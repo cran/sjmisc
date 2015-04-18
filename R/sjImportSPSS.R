@@ -588,7 +588,7 @@ sji.setValueLabel.vector <- function(var, labels, var.name = NULL) {
   if (!is.null(labels)) {
     # string varibles can't get value labels
     if (is.null(var) || is.character(var)) {
-      warning("Can't attach value labels to string or NULL vectors.\n")
+      warning("Can't attach value labels to string or NULL vectors.", call. = F)
     } else {
       # check if var is a factor
       if (is.factor(var)) {
@@ -623,13 +623,13 @@ sji.setValueLabel.vector <- function(var, labels, var.name = NULL) {
         name.string <- var.name
       }
       if (is.infinite(valrange)) {
-        warning("Can't set value labels. Infinite value range.\n")
+        warning("Can't set value labels. Infinite value range.", call. = F)
       # check for valid length of labels
       } else if (valrange < lablen) {
         # we have more labels than values, so just take as many
         # labes as values are present
-        message(sprintf("More labels than values of \"%s\". Using first %i labels.\n", name.string, valrange))
-        attr(var, attr.string) <- c(as.character(c(minval:maxval)))
+        message(sprintf("More labels than values of \"%s\". Using first %i labels.", name.string, valrange))
+        attr(var, attr.string) <- as.character(c(minval:maxval))
         names(attr(var, attr.string)) <- labels[1:valrange]
       # value range is larger than amount of labels. we may
       # have not continuous value range, e.g. "-2" as filter and
@@ -641,10 +641,10 @@ sji.setValueLabel.vector <- function(var, labels, var.name = NULL) {
         valrange <- length(values)
         # still no match?
         if (valrange != lablen) {
-          warning(sprintf("Can't set value labels. Value range of \"%s\" is longer than length of \"labels\".\n", name.string))
+          warning(sprintf("Can't set value labels. Value range of \"%s\" is longer than length of \"labels\".", name.string), call. = F)
         } else {
           # else, set attributes
-          attr(var, attr.string) <- as.character(valrange)
+          attr(var, attr.string) <- as.character(c(1:valrange))
           names(attr(var, attr.string)) <- labels
         }
       } else {
@@ -657,12 +657,32 @@ sji.setValueLabel.vector <- function(var, labels, var.name = NULL) {
 }
 
 
-# this function returns TRUE if factor 'x' has numeric
-# factor levels.
+#' @title Check whether a factor has numeric levels only
+#' @name is_num_fac
+#' @description This function checks whether a factors has only numeric or
+#'                any non-numeric factor levels.
+#'
+#' @param x a \code{\link{factor}}.
+#' @return Logical, \code{TRUE} if factors has numeric factor levels only,
+#'           \code{FALSE} otherwise.
+#'
+#' @examples
+#' # numeric factor levels
+#' f1 <- factor(c(NA, 1, 3, NA, 2, 4))
+#' is_num_fac(f1)
+#'
+#' # not completeley numeric factor levels
+#' f2 <- factor(c(NA, "C", 1, 3, "A", NA, 2, 4))
+#' is_num_fac(f2)
+#'
+#' # not completeley numeric factor levels
+#' f3 <- factor(c("Justus", "Bob", "Peter"))
+#' is_num_fac(f3)
+#'
+#' @export
 is_num_fac <- function(x) {
   # check if we have numeric levels
-  numlev <- suppressWarnings(as.numeric(levels(x)))
-  return (!is.na(numlev[1]))
+  return (!anyNA(suppressWarnings(as.numeric(levels(x)))))
 }
 
 
@@ -899,9 +919,10 @@ set_var_labels <- function(x, lab, attr.string = NULL) {
 #'
 #' @param x A variable of type \code{\link{numeric}}, \code{\link{atomic}}
 #'          \code{\link{factor}} or \code{\link[haven]{labelled}} (see \code{haven} package)
-#'          \emph{with associated value labels}
-#'          (see \code{\link{set_val_labels}}).
-#' @return A factor variable with the associated value labels as factor levels.
+#'          \emph{with associated value labels} (see \code{\link{set_val_labels}}),
+#'          respectively a data frame with such variables.
+#' @return A factor variable with the associated value labels as factor levels, or a
+#'           data frame with such factor variables (if \code{x} was a data frame.
 #'
 #' @note Value and variable label attributes (see, for instance, \code{\link{get_val_labels}}
 #'         or \code{\link{set_val_labels}}) will be removed  when converting variables to factors.
@@ -924,6 +945,16 @@ set_var_labels <- function(x, lab, attr.string = NULL) {
 #'
 #' @export
 to_label <- function(x) {
+  if (is.matrix(x) || is.data.frame(x)) {
+    for (i in 1:ncol(x)) x[[i]] <- to_label_helper(x[[i]])
+    return (x)
+  } else {
+    return (to_label_helper(x))
+  }
+}
+
+
+to_label_helper <- function(x) {
   # check if factor has numeric factor levels
   if (is.factor(x) && !is_num_fac(x)) {
     # if not, stop here
@@ -962,8 +993,11 @@ to_label <- function(x) {
 #'            \code{\link{to_label}} to convert a value into a factor with labelled
 #'            factor levels.
 #'
-#' @param x A (numeric or atomic) variable.
-#' @return A factor variable, including variable and value labels.
+#' @param x A (numeric or atomic) variable or a data frame with
+#'          (numeric or atomic) variables.
+#' @return A factor variable, including variable and value labels, respectively
+#'           a data frame with factor variables (including variable and value labels)
+#'           if \code{x} was a data frame.
 #'
 #' @note This function only works with vectors that have value and variable
 #'        labels attached. This is automatically done by importing SPSS data sets
@@ -985,6 +1019,16 @@ to_label <- function(x) {
 #'
 #' @export
 to_fac <- function(x) {
+  if (is.matrix(x) || is.data.frame(x)) {
+    for (i in 1:ncol(x)) x[[i]] <- to_fac_helper(x[[i]])
+    return (x)
+  } else {
+    return (to_fac_helper(x))
+  }
+}
+
+
+to_fac_helper <- function(x) {
   # retrieve value labels
   lab <- get_val_labels(x)
   # retrieve variable labels
@@ -1010,13 +1054,18 @@ to_fac <- function(x) {
 #'            factor levels and \code{\link{to_fac}} to convert a numeric variable
 #'            into a factor (and retain labels)
 #'
-#' @param x A (factor) variable.
+#' @param x A (factor) variable or a data frame with (factor) variables.
 #' @param startAt the starting index, i.e. the lowest numeric value of the variable's
-#'          value range.
+#'          value range. By default, this parameter is \code{NULL}, hence the lowest
+#'          value of the returned numeric variable corresponds to the lowest factor
+#'          level (if factor is \code{\link{numeric}}) or to \code{1} (if factor levels
+#'          are not numeric).
 #' @param keep.labels logical, if \code{TRUE}, former factor levels will be attached as
 #'          value labels. See \code{\link{set_val_labels}} for more details.
-#' @return A numeric variable with values ranging from \code{startAt} to
-#'           \code{startAt} + length of factor levels.
+#' @return A numeric variable with values ranging either from \code{startAt} to
+#'           \code{startAt} + length of factor levels, or to the corresponding
+#'           factor levels (if these were numeric). Or a data frame with numeric
+#'           variables, if \code{x} was a data frame.
 #'
 #' @examples
 #' data(efc)
@@ -1030,20 +1079,44 @@ to_fac <- function(x) {
 #' # to "5".
 #' table(to_value(test, 5))
 #'
+#' # numeric factor keeps values
+#' dummy <- factor(c("3", "4", "6"))
+#' table(to_value(dummy))
+#'
+#' # non-numeric factor is converted to numeric
+#' # starting at 1
+#' dummy <- factor(c("D", "F", "H"))
+#' table(to_value(dummy))
+#'
 #' @export
-to_value <- function(x, startAt = 1, keep.labels = TRUE) {
+to_value <- function(x, startAt = NULL, keep.labels = TRUE) {
+  if (is.matrix(x) || is.data.frame(x)) {
+    for (i in 1:ncol(x)) x[[i]] <- to_value_helper(x[[i]], startAt, keep.labels)
+    return (x)
+  } else {
+    return (to_value_helper(x, startAt, keep.labels))
+  }
+}
+
+
+to_value_helper <- function(x, startAt, keep.labels) {
   # retrieve "value labels"
   labels <- levels(x)
   # check if we have numeric factor levels
   if (is_num_fac(x)) {
     # convert to numeric via as.vector
     new_value <- as.numeric(as.vector((x)))
-    # check if lowest value of variable differs from
-    # requested minimum conversion value
-    val_diff <- startAt - min(new_value, na.rm = T)
-    # adjust new_value
-    new_value <- new_value + val_diff
+    # new minimum value?
+    if (!is.null(startAt) && is.numeric(startAt)) {
+      # check if lowest value of variable differs from
+      # requested minimum conversion value
+      val_diff <- startAt - min(new_value, na.rm = T)
+      # adjust new_value
+      new_value <- new_value + val_diff
+    }
   } else {
+    # check startAt value
+    if (is.null(startAt)) startAt <- 1
     # get amount of categories
     l <- length(levels(x))
     # determine highest category value

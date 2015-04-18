@@ -17,8 +17,8 @@ if(getRversion() >= "2.15.1") utils::globalVariables(c("fit"))
 #'         }
 #'
 #' @references \itemize{
-#'               \item \href{http://stats.stackexchange.com/questions/78808/}{stack exchange 1}
-#'               \item \href{http://stats.stackexchange.com/questions/15958/}{stack exchange 2}
+#'               \item \href{http://stats.stackexchange.com/questions/78808/}{How to compute eta-sq in ANOVA by hand?}
+#'               \item \href{http://stats.stackexchange.com/questions/15958/}{How to interpret and report eta squared?}
 #'               \item \href{http://en.wikiversity.org/wiki/Eta-squared}{Wikipedia: Eta-squared}
 #'               \item Levine TR, Hullett CR (2002): Eta Squared, Partial Eta Squared, and Misreporting of Effect Size in Communication Research (\href{https://www.msu.edu/~levinet/eta\%20squared\%20hcr.pdf}{pdf})
 #'             }
@@ -103,8 +103,8 @@ std_beta <- function(fit, include.ci = FALSE) {
     return (sjs.stdmm(fit))
   } else {
     b <- summary(fit)$coef[-1, 1]
-    sx <- sapply(fit$model[-1], sd)
-    sy <- sapply(fit$model[1], sd)
+    sx <- sapply(as.data.frame(fit$model)[-1], sd, na.rm = T)
+    sy <- sapply(as.data.frame(fit$model)[1], sd, na.rm = T)
     beta <- b * sx / sy
     se <- summary(fit)$coefficients[-1, 2]
     beta.se <- se * sx / sy
@@ -160,7 +160,8 @@ sjs.stdmm <- function(fit) {
 #' @param weights defining integer valued weights for the observations. By default,
 #'          this is \code{NULL}.
 #' @return (Invisibly) returns a data frame with U, p and Z-values for each group-comparison
-#'         as well as effect-size r.
+#'         as well as effect-size r; additionally, group-labels and groups' n's are
+#'         also included.
 #'
 #' @note This function calls the \code{\link[coin]{wilcox_test}} with formula. If \code{grp}
 #'         has more than two groups, additionally a Kruskal-Wallis-Test (see \code{\link{kruskal.test}})
@@ -173,10 +174,9 @@ sjs.stdmm <- function(fit) {
 #'        }
 #'
 #' @examples
-#' \dontrun{
 #' data(efc)
 #' # Mann-Whitney-U-Tests for elder's age by elder's dependency.
-#' mwu(efc$e17age, efc$e42dep)}
+#' mwu(efc$e17age, efc$e42dep)
 #'
 #' @export
 mwu <- function(var, grp, distribution="asymptotic", weights=NULL) {
@@ -186,9 +186,14 @@ mwu <- function(var, grp, distribution="asymptotic", weights=NULL) {
   if (!requireNamespace("coin", quietly = TRUE)) {
     stop("Package 'coin' needed for this function to work. Please install it.", call. = FALSE)
   }
+  # do we have a factor? if yes, make numeric
+  if (is.factor(grp)) grp <- to_value(grp)
   # group "counter" (index) should start with 1, not 0
   if (min(grp, na.rm = TRUE) == 0) grp <- grp + 1
-  cnt <- length(unique(na.omit(grp)))
+  # retrieve unique group values. need to iterate all values
+  grp_values <- sort(unique(na.omit(grp)))
+  # length of value range
+  cnt <- length(grp_values)
   labels <- autoSetValueLabels(grp)
   message("Performing Mann-Whitney-U-Test...")
   message("---------------------------------")
@@ -198,8 +203,8 @@ mwu <- function(var, grp, distribution="asymptotic", weights=NULL) {
     for (j in i:cnt) {
       if (i != j) {
         # retrieve cases (rows) of subgroups
-        xsub <- var[which(grp == i | grp == j)]
-        ysub <- grp[which(grp == i | grp == j)]
+        xsub <- var[which(grp == grp_values[i] | grp == grp_values[j])]
+        ysub <- grp[which(grp == grp_values[i] | grp == grp_values[j])]
         # only use rows with non-missings
         ysub <- ysub[which(!is.na(xsub))]
         # adjust weights, pick rows from subgroups (see above)
@@ -224,21 +229,26 @@ mwu <- function(var, grp, distribution="asymptotic", weights=NULL) {
         p <- coin::pvalue(wt)
         r <- abs(z / sqrt(length(var)))
         w <- wilcox.test(xsub, ysub.n, paired = TRUE)$statistic
-        rkm.i <- mean(rank(xsub)[which(ysub.n == i)], na.rm = TRUE)
-        rkm.j <- mean(rank(xsub)[which(ysub.n == j)], na.rm = TRUE)
+        rkm.i <- mean(rank(xsub)[which(ysub.n == grp_values[i])], na.rm = TRUE)
+        rkm.j <- mean(rank(xsub)[which(ysub.n == grp_values[j])], na.rm = TRUE)
+        # compute n for each group
+        n_grp1 <- length(xsub[which(ysub.n == grp_values[i])])
+        n_grp2 <- length(xsub[which(ysub.n == grp_values[j])])
+        # print to console
         if (is.null(labels)) {
           cat(sprintf("Groups (%i|%i), n = %i/%i:\n",
-                      i,
-                      j,
-                      length(xsub[which(ysub.n == i)]),
-                      length(xsub[which(ysub.n == j)])))
+                      grp_values[i],
+                      grp_values[j],
+                      n_grp1,
+                      n_grp2))
         } else {
           cat(sprintf("Groups %i = %s (n = %i) | %i = %s (n = %i):\n",
-                      i,
+                      grp_values[i],
                       labels[i],
-                      length(xsub[which(ysub.n == i)]),
-                      j, labels[j],
-                      length(xsub[which(ysub.n == j)])))
+                      n_grp1,
+                      grp_values[j],
+                      labels[j],
+                      n_grp2))
         }
         if (p < 0.001) {
           p <- 0.001
@@ -248,8 +258,12 @@ mwu <- function(var, grp, distribution="asymptotic", weights=NULL) {
         }
         cat(sprintf("  U = %.3f, W = %.3f, p %s %.3f, Z = %.3f\n  effect-size r = %.3f\n  rank-mean(%i) = %.2f\n  rank-mean(%i) = %.2f\n\n", u, w, p.string, p, z, r, i, rkm.i, j, rkm.j))
         df <- rbind(df,
-                    cbind(grp1 = i,
-                          grp2 = j,
+                    cbind(grp1 = grp_values[i],
+                          grp1.label = labels[i],
+                          grp1.n = n_grp1,
+                          grp2 = grp_values[j],
+                          grp2.label = labels[j],
+                          grp2.n = n_grp2,
                           u = u,
                           w = w,
                           p = p,
@@ -276,7 +290,25 @@ mwu <- function(var, grp, distribution="asymptotic", weights=NULL) {
     }
     cat(sprintf("p %s %.3f\n", p.string, p))
   }
-  invisible(df)
+  # prepare a data frame that can be used for 'sjt.df'.
+  tab.df <- data.frame(Groups = sprintf("%s<br>%s",
+                                        df$grp1.label,
+                                        df$grp2.label),
+                       N = sprintf("%s<br>%s",
+                                   df$grp1.n,
+                                   df$grp2.n),
+                       'Mean Rank' = sprintf("%.2f<br>%.2f",
+                                             as.numeric(as.character(df$rank.mean.grp1)),
+                                             as.numeric(as.character(df$rank.mean.grp2))),
+                       'Mann-Whitney-U' = df$u,
+                       'Wilcoxon-W' = df$w,
+                       Z = sprintf("%.3f", as.numeric(as.character(df$z))),
+                       'Effect Size' = sprintf("%.3f", as.numeric(as.character(df$r))),
+                       p = sprintf("%.3f", as.numeric(as.character(df$p))))
+  # replace 0.001 with <0.001
+  levels(tab.df$p)[which(levels(tab.df$p) == "0.001")] <- "<0.001"
+  # return both data frames
+  invisible (structure(class = "mwu",list(df = df, tab.df = tab.df)))
 }
 
 
@@ -307,8 +339,7 @@ chisq_gof <- function(var, prob, weights=NULL) {
   # goodness of fit-test. x is one-dimensional and
   # y not given
   chi2gof <- chisq.test(dummy, p = prob)
-  print(chi2gof)
-  invisible (chi2gof)
+  return (chi2gof)
 }
 
 
@@ -328,8 +359,8 @@ chisq_gof <- function(var, prob, weights=NULL) {
 cronb <- function(df) {
   df <- na.omit(df)
   if (is.null(ncol(df)) || ncol(df) < 2) {
-    cat("\nToo less columns in this factor to calculate alpha value!\n")
-    return(0)
+    warning("Too less columns in this factor to calculate alpha value!", call. = F)
+    return (NULL)
   }
   return (dim(df)[2] / (dim(df)[2] - 1) * (1 - sum(apply(df, 2, var)) / var(rowSums(df))))
 }
@@ -338,13 +369,13 @@ cronb <- function(df) {
 #' @title Performs a reliability test on an item scale.
 #' @name reliab_test
 #' @description This function calculates the item discriminations (corrected item-total
-#'                correlations for each item of \code{df} with the remaining items) and
+#'                correlations for each item of \code{x} with the remaining items) and
 #'                the Cronbach's alpha for each item, if it was deleted from the
 #'                scale.
 #'
 #' @seealso \code{\link{cronb}}
 #'
-#' @param df A data frame with items (from a scale)
+#' @param x A data frame with items (from a scale)
 #' @param scaleItems If \code{TRUE}, the data frame's vectors will be scaled. Recommended,
 #'          when the variables have different measures / scales.
 #' @param digits Amount of digits for Cronbach's Alpha and correlation values in
@@ -372,25 +403,25 @@ cronb <- function(df) {
 #' end <- which(colnames(efc) == "c90cop9")
 #'
 #' # create data frame with COPE-index scale
-#' df <- as.data.frame(efc[, c(start:end)])
-#' colnames(df) <- varlabs[c(start:end)]
+#' x <- data.frame(efc[, c(start:end)])
+#' colnames(x) <- varlabs[c(start:end)]
 #'
 #' \dontrun{
-#' sjt.df(reliab_test(df),
+#' sjt.df(reliab_test(x),
 #'        describe = FALSE,
 #'        showCommentRow = TRUE,
 #'        commentString = sprintf("Cronbach's &alpha;=%.2f",
-#'                                cronb(df)))}
+#'                                cronb(x)))}
 #'
 #' # ---------------------------------------
 #' # Compute PCA on Cope-Index, and perform a
 #' # reliability check on each extracted factor.
 #' # ---------------------------------------
 #' \dontrun{
-#' factors <- sjt.pca(df)$factor.index
+#' factors <- sjt.pca(x)$factor.index
 #' findex <- sort(unique(factors))
 #' for (i in 1:length(findex)) {
-#'  rel.df <- subset(df, select = which(factors == findex[i]))
+#'  rel.df <- subset(x, select = which(factors == findex[i]))
 #'  if (ncol(rel.df) >= 3) {
 #'    sjt.df(reliab_test(rel.df),
 #'           describe = FALSE,
@@ -403,16 +434,23 @@ cronb <- function(df) {
 #'  }}
 #'
 #' @export
-reliab_test <- function(df, scaleItems=FALSE, digits=3) {
+reliab_test <- function(x, scaleItems=FALSE, digits=3) {
   # -----------------------------------
   # remove missings, so correlation works
   # -----------------------------------
-  df <- na.omit(df)
+  x <- na.omit(x)
+  # -----------------------------------
+  # check param
+  # -----------------------------------
+  if (!is.matrix(x) && !is.data.frame(x)) {
+    warning("'x' needs to be a data frame or matrix.", call. = F)
+    return (NULL)
+  }
   # -----------------------------------
   # remember item (column) names for return value
   # return value gets column names of initial data frame
   # -----------------------------------
-  df.names <- colnames(df)
+  df.names <- colnames(x)
   # -----------------------------------
   # check for minimum amount of columns
   # can't be less than 3, because the reliability
@@ -420,12 +458,12 @@ reliab_test <- function(df, scaleItems=FALSE, digits=3) {
   # item is deleted. If data frame has only two columns
   # and one is deleted, Cronbach's alpha cannot be calculated.
   # -----------------------------------
-  if (ncol(df) > 2) {
+  if (ncol(x) > 2) {
     # -----------------------------------
     # Check whether items should be scaled. Needed,
     # when items have different measures / scales
     # -----------------------------------
-    if (scaleItems) df <- data.frame(scale(df, center = TRUE, scale = TRUE))
+    if (scaleItems) x <- data.frame(scale(x, center = TRUE, scale = TRUE))
     # -----------------------------------
     # init vars
     # -----------------------------------
@@ -434,12 +472,12 @@ reliab_test <- function(df, scaleItems=FALSE, digits=3) {
     # -----------------------------------
     # iterate all items
     # -----------------------------------
-    for (i in 1:ncol(df)) {
+    for (i in 1:ncol(x)) {
       # -----------------------------------
       # create subset with all items except current one
       # (current item "deleted")
       # -----------------------------------
-      sub.df <- subset(df, select = c(-i))
+      sub.df <- subset(x, select = c(-i))
       # -----------------------------------
       # calculate cronbach-if-deleted
       # -----------------------------------
@@ -447,7 +485,7 @@ reliab_test <- function(df, scaleItems=FALSE, digits=3) {
       # -----------------------------------
       # calculate corrected total-item correlation
       # -----------------------------------
-      totalCorr <- c(totalCorr, cor(df[, i],
+      totalCorr <- c(totalCorr, cor(x[, i],
                                     apply(sub.df, 1, sum),
                                     use = "pairwise.complete.obs"))
     }
@@ -462,7 +500,7 @@ reliab_test <- function(df, scaleItems=FALSE, digits=3) {
     colnames(ret.df) <- c("Cronbach's &alpha; if item deleted", "Item discrimination")
     rownames(ret.df) <- df.names
   } else {
-    warning("Data frame needs at least three columns for reliability-test!")
+    warning("Data frame needs at least three columns for reliability-test!", call. = F)
     ret.df <- NULL
   }
   # -----------------------------------
@@ -497,6 +535,7 @@ reliab_test <- function(df, scaleItems=FALSE, digits=3) {
 #' df <- as.data.frame(efc[,c(start:end)])
 #'
 #' mic(df)
+#'
 #' @export
 mic <- function(data, corMethod="pearson") {
   # -----------------------------------
@@ -511,20 +550,20 @@ mic <- function(data, corMethod="pearson") {
   # -----------------------------------
   # Sum up all correlation values
   # -----------------------------------
-  mic <- c()
+  meanic <- c()
   for (j in 1:(ncol(corr) - 1)) {
     # first correlation is always "1" (self-correlation)
     for (i in (j + 1):nrow(corr)) {
       # check four valid bound
       if (i <= nrow(corr) && j <= ncol(corr)) {
         # add up all subsequent values
-        mic <- c(mic, corr[i, j])
+        meanic <- c(meanic, corr[i, j])
       } else {
-        mic <- c(mic, "NA")
+        meanic <- c(meanic, "NA")
       }
     }
   }
-  return (mean(mic))
+  return (mean(meanic))
 }
 
 
@@ -555,7 +594,7 @@ mic <- function(data, corMethod="pearson") {
 #' @export
 table_values <- function(tab, digits=2) {
   # convert to ftable object
-  if (class(tab) != "ftable") tab <- ftable(tab)
+  if (all(class(tab) != "ftable")) tab <- ftable(tab)
   tab.cell <- round(100 * prop.table(tab), digits)
   tab.row <- round(100 * prop.table(tab, 1), digits)
   tab.col <- round(100 * prop.table(tab, 2), digits)
@@ -589,7 +628,7 @@ table_values <- function(tab, digits=2) {
 #' @export
 phi <- function(tab) {
   # convert to flat table
-  if (class(tab) != "ftable") tab <- ftable(tab)
+  if (all(class(tab) != "ftable")) tab <- ftable(tab)
   tb <- summary(MASS::loglm(~1 + 2, tab))$tests
   phi_val <- sqrt(tb[2, 1] / sum(tab))
   return (phi_val)
@@ -612,7 +651,7 @@ phi <- function(tab) {
 #'
 #' @export
 cramer <- function(tab) {
-  if (class(tab) != "ftable") tab <- ftable(tab)
+  if (all(class(tab) != "ftable")) tab <- ftable(tab)
   phi_val <- phi(tab)
   cramer <- sqrt(phi_val^2 / min(dim(tab) - 1))
   return (cramer)
@@ -666,7 +705,7 @@ cv <- function(x) {
       dv <- x@frame[[1]]
     } else if (class(x) == "lme") {
       # dependent variable in lme
-      dv <- x@data[[1]]
+      dv <- x$data[[1]]
     }
     # compute mean of dependent variable
     mw <- mean(dv, na.rm = TRUE)
@@ -744,4 +783,101 @@ levene_test <- function(depVar, grpVar) {
   } else {
     message("Groups are not homogeneous!\n")
   }
+}
+
+
+#' @title Check whether two factors are crossed
+#' @name is_crossed
+#' @description This function checks whether two factors are crossed,
+#'                i.e. if each level of one factor occurs in combination
+#'                with each level of the other factor.
+#'
+#' @param f1 a numeric vector or \code{\link{factor}}.
+#' @param f2 a numeric vector or \code{\link{factor}}.
+#' @return Logical, \code{TRUE} if factors are crossed, \code{FALSE} otherwise.
+#'
+#' @seealso \code{\link{is_nested}}
+#'
+#' @references Grace, K. The Difference Between Crossed and Nested Factors. \href{http://www.theanalysisfactor.com/the-difference-between-crossed-and-nested-factors/}{(web)}
+#'
+#' @examples
+#' # crossed factors, each category of
+#' # x appears in each category of y
+#' x <- c(1,4,3,2,3,2,1,4)
+#' y <- c(1,1,1,2,2,1,2,2)
+#' # show distribution
+#' table(x, y)
+#' # check if crossed
+#' is_crossed(x, y)
+#'
+#' # not crossed factors
+#' x <- c(1,4,3,2,3,2,1,4)
+#' y <- c(1,1,1,2,1,1,2,2)
+#' # show distribution
+#' table(x, y)
+#' # check if crossed
+#' is_crossed(x, y)
+#'
+#' @export
+is_crossed <- function(f1, f2) {
+  tab <- table(f1, f2)
+  # for crossed factors, we should have no zeros in any rows
+  # (i.e. each level of f1 also contains any level of f2)
+  return (!any(apply(tab, 1, function(x) any(x==0)) == TRUE))
+}
+
+
+#' @title Check whether two factors are nested
+#' @name is_nested
+#' @description This function checks whether two factors are nested,
+#'                i.e. if each category of the first factor co-occurs
+#'                with only one category of the other.
+#'
+#' @param f1 a numeric vector or \code{\link{factor}}.
+#' @param f2 a numeric vector or \code{\link{factor}}.
+#' @return Logical, \code{TRUE} if factors are nested, \code{FALSE} otherwise.
+#'
+#' @note If factors are nested, a message is displayed to tell whether \code{f1}
+#'         is nested within \code{f2} or vice versa.
+#'
+#' @seealso \code{\link{is_crossed}}
+#'
+#' @references Grace, K. The Difference Between Crossed and Nested Factors. \href{http://www.theanalysisfactor.com/the-difference-between-crossed-and-nested-factors/}{(web)}
+#'
+#' @examples
+#' # nested factors, each category of
+#' # x appears in one category of y
+#' x <- c(1,2,3,4,5,6,7,8,9)
+#' y <- c(1,1,1,2,2,2,3,3,3)
+#' # show distribution
+#' table(x, y)
+#' # check if nested
+#' is_nested(x, y)
+#' is_nested(y, x)
+#'
+#' # not nested factors
+#' x <- c(1,2,3,4,5,6,7,8,9,1,2)
+#' y <- c(1,1,1,2,2,2,3,3,3,2,3)
+#' # show distribution
+#' table(x, y)
+#' # check if nested
+#' is_nested(x, y)
+#' is_nested(y, x)
+#'
+#' @export
+is_nested <- function(f1, f2) {
+  tab <- table(f1, f2)
+  # cross tabulation of nested factors should have only 1 value per row
+  # (or column) that is not zero. If we found more, factors are not nested
+  # or rows and columns have to be swapped.
+  # check if f1 is nested within f2
+  nested <- !any(apply(tab, 1, function(x) sum(x!=0) > 1))
+  if (nested) message("'f1' is nested within 'f2'")
+  # swap rows and columns to check whether factors are nested
+  # check whether f2 is nested within f1
+  if (!nested) {
+    nested <- !any(apply(tab, 2, function(x) sum(x!=0) > 1))
+    if (nested) message("'f2' is nested within 'f1'")
+  }
+  return (nested)
 }
