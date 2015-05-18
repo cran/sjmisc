@@ -44,9 +44,9 @@ dicho <- function(x, dichBy = "median", dichVal = -1, asNum = FALSE) {
   }
   if (is.matrix(x) || is.data.frame(x)) {
     for (i in 1:ncol(x)) x[[i]] <- dicho_helper(x[[i]], dichBy, dichVal, asNum)
-    return (x)
+    return(x)
   } else {
-    return (dicho_helper(x, dichBy, dichVal, asNum))
+    return(dicho_helper(x, dichBy, dichVal, asNum))
   }
 }
 
@@ -59,7 +59,7 @@ dicho_helper <- function(var, dichBy, dichVal, asNum) {
       # try to convert to numeric
       var <- as.numeric(as.character(var))
     } else {
-      message("Could not dichotomoze non-numeric factor.")
+      message("Could not dichotomize non-numeric factor.")
       return (var)
     }
   }
@@ -105,6 +105,15 @@ dicho_helper <- function(var, dichBy, dichVal, asNum) {
 #'
 #' @return A grouped variable, either as numeric or as factor (see paramter \code{asNumeric}).
 #'
+#' @details If \code{groupsize} is set to a specific value, the variable is recoded
+#'            into several groups, where each group has a maximum range of \code{groupsize}.
+#'            Hence, the amount of groups differ depending on the range of \code{var}.
+#'            \cr \cr
+#'            If \code{groupsize = "auto"}, the variable is recoded into a maximum of
+#'            \code{autoGroupCount} groups. Hence, independent from the range of
+#'            \code{var}, always the same amount of groups are created, so the range
+#'            within each group differs (depending on \code{var}'s range).
+#'
 #' @examples
 #' age <- abs(round(rnorm(100, 65, 20)))
 #' age.grp <- group_var(age, 10)
@@ -114,26 +123,22 @@ dicho_helper <- function(var, dichBy, dichVal, asNum) {
 #' # histogram with EUROFAMCARE sample dataset
 #' # variable not grouped
 #' data(efc)
-#' efc.val <- get_val_labels(efc)
-#' efc.var <- get_var_labels(efc)
 #' \dontrun{
 #' library(sjPlot)
 #' sjp.frq(efc$e17age,
-#'         title = efc.var[['e17age']],
+#'         title = get_var_labels(efc$e17age),
 #'         type = "h",
 #'         showValueLabels = FALSE)}
 #'
 #' # bar plot with EUROFAMCARE sample dataset
 #' # grouped variable
 #' data(efc)
-#' efc.val <- get_val_labels(efc)
-#' efc.var <- get_var_labels(efc)
 #' ageGrp <- group_var(efc$e17age)
 #' ageGrpLab <- group_labels(efc$e17age)
 #' \dontrun{
 #' library(sjPlot)
 #' sjp.frq(ageGrp,
-#'         title = efc.var[['e17age']],
+#'         title = get_var_labels(efc$e17age),
 #'         axisLabels.x = ageGrpLab)}
 #'
 #' @export
@@ -148,7 +153,7 @@ group_var <- function(var,
   levels(var) <- c(1:length(levels(var)))
   # convert to numeric?
   if (asNumeric) var <- as.numeric(as.character(var))
-  return (var)
+  return(var)
 }
 
 
@@ -167,7 +172,7 @@ group_var <- function(var,
 #'         \code{rightInterval} as used in the \code{\link{group_var}} function
 #'         if you want to create labels for the related recoded variable.
 #'
-#' @param var The scale variable, which should recoded into groups.
+#' @param var The variable, which should recoded into groups.
 #' @param groupsize The group-size, i.e. the range for grouping. By default, for each 5 categories
 #'          new group is built, i.e. \code{groupsize=5}. Use \code{groupsize="auto"} to automatically
 #'          resize a variable into a maximum of 30 groups (which is the ggplot-default grouping when
@@ -184,6 +189,8 @@ group_var <- function(var,
 #'           formatted as "from lower bound to upper bound", e.g. \code{"10-19"  "20-29"  "30-39"} etc.
 #'           See example below.
 #'
+#' @details See 'Details' in \code{\link{group_var}}.
+#'
 #' @examples
 #' age <- abs(round(rnorm(100, 65, 20)))
 #' age.grp <- group_var(age, 10)
@@ -197,26 +204,22 @@ group_var <- function(var,
 #' # histogram with EUROFAMCARE sample dataset
 #' # variable not grouped
 #' data(efc)
-#' efc.val <- get_val_labels(efc)
-#' efc.var <- get_var_labels(efc)
 #' \dontrun{
 #' library(sjPlot)
 #' sjp.frq(efc$e17age,
-#'         title = efc.var[['e17age']],
+#'         title = get_var_labels(efc$e17age),
 #'         type = "h",
 #'         showValueLabels = FALSE)}
 #'
 #' # bar plot with EUROFAMCARE sample dataset
 #' # grouped variable
 #' data(efc)
-#' efc.val <- get_val_labels(efc)
-#' efc.var <- get_var_labels(efc)
 #' ageGrp <- group_var(efc$e17age)
 #' ageGrpLab <- group_labels(efc$e17age)
 #' \dontrun{
 #' library(sjPlot)
 #' sjp.frq(ageGrp,
-#'         title = efc.var[['e17age']],
+#'         title = get_var_labels(efc$e17age),
 #'         axisLabels.x = ageGrpLab)}
 #'
 #' @export
@@ -245,7 +248,7 @@ group_labels <- function(var,
     upper <- as.numeric(subs[[1]][2])
     # Prüfen, welche Intervallgrenze ein-
     # und welche ausgeschlossen werden soll
-    if(rightInterval) {
+    if (rightInterval) {
       lower <- lower + 1
     } else {
       upper <- upper - 1
@@ -253,7 +256,7 @@ group_labels <- function(var,
     # Rückgabe des Strings
     retval[i] <- c(paste(lower, "-", upper, sep = ""))
   }
-  return (retval)
+  return(retval)
 }
 
 
@@ -278,7 +281,7 @@ group_helper <- function(var, groupsize, rightInterval, autoGroupCount) {
                                        max(var, na.rm = TRUE) + multip * groupsize,
                                        by = groupsize)),
                         right = rightInterval))
-  return (var)
+  return(var)
 }
 
 
@@ -286,17 +289,21 @@ group_helper <- function(var, groupsize, rightInterval, autoGroupCount) {
 #' @name word_wrap
 #'
 #' @description Insert line breaks in long character strings. Useful if you want to wordwrap
-#'                plot labels.
+#'                labels / titles for plots or tables.
 #'
-#' @param labels The label(s) (i.e. character string). You can also pass several strings as vector
-#'          (e.g. \code{labels=c("first long string", "second long string")})
-#' @param wrap The amount of chars per line (i.e. line length)
-#' @param linesep By default, this parameter is \code{NULL} and a regular new line
-#'          string is used. For HTML-needs, for instance, \code{linesep} could be \code{"<br>"}.
+#' @param labels the label(s) (i.e. character string) where a line break should be
+#'          inserted. You can also pass several strings as vector
+#'          (e.g. \code{labels = c("first long string", "second long string")})
+#' @param wrap the maximum amount of chars per line (i.e. line length)
+#' @param linesep by default, this parameter is \code{NULL} and a regular new line
+#'          string (\code{"\\n"}) is used. For HTML-needs, for instance, \code{linesep}
+#'          could be \code{"<br>"}.
 #' @return New label(s) with line breaks inserted at every \code{wrap}'s position.
 #'
 #' @examples
 #' word_wrap(c("A very long string", "And another even longer string!"), 10)
+#'
+#' message(word_wrap("Much too long string for just one line!", 15))
 #'
 #' @export
 word_wrap <- function(labels, wrap, linesep=NULL) {
@@ -315,7 +322,7 @@ word_wrap <- function(labels, wrap, linesep=NULL) {
     linesep <- sprintf("\\1%s", linesep)
   }
   # create regex pattern for line break
-  pattern <- c(paste('(.{1,', wrap, '})(\\s|$)', sep=""))
+  pattern <- c(paste('(.{1,', wrap, '})(\\s|$)', sep = ""))
   # iterate all labels
   for (n in 1:length(labels)) {
     # check if wrap exceeds lengths of labels
@@ -344,22 +351,22 @@ word_wrap <- function(labels, wrap, linesep=NULL) {
 #' @title Recode variable categories into new values.
 #' @name recode_to
 #'
-#' @description Recodes the categories of a variables \code{var} into new category values, beginning
+#' @description Recodes (or "renumbers") the categories of \code{var} into new category values, beginning
 #'                with the lowest value specified by parameter \code{lowest}. Useful if you want
 #'                to recode dummy variables with 1/2 coding to 0/1 coding, or recoding scales from
 #'                1-4 to 0-3 etc.
 #'
 #' @seealso \code{\link{rec}} for general recoding of variables and \code{\link{set_na}}
-#'            for setting \code{NA} values.
+#'            for setting \code{\link{NA}} values.
 #'
-#' @param var The variable (vector) that should be recoded.
+#' @param x A variable (vector) or a data frame that should be recoded.
 #' @param lowest Indicating the lowest category value after recoding. Default is 0, so the new
 #'          variable starts with the category value 0.
 #' @param highest If specified and larger than \code{lowest}, all category values larger than
 #'          \code{highest} will be set to \code{NA}. Default is \code{-1}, i.e. this parameter is ignored
 #'          and no NA's will be produced.
 #' @return A new variable with recoded category values, where \code{lowest} indicates the lowest
-#'           value.
+#'           value; or a data frame where variables have been recoded as described.
 #'
 #' @note Value and variable label attributes (see, for instance, \code{\link{get_val_labels}}
 #'         or \code{\link{set_val_labels}}) are retained.
@@ -384,7 +391,17 @@ word_wrap <- function(labels, wrap, linesep=NULL) {
 #' recode_to(dummy, 1, 3)
 #'
 #' @export
-recode_to <- function(var, lowest=0, highest=-1) {
+recode_to <- function(x, lowest=0, highest=-1) {
+  if (is.matrix(x) || is.data.frame(x)) {
+    for (i in 1:ncol(x)) x[[i]] <- rec_to_helper(x[[i]], lowest, highest)
+    return(x)
+  } else {
+    return(rec_to_helper(x, lowest, highest))
+  }
+}
+
+
+rec_to_helper <- function(var, lowest, highest) {
   # retrieve value labels
   val_lab <- get_val_labels(var)
   # retrieve variable label
@@ -404,8 +421,8 @@ recode_to <- function(var, lowest=0, highest=-1) {
   # set NA to all values out of range
   if (highest > lowest) var[var > highest] <- NA
   # set back labels, if we have any
-  if (!is.null(val_lab)) dummy <- suppressWarnings(set_val_labels(dummy, val_lab))
-  if (!is.null(var_lab)) dummy <- suppressWarnings(set_var_labels(dummy, var_lab))
+  if (!is.null(val_lab)) var <- suppressWarnings(set_val_labels(var, val_lab))
+  if (!is.null(var_lab)) var <- suppressWarnings(set_var_labels(var, var_lab))
   # return recoded var
   return(var)
 }
@@ -421,10 +438,11 @@ recode_to <- function(var, lowest=0, highest=-1) {
 #'            for re-shifting value ranges.
 #'
 #' @param x a numeric variable (vector) or a \code{\link{factor}} with numeric
-#'          levels that should be recoded.
+#'          levels that should be recoded; or a data frame with such vectors.
 #' @param recodes a string with recode pairs of old and new values. See details for
 #'          examples.
-#' @return A numeric variable with recoded category values.
+#' @return A numeric variable with recoded category values, or a data frame
+#'           with recoded categories for all variables.
 #'
 #' @details  The \code{recodes} string has following syntax:
 #'           \itemize{
@@ -436,8 +454,13 @@ recode_to <- function(var, lowest=0, highest=-1) {
 #'            \item \code{\link{NA}} values are allowed both as old and new value, e.g. \code{"NA=1; 3:5=NA"} (recodes all NA from old value into 1, and all old values from 3 to 5 into NA in the new variable)
 #'            \item \code{"rev"} is a special token that reverses the value order (see examples)
 #'           }
-#'           Variable label attributes (see, for instance, \code{\link{get_var_labels}})
-#'           are retained, however, value label attributes are removed.
+#'
+#' @note Please note following behaviours of the function:
+#'       \itemize{
+#'         \item Non-matching values will be set to \code{\link{NA}}.
+#'         \item Variable label attributes (see, for instance, \code{\link{get_var_labels}}) are retained, however, value label attributes are removed.
+#'         \item If \code{x} is a data frame, all variables of the data frame should have the same categories resp. value range (else, see first bullet, \code{NA}s are produced).
+#'       }
 #'
 #' @examples
 #' data(efc)
@@ -458,8 +481,22 @@ recode_to <- function(var, lowest=0, highest=-1) {
 #' # reverse value order
 #' table(rec(efc$e42dep, "rev"), exclude = NULL)
 #'
+#' # recode variables with same categorie in a data frame
+#' head(efc[, 6:9])
+#' head(rec(efc[, 6:9], "1=10;2=20;3=30;4=40"))
+#'
 #' @export
 rec <- function(x, recodes) {
+  if (is.matrix(x) || is.data.frame(x)) {
+    for (i in 1:ncol(x)) x[[i]] <- rec_helper(x[[i]], recodes)
+    return(x)
+  } else {
+    return(rec_helper(x, recodes))
+  }
+}
+
+
+rec_helper <- function(x, recodes) {
   # retrieve variable label
   var_lab <- get_var_labels(x)
   val_lab <- NULL
@@ -609,7 +646,7 @@ rec <- function(x, recodes) {
   # set back variable and value labels
   new_var <- set_var_labels(new_var, var_lab)
   new_var <- set_val_labels(new_var, val_lab)
-  return (new_var)
+  return(new_var)
 }
 
 
@@ -659,9 +696,9 @@ rec <- function(x, recodes) {
 set_na <- function(x, values) {
   if (is.matrix(x) || is.data.frame(x)) {
     for (i in 1:ncol(x)) x[[i]] <- set_na_helper(x[[i]], values)
-    return (x)
+    return(x)
   } else {
-    return (set_na_helper(x, values))
+    return(set_na_helper(x, values))
   }
 }
 
@@ -690,17 +727,33 @@ set_na_helper <- function(var, values) {
     # and set them to NA
     var[var == values[i]] <- NA
     # check if value labels exist, and if yes, remove them
-    labelpos <- which(as.numeric(vl) == values[i])
+    labelpos <- suppressWarnings(which(as.numeric(vl) == values[i]))
     # remove NA label
     if (length(labelpos > 0)) {
       vl <- vl[-labelpos]
       ln <- ln[-labelpos]
+    } else {
+      # if vl were not numeric convertable, try character conversion
+      # check if value labels exist, and if yes, remove them
+      labelpos <- suppressWarnings(which(as.character(vl) == values[i]))
+      # remove NA label
+      if (length(labelpos > 0)) {
+        vl <- vl[-labelpos]
+        ln <- ln[-labelpos]
+      }
     }
   }
   # set back updated label attribute
   if (!is.null(attr.string)) {
-    attr(var, attr.string) <- vl
-    names(attr(var, attr.string)) <- ln
+    # do we have any labels left?
+    if (length(vl) > 0) {
+      # if yes, set back label attribute
+      attr(var, attr.string) <- vl
+      names(attr(var, attr.string)) <- ln
+    } else {
+      # else remove attribute
+      attr(var, attr.string) <- NULL
+    }
   }
   return(var)
 }
@@ -716,7 +769,7 @@ set_na_helper <- function(var, values) {
 #'                This function sums up all \code{weights} values of the associated
 #'                categories of \code{var}, whereas the \code{\link{weight}} function
 #'                uses a \code{\link{xtabs}} formula to weight cases. Thus, this function
-#'                may return a value with a different length than that from \code{var}.
+#'                may return a vector of different length than \code{var}.
 #'
 #' @seealso \code{\link{weight}}
 #'
@@ -727,17 +780,13 @@ set_na_helper <- function(var, values) {
 #'
 #' @return The weighted \code{var}.
 #'
-#' @note The values of the returned vector are in sorted order, whereas the categories
-#'        of the original \code{var} may be spread randomly. Hence, \code{var} can't be
-#'        used, for instance, for further cross tabulation. In case you want to have
-#'        weighted contingency tables or (grouped) box plots etc., use the \code{weightBy}
-#'        parameter of most functions.
+#' @note See 'Note' in \code{\link{weight}}
 #'
 #' @examples
 #' v <- sample(1:4, 20, TRUE)
 #' table(v)
 #' w <- abs(rnorm(20))
-#' table(weight2(v,w))
+#' table(weight2(v, w))
 #'
 #' @export
 weight2 <- function(var, weights) {
@@ -747,7 +796,7 @@ weight2 <- function(var, weights) {
     newcount = round(sum(weights[which(var == items[i])]))
     newvar <- c(newvar, rep(items[i], newcount))
   }
-  return (newvar)
+  return(newvar)
 }
 
 
@@ -765,8 +814,8 @@ weight2 <- function(var, weights) {
 #'
 #' @return The weighted \code{var}.
 #'
-#' @note The values of the returned vector are in sorted order, whereas the categories
-#'        of the original \code{var} may be spread randomly. Hence, \code{var} can't be
+#' @note The values of the returned vector are in sorted order, whereas the values'
+#'        order of the original \code{var} may be spread randomly. Hence, \code{var} can't be
 #'        used, for instance, for further cross tabulation. In case you want to have
 #'        weighted contingency tables or (grouped) box plots etc., use the \code{weightBy}
 #'        parameter of most functions.
@@ -775,7 +824,7 @@ weight2 <- function(var, weights) {
 #' v <- sample(1:4, 20, TRUE)
 #' table(v)
 #' w <- abs(rnorm(20))
-#' table(weight(v,w))
+#' table(weight(v, w))
 #'
 #' @export
 weight <- function(var, weights) {
@@ -803,14 +852,16 @@ weight <- function(var, weights) {
 #'
 #' @seealso \code{\link{str_pos}}
 #'
-#' @description This function groups elements of a string vector (character or string variable) according
-#'                to the element's distance. The more similar two string elements are, the higher is the
+#' @description This function groups elements of a string vector (character or string
+#'                variable) according to the element's distance ('similatiry'). The
+#'                more similar two string elements are, the higher is the
 #'                chance to be combined into a group.
 #'
 #' @param strings a character vector with string elements
 #' @param maxdist the maximum distance between two string elements, which is allowed to treat two
 #'          elements as similar or equal.
-#' @param method Method for distance calculation. The default is \code{"lv"}. See \code{stringdist} package for details.
+#' @param method Method for distance calculation. The default is \code{"lv"}. See
+#'          \code{\link[stringdist]{stringdist}} package for details.
 #' @param strict if \code{TRUE}, value matching is more strictly. See examples for details.
 #' @param trim.whitespace if \code{TRUE} (default), leading and trailing white spaces will
 #'          be removed from string values.
@@ -823,12 +874,18 @@ weight <- function(var, weights) {
 #'
 #' @examples
 #' \dontrun{
-#' oldstring <- c("Hello", "Helo", "Hole", "Apple", "Ape", "New", "Old", "System", "Systemic")
+#' library(sjPlot)
+#' oldstring <- c("Hello", "Helo", "Hole", "Apple",
+#'                "Ape", "New", "Old", "System", "Systemic")
 #' newstring <- group_str(oldstring)
-#' sjt.frq(data.frame(oldstring, newstring), removeStringVectors = FALSE, autoGroupStrings = FALSE)
+#' sjt.frq(data.frame(oldstring, newstring),
+#'         removeStringVectors = FALSE,
+#'         autoGroupStrings = FALSE)
 #'
 #' newstring <- group_str(oldstring, strict = TRUE)
-#' sjt.frq(data.frame(oldstring, newstring), removeStringVectors = FALSE, autoGroupStrings = FALSE)}
+#' sjt.frq(data.frame(oldstring, newstring),
+#'         removeStringVectors = FALSE,
+#'         autoGroupStrings = FALSE)}
 #'
 #' @export
 group_str <- function(strings, maxdist = 2, method = "lv", strict = FALSE, trim.whitespace = TRUE, remove.empty = TRUE, showProgressBar = FALSE) {
@@ -843,10 +900,6 @@ group_str <- function(strings, maxdist = 2, method = "lv", strict = FALSE, trim.
   # -------------------------------------
   if (!is.character(strings)) strings <- as.character(strings)
   # -------------------------------------
-  # helper function to trim white spaces
-  # -------------------------------------
-  trim <- function (x) gsub("^\\s+|\\s+$", "", x)
-  # -------------------------------------
   # trim white spaces
   # -------------------------------------
   if (trim.whitespace) {
@@ -860,7 +913,7 @@ group_str <- function(strings, maxdist = 2, method = "lv", strict = FALSE, trim.
     for (i in 1:length(strings)) {
       if (0 == nchar(strings[i])) removers <- c(removers, i)
     }
-    if (length(removers)>0) strings <- strings[-removers]
+    if (length(removers) > 0) strings <- strings[-removers]
   }
   # -------------------------------------
   # create matrix from string values of variable
@@ -884,7 +937,7 @@ group_str <- function(strings, maxdist = 2, method = "lv", strict = FALSE, trim.
         if (any(pel == curel)) elfound <- TRUE
       }
     }
-    return (elfound)
+    return(elfound)
   }
   # -------------------------------------
   # create progress bar
@@ -992,8 +1045,24 @@ group_str <- function(strings, maxdist = 2, method = "lv", strict = FALSE, trim.
   # e.g. the three values "hello", "holle" and "hole"
   # will be "recoded" into on value "hello, holle, hole"
   # -------------------------------------
-  return (strings.new)
+  return(strings.new)
 }
+
+
+#' @title Trim leading and trailing whitespaces from strings
+#' @name trim
+#'
+#' @param x a character vector or string
+#'
+#' @return Trimmed \code{x}, i.e. with leading and trailing spaces removed.
+#'
+#' @examples
+#' trim("white space at end ")
+#' trim(" white space at start and end ")
+#'
+#' @export
+trim <- function(x) gsub("^\\s+|\\s+$", "", x)
+
 
 
 #' @title Find partial matching and close distance elements in strings
@@ -1015,7 +1084,7 @@ group_str <- function(strings, maxdist = 2, method = "lv", strict = FALSE, trim.
 #'            \item 1 for one-step matching, which means, only substrings of same length as \code{findTerm} are extracted from \code{searchString} matching
 #'            \item 2 for two-step matching, which means, substrings of same length as \code{findTerm} as well as strings with a slightly wider range are extracted from \code{searchString} matching
 #'          }
-#'          Default value is 0.
+#'          Default value is 0. See 'Details' for more information.
 #' @param showProgressBar If \code{TRUE}, the progress bar is displayed when computing the distance matrix.
 #'          Default in \code{FALSE}, hence the bar is hidden.
 #'
@@ -1023,11 +1092,19 @@ group_str <- function(strings, maxdist = 2, method = "lv", strict = FALSE, trim.
 #'           partially match or are similar to \code{findTerm}. Returns \code{-1} if no
 #'           match was found.
 #'
-#' @note this function does \emph{not} return the position of a matching string \emph{inside}
+#' @note This function does \emph{not} return the position of a matching string \emph{inside}
 #'         another string, but the element's index of the \code{searchString} vector, where
 #'         a (partial) match with \code{findTerm} was found. Thus, searching for "abc" in
 #'         a string "this is abc" will not return 9 (the start position of the substring),
 #'         but 1 (the element index, which is always 1 if \code{searchString} only has one element).
+#'
+#' @details For \code{part.dist.match = 1}, a substring of \code{length(findTerm)} is extracted
+#'            from \code{searchString}, starting at position 0 in \code{searchString} until
+#'            the end of \code{searchString} is reached. Each substring is matched against
+#'            \code{findTerm}, and results with a maximum distance of \code{maxdist}
+#'            are considered as "matching". If \code{part.dist.match = 2}, the range
+#'            of the extracted substring is increased by 2, i.e. the extracted substring
+#'            is two chars longer.
 #'
 #' @examples
 #' \dontrun{
@@ -1049,7 +1126,11 @@ group_str <- function(strings, maxdist = 2, method = "lv", strict = FALSE, trim.
 #' str_pos("We are Sex Pistols!", "postils", part.dist.match = 1)}
 #'
 #' @export
-str_pos <- function(searchString, findTerm, maxdist = 2, part.dist.match = 0, showProgressBar = FALSE) {
+str_pos <- function(searchString,
+                    findTerm,
+                    maxdist = 2,
+                    part.dist.match = 0,
+                    showProgressBar = FALSE) {
   # -------------------------------------
   # init return value
   # -------------------------------------
@@ -1064,7 +1145,7 @@ str_pos <- function(searchString, findTerm, maxdist = 2, part.dist.match = 0, sh
   # -------------------------------------
   if (!requireNamespace("stringdist", quietly = TRUE)) {
     warning("Package 'stringdist' needed for this function to fully work. Please install it. Only partial matching indices are returned.", call. = F)
-    return (indices)
+    return(indices)
   }
   # -------------------------------------
   # find element indices from similar strings
@@ -1079,7 +1160,7 @@ str_pos <- function(searchString, findTerm, maxdist = 2, part.dist.match = 0, sh
     # -------------------------------------
     # helper function to trim white spaces
     # -------------------------------------
-    trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+    trim <- function(x) gsub("^\\s+|\\s+$", "", x)
     ftlength <- nchar(findTerm)
     # -------------------------------------
     # create progress bar
@@ -1155,11 +1236,27 @@ str_pos <- function(searchString, findTerm, maxdist = 2, part.dist.match = 0, sh
 #'                values of a row are valid (and not \code{\link{NA}}).
 #'
 #' @param dat a \code{\link{data.frame}} with at least two columns, where row means are applied.
-#' @param n the amount of valid values per row to calculate the row mean. If a row's amount of valid
-#'          values is less than \code{n}, \code{\link{NA}} will be returned as row mean value.
+#' @param n May either be
+#'          \itemize{
+#'            \item a numeric value that indicates the amount of valid values per row to calculate the row mean;
+#'            \item or a value between 0 and 1, indicating a proportion of valid values per row to calculate the row mean (see details).
+#'          }
+#'          If a row's amount of valid values is less than \code{n}, \code{\link{NA}} will be returned as row mean value.
+#' @param digits numeric value indicating the number of decimal places to be used for rounding mean
+#'          value. Negative values are allowed (see ‘Details’).
 #'
 #' @return A vector with row mean values of \code{df} for those rows with at least \code{n}
 #'           valid values. Else, \code{\link{NA}} is returned.
+#'
+#' @details Rounding to a negative number of \code{digits} means rounding to a power of
+#'            ten, so for example mean_n(df, 3, digits = -2) rounds to the
+#'            nearest hundred. \cr \cr
+#'          For \code{n}, must be a numeric value from \code{0} to \code{ncol(dat)}. If
+#'            a \emph{row} in \code{dat} has at least \code{n} non-missing values, the
+#'            row mean is returned. If \code{n} is a non-integer value from 0 to 1,
+#'            \code{n} is considered to indicate the proportion of necessary non-missing
+#'            values per row. E.g., if \code{n = .75}, a row must have at least \code{ncol(dat) * n}
+#'            non-missing values for the row mean to be calculated. See examples.
 #'
 #' @references \itemize{
 #'              \item \href{http://candrea.ch/blog/compute-spss-like-mean-index-variables/}{candrea's blog}
@@ -1171,13 +1268,32 @@ str_pos <- function(searchString, findTerm, maxdist = 2, part.dist.match = 0, sh
 #'                   c2 = c(NA,2,NA,5),
 #'                   c3 = c(NA,4,NA,NA),
 #'                   c4 = c(2,3,7,8))
+#'
+#' # needs at least 4 non-missing values per row
 #' mean_n(dat, 4) # 1 valid return value
+#'
+#' # needs at least 3 non-missing values per row
 #' mean_n(dat, 3) # 2 valid return values
+#'
+#' # needs at least 2 non-missing values per row
 #' mean_n(dat, 2)
+#'
+#' # needs at least 1 non-missing value per row
 #' mean_n(dat, 1) # all means are shown
 #'
+#' # needs at least 50% of non-missing values per row
+#' mean_n(dat, .5) # 3 valid return values
+#'
+#' # needs at least 75% of non-missing values per row
+#' mean_n(dat, .75) # 2 valid return values
+#'
 #' @export
-mean_n <- function(dat, n) {
+mean_n <- function(dat, n, digits = 2) {
+  # ---------------------------------------
+  # is 'n' indicating a proportion?
+  # ---------------------------------------
+  digs <- n%%1
+  if (digs != 0) n <- round(ncol(dat) * digs)
   # ---------------------------------------
   # coerce matrix to data frame
   # ---------------------------------------
@@ -1196,5 +1312,5 @@ mean_n <- function(dat, n) {
     warning("'n' must be smaller or equal to data.frame's amount of columns.", call. = F)
     return (NA)
   }
-  apply(dat, 1, function(x) ifelse(sum(!is.na(x)) >= n, mean(x, na.rm = TRUE), NA))
+  round(apply(dat, 1, function(x) ifelse(sum(!is.na(x)) >= n, mean(x, na.rm = TRUE), NA)), digits)
 }

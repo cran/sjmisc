@@ -12,8 +12,9 @@
 #' @param path The file path to the SPSS dataset.
 #' @param enc The file encoding of the SPSS dataset. \emph{Not needed if \code{option = "haven"} (default).}
 #' @param autoAttachVarLabels if \code{TRUE}, variable labels will automatically be
-#'          attached to each variable as \code{"variable.label"} attribute.
-#'          See \code{\link{set_var_labels}} for details.
+#'          attached to each variable as \code{"variable.label"} attribute. Use this
+#'          parameter, if \code{option = "foreign"}, where variable labels are attached
+#'          as list-attribute to the imported data frame.
 #'          \emph{Not needed if \code{option = "haven"} (default).}
 #' @param atomic.to.fac Logical, if \code{TRUE}, factor variables imported from
 #'          SPSS (which are imported as \code{\link{atomic}}) will be converted
@@ -21,20 +22,28 @@
 #' @param option string, indicating which package will be used to read the SPSS data file.
 #'          By default, \code{option = "haven"}, which means, the \code{read_spss} function
 #'          from the \code{haven} package is used. Use \code{option = "foreign"} to
-#'          use foreign's \code{read.spss} function. Use \code{options(read_spss = "foreign")}
+#'          use foreign's \code{\link[foreign]{read.spss}} function. Use \code{options(read_spss = "foreign")}
 #'          to make this function always use the foreign-package \code{\link[foreign]{read.spss}} function.
 #' @return A data frame containing the SPSS data. Retrieve value labels with \code{\link{get_val_labels}}
 #'   and variable labels with \code{\link{get_var_labels}}.
 #'
-#' @note This is a wrapper function for \code{\link{read_spss}} of the
-#'         \code{haven} package. This function adds value and variable
-#'         labels to the imported variables of the data frame. \cr \cr
-#'        With attached value and variable labels, most functions of this package
-#'        automatically detect labels and uses them as axis, legend or title labels
-#'        in plots (\code{sjp.}-functions) respectively as column or row headers
-#'        in table outputs (\code{sjt.}-functions). Use \code{options(autoSetValueLabels = FALSE)}
-#'        and \code{options(autoSetVariableLabels = FALSE)} to turn off automatic
-#'        label detection.
+#' @note This is a wrapper function for \code{\link[haven]{read_spss}} of the
+#'         \code{haven} package and \code{\link[foreign]{read.spss}} of the
+#'         \code{foreign} package. This function adds value and variable
+#'         labels as attributes to the imported variables of the data frame.
+#'         \cr \cr
+#'         With attached value and variable labels, most functions of the
+#'         \code{sjPlot} package automatically detect labels and uses them as axis,
+#'         legend or title labels in plots (\code{sjp.}-functions) respectively
+#'         as column or row headers in table outputs (\code{sjt.}-functions). See
+#'         \href{http://www.strengejacke.de/sjPlot/datainit/}{online manual}
+#'         for more details.
+#'         \cr \cr
+#'         When working with other packages, you can, e.g., use
+#'         \code{\link{get_var_labels}} or \code{\link{get_val_labels}}
+#'         to get a vector of value and variable labels, which can then be
+#'         used with other functions like \code{\link{barplot}} etc.
+#'         See 'Examples' from \code{\link{get_val_labels}}.
 #'
 #' @examples
 #' \dontrun{
@@ -158,7 +167,7 @@ atomic_to_fac <- function(data.spss, attr.string) {
     }
     close(pb)
   }
-  return (data.spss)
+  return(data.spss)
 }
 
 
@@ -336,9 +345,9 @@ write_data <- function(x, path, type = "spss") {
 # of class "labelled" (haven package)
 is_labelled <- function(x) {
   # check if object has multiple class attributes
-  if (length(class(x)) > 1) return (any(class(x) == "labelled"))
+  if (length(class(x)) > 1) return(any(class(x) == "labelled"))
   # return if labelled
-  return (class(x) == "labelled")
+  return(class(x) == "labelled")
 }
 
 
@@ -350,19 +359,24 @@ is_labelled <- function(x) {
 #'                a single vector of type \code{labelled} into an sjPlot friendly data
 #'                frame format, which means that simply all \code{\link[haven]{labelled}} class
 #'                attributes will be removed, so all vectors / variables will most
-#'                likely become \code{\link{atomic}}.
+#'                likely become \code{\link{atomic}}. Additionally, \code{tbl_df} and
+#'                \code{tbl} class attributes will be removed from data frames. See 'Note'.
 #'
 #' @seealso \href{http://www.strengejacke.de/sjPlot/datainit/}{sjPlot manual: data initialization}
 #'
 #' @param x a data frame, which contains \code{\link[haven]{labelled}} class vectors or a single vector
 #'          of class \code{labelled}.
 #' @return a data frame or single vector (depending on \code{x}) with 'sjPlot' friendly
-#'           vector classes.
+#'           object classes.
 #'
 #' @note This function is currently only used to avoid possible compatibility issues
-#'         with \code{\link[haven]{labelled}} class vectors. Some known issues with \code{\link[haven]{labelled}}
+#'         with \code{\link[haven]{labelled}} class vectors and \code{tbl_df} resp.
+#'         \code{tbl} class attributes for data frames. Some known issues with \code{\link[haven]{labelled}}
 #'         class vectors have already been fixed, so it might be that this function
-#'         will become redundant in the future.
+#'         will become redundant in the future. Currently, data frames with \code{tbl_df} and
+#'         \code{tbl} class attributes may cause difficulties when indexing columns
+#'         like \code{data.frame[, colnr]} - only \code{data.frame[[colnr]]} seems
+#'         to be safe when accessing data frame columns from within function calls.
 #'
 #' @export
 to_sjPlot <- function(x) {
@@ -378,7 +392,7 @@ to_sjPlot <- function(x) {
                          max = ncol(x),
                          style = 3)
     # tell user...
-    message("Cconverting from haven to sjPlot. Please wait...\n")
+    message("Converting from haven to sjPlot. Please wait...\n")
     for (i in 1:ncol(x)) {
       # remove labelled class
       if (is_labelled(x[[i]])) x[[i]] <- unclass(x[[i]])
@@ -392,15 +406,16 @@ to_sjPlot <- function(x) {
     # remove labelled class
     if (is_labelled(x)) x <- unclass(x)
   }
-  return (x)
+  return(x)
 }
 
 
-#' @title Retrieve value labels of a variable or an SPSS-imported data frame
+#' @title Retrieve value labels of a variable or an imported data frame
 #' @name get_val_labels
 #'
 #' @description This function retrieves the value labels of an imported
-#'                SPSS data set (via \code{\link{read_spss}}) and
+#'                SPSS, SAS or STATA data set (via \code{\link{read_spss}},
+#'                \code{\link{read_sas}} or \code{\link{read_stata}}) and
 #'                \itemize{
 #'                  \item if \code{x} is a data frame, returns the all variable's value labels as \code{\link{list}} object
 #'                  \item or, if \code{x} is a vector, returns the label as string.
@@ -413,7 +428,8 @@ to_sjPlot <- function(x) {
 #'            }
 #'
 #' @param x a data frame with variables that have attached value labels (e.g.
-#'          from an imported SPSS data (see \code{\link{read_spss}})) or a variable
+#'          from an imported SPSS, SAS or STATA data set, via \code{\link{read_spss}},
+#'          \code{\link{read_sas}} or \code{\link{read_stata}}) or a variable
 #'          (vector) with attached value labels.
 #' @return Either a list with all value labels from the data frame's variables,
 #'           a string with the value labels, if \code{x} is a variable,
@@ -422,24 +438,40 @@ to_sjPlot <- function(x) {
 #' @details This package can add (and read) value and variable labels either in \code{foreign}
 #'            package style (\emph{value.labels} and \emph{variable.label}) or in
 #'            \code{haven} package style (\emph{labels} and \emph{label}). By default,
-#'            the \code{haven} package style is used. The \code{sjPlot} package accesses
+#'            the \code{haven} package style is used.
+#'            \cr \cr
+#'            The \code{sjPlot} package accesses
 #'            these attributes to automatically read label attributes for labelling
-#'            axes categories and titles or table rows and columns. \cr Furthermore,
-#'            value and variable labels are used when saving data, e.g. to SPSS
+#'            axes categories and titles or table rows and columns.
+#'            \cr \cr
+#'            When working with other packages, you can, e.g., use
+#'            \code{\link{get_var_labels}} or \code{\link{get_val_labels}}
+#'            to get a vector of value and variable labels, which can then be
+#'            used with other functions like \code{\link{barplot}} etc.
+#'            See 'Examples' from \code{\link{get_val_labels}}.
+#'            \cr \cr
+#'            Furthermore, value and variable labels are used when saving data, e.g. to SPSS
 #'            (see \code{\link{write_spss}}), which means that the written SPSS file
-#'            contains proper labels for each variable. \cr
-#'            You can set a default label style via \code{options(value_labels = "haven")}
+#'            contains proper labels for each variable.
+#'            \cr \cr
+#'            You can set a default label style (i.e. the names of the label
+#'            attributes, see above) via \code{options(value_labels = "haven")}
 #'            or \code{options(value_labels = "foreign")}.
 #'
 #' @note This function only works with vectors that have value and variable
-#'        labels attached. This is automatically done by importing SPSS data sets
-#'        with the \code{\link{read_spss}} function and can manually be applied
-#'        with the \code{\link{set_val_labels}} and \code{\link{set_var_labels}}
-#'        functions. \cr \cr
-#'        With attached value and variable labels, most functions of this package
+#'        labels attached. This is automatically done by importing data sets
+#'        with the \code{\link{read_spss}}, \code{\link{read_sas}} or \code{\link{read_stata}}
+#'        function or labels can manually be added using the \code{\link{set_val_labels}}
+#'        and \code{\link{set_var_labels}} functions.
+#'        \cr \cr
+#'        With attached value and variable labels, most functions of the \code{sjPlot} package
 #'        automatically detect labels and uses them as axis, legend or title labels
 #'        in plots (\code{sjp.}-functions) respectively as column or row headers
-#'        in table outputs (\code{sjt.}-functions). Use \code{options(autoSetValueLabels = FALSE)}
+#'        in table outputs (\code{sjt.}-functions).  See
+#'        \href{http://www.strengejacke.de/sjPlot/datainit/}{online manual}
+#'        for more details.
+#'        \cr \cr
+#'        Use \code{options(autoSetValueLabels = FALSE)}
 #'        and \code{options(autoSetVariableLabels = FALSE)} to turn off automatic
 #'        label detection.
 #'
@@ -456,6 +488,13 @@ to_sjPlot <- function(x) {
 #' data(efc)
 #' get_val_labels(efc$e42dep)
 #'
+#' # simple barplot
+#' barplot(table(efc$e42dep))
+#' # get value labels to annotate barplot
+#' barplot(table(efc$e42dep),
+#'         names.arg = get_val_labels(efc$e42dep),
+#'         main = get_var_labels(efc$e42dep))
+#'
 #' @export
 get_val_labels <- function(x) {
   if (is.data.frame(x) || is.matrix(x)) {
@@ -463,7 +502,7 @@ get_val_labels <- function(x) {
   } else {
     a <- sji.getValueLabel(x)
   }
-  return (a)
+  return(a)
 }
 
 
@@ -472,7 +511,7 @@ sji.getValueLabel <- function(x) {
   # haven or sjPlot?
   attr.string <- getValLabelAttribute(x)
   # nothing found? then leave...
-  if (is.null(attr.string)) return (NULL)
+  if (is.null(attr.string)) return(NULL)
   # retrieve named labels
   lab <- attr(x, attr.string)
   # check if we have anything
@@ -483,7 +522,7 @@ sji.getValueLabel <- function(x) {
     labels <- names(lab)[reihenfolge]
   }
   # return them
-  return (labels)
+  return(labels)
 }
 
 
@@ -491,11 +530,11 @@ sji.getValueLabelValues <- function(x) {
   # haven or sjPlot?
   attr.string <- getValLabelAttribute(x)
   # nothing found? then leave...
-  if (is.null(attr.string)) return (NULL)
+  if (is.null(attr.string)) return(NULL)
   # sort values
   val.sort <- sort(as.numeric(unname(attr(x, attr.string))))
   # return sorted
-  return (val.sort)
+  return(val.sort)
 }
 
 
@@ -505,7 +544,7 @@ sji.getValueLabelValues <- function(x) {
 #' @description This function attaches character labels as \code{"value.labels"} attribute
 #'                to a variable or vector \code{"x"}, resp. to all variables of a data frame
 #'                if \code{"x"} is a \code{\link{data.frame}}. These value labels will be accessed
-#'                by most of this package's functions, in order to automatically set values
+#'                by functions of the \emph{sjPlot} package, in order to automatically set values
 #'                or legend labels.
 #'
 #' @seealso \itemize{
@@ -523,26 +562,13 @@ sji.getValueLabelValues <- function(x) {
 #'          character vectors. If \code{labels} is a list, it must have the same length as
 #'          number of columns of \code{x}. If \code{labels} is a vector and \code{x} is a data frame,
 #'          the \code{labels} will be applied to each column of \code{x}.
-#' @return \code{x} with attached value labels.
+#'          Use \code{labels = ""} to remove labels-attribute from \code{x}.
+#' @return \code{x} with attached value labels; or with removed label-attribute if
+#'            \code{labels = ""}.
 #'
-#' @details This package can add (and read) value and variable labels either in \code{foreign}
-#'            package style (\emph{value.labels} and \emph{variable.label}) or in
-#'            \code{haven} package style (\emph{labels} and \emph{label}). By default,
-#'            the \code{haven} package style is used. The \code{sjPlot} package accesses
-#'            these attributes to automatically read label attributes for labelling
-#'            axes categories and titles or table rows and columns. \cr Furthermore,
-#'            value and variable labels are used when saving data, e.g. to SPSS
-#'            (see \code{\link{write_spss}}), which means that the written SPSS file
-#'            contains proper labels for each variable. \cr
-#'            You can set a default label style via \code{options(value_labels = "haven")}
-#'            or \code{options(value_labels = "foreign")}.
+#' @details See 'Details' in \code{\link{get_val_labels}}
 #'
-#' @note With attached value and variable labels, most functions of this package
-#'       automatically detect labels and uses them as axis, legend or title labels
-#'       in plots (\code{sjp.}-functions) respectively as column or row headers
-#'       in table outputs (\code{sjt.}-functions). Use \code{options(autoSetValueLabels = FALSE)}
-#'       and \code{options(autoSetVariableLabels = FALSE)} to turn off automatic
-#'       label detection.
+#' @note See 'Note' in \code{\link{get_val_labels}}
 #'
 #' @examples
 #' \dontrun{
@@ -555,15 +581,15 @@ sji.getValueLabelValues <- function(x) {
 #'
 #' @export
 set_val_labels <- function(x, labels) {
-  return (sji.setValueLabelNameParam(x, labels))
+  return(sji.setValueLabelNameParam(x, labels))
 }
 
 
 sji.setValueLabelNameParam <- function(x, labels) {
   # any valid labels? if not, return vector
-  if (is.null(labels)) return (x)
+  if (is.null(labels)) return(x)
   if (is.vector(x) || is.atomic(x)) {
-    return (sji.setValueLabel.vector(x, labels))
+    return(sji.setValueLabel.vector(x, labels))
   } else if (is.data.frame(x) || is.matrix(x)) {
     for (i in 1:ncol(x)) {
       if (is.list(labels)) {
@@ -574,7 +600,7 @@ sji.setValueLabelNameParam <- function(x, labels) {
         warning("'labels' must be a list of same length as 'ncol(x)' or a vector.", call. = F)
       }
     }
-    return (x)
+    return(x)
   }
 }
 
@@ -586,8 +612,12 @@ sji.setValueLabel.vector <- function(var, labels, var.name = NULL) {
   if (is.null(attr.string)) attr.string <- "labels"
   # check for null
   if (!is.null(labels)) {
+    # if labels is empty string, remove labels
+    # attribute
+    if (length(labels) == 1 && nchar(labels) == 0) {
+      attr(var, attr.string) <- NULL
+    } else if (is.null(var) || is.character(var)) {
     # string varibles can't get value labels
-    if (is.null(var) || is.character(var)) {
       warning("Can't attach value labels to string or NULL vectors.", call. = F)
     } else {
       # check if var is a factor
@@ -653,17 +683,17 @@ sji.setValueLabel.vector <- function(var, labels, var.name = NULL) {
       }
     }
   }
-  return (var)
+  return(var)
 }
 
 
 #' @title Check whether a factor has numeric levels only
 #' @name is_num_fac
-#' @description This function checks whether a factors has only numeric or
+#' @description This function checks whether a factor has only numeric or
 #'                any non-numeric factor levels.
 #'
 #' @param x a \code{\link{factor}}.
-#' @return Logical, \code{TRUE} if factors has numeric factor levels only,
+#' @return Logical, \code{TRUE} if factor has numeric factor levels only,
 #'           \code{FALSE} otherwise.
 #'
 #' @examples
@@ -682,17 +712,18 @@ sji.setValueLabel.vector <- function(var, labels, var.name = NULL) {
 #' @export
 is_num_fac <- function(x) {
   # check if we have numeric levels
-  return (!anyNA(suppressWarnings(as.numeric(levels(x)))))
+  return(!anyNA(suppressWarnings(as.numeric(levels(x)))))
 }
 
 
-#' @title Retrieve variable labels of (an SPSS-imported) data frame or of a specific variable
+#' @title Retrieve variable labels of a data frame or a variable
 #' @name get_var_labels
 #'
-#' @description This function retrieves the variable labels of an imported
-#'                SPSS data set (via \code{\link{read_spss}}) and
+#' @description This function retrieves the value labels of an imported
+#'                SPSS, SAS or STATA data set (via \code{\link{read_spss}},
+#'                \code{\link{read_sas}} or \code{\link{read_stata}}) and
 #'                \itemize{
-#'                  \item if \code{x} is a data frame, returns the all variable labels as \code{\link{list}} object
+#'                  \item if \code{x} is a data frame, returns the all variable labels as names character vector of length \code{ncol(x)}.
 #'                  \item or, if \code{x} is a vector, returns the variable label as string.
 #'                  }
 #'
@@ -702,35 +733,14 @@ is_num_fac <- function(x) {
 #'            \item \code{\link{set_var_labels}}
 #'            }
 #'
-#' @param x A data frame (containing imported SPSS data or with attached variable labels) or
-#'          a vector with \code{"label"} or \code{"variable.label"} attribute.
+#' @param x A data frame or a vector with \code{"label"} or \code{"variable.label"} attribute.
 #'
-#' @return A named char vector with all variable labels from the SPSS dataset,
-#'           or a simple string vector with the variable label, if \code{x} is a variable.
+#' @return A named char vector with all variable labels from the data frame,
+#'           or a simple char vector (of length 1) with the variable label, if \code{x} is a variable.
 #'
-#' @details This package can add (and read) value and variable labels either in \code{foreign}
-#'            package style (\emph{value.labels} and \emph{variable.label}) or in
-#'            \code{haven} package style (\emph{labels} and \emph{label}). By default,
-#'            the \code{haven} package style is used. The \code{sjPlot} package accesses
-#'            these attributes to automatically read label attributes for labelling
-#'            axes categories and titles or table rows and columns. \cr Furthermore,
-#'            value and variable labels are used when saving data, e.g. to SPSS
-#'            (see \code{\link{write_spss}}), which means that the written SPSS file
-#'            contains proper labels for each variable. \cr
-#'            You can set a default label style via \code{options(value_labels = "haven")}
-#'            or \code{options(value_labels = "foreign")}.
+#' @details See 'Details' in \code{\link{get_val_labels}}
 #'
-#' @note This function only works with vectors that have value and variable
-#'        labels attached. This is automatically done by importing SPSS data sets
-#'        with the \code{\link{read_spss}} function and can manually be applied
-#'        with the \code{\link{set_val_labels}} and \code{\link{set_var_labels}}
-#'        functions. \cr \cr
-#'        With attached value and variable labels, most functions of this package
-#'        automatically detect labels and uses them as axis, legend or title labels
-#'        in plots (\code{sjp.}-functions) respectively as column or row headers
-#'        in table outputs (\code{sjt.}-functions). Use \code{options(autoSetValueLabels = FALSE)}
-#'        and \code{options(autoSetVariableLabels = FALSE)} to turn off automatic
-#'        label detection.
+#' @note See 'Note' in \code{\link{get_val_labels}}
 #'
 #' @examples
 #' # import SPSS data set
@@ -743,16 +753,19 @@ is_num_fac <- function(x) {
 #' # mydat.val <- get_val_labels(mydat)
 #'
 #' data(efc)
-#' # sample data set has not attached variable labels to each vector
-#' # so we have to do this first... use 'autoAttachVarLabels' in
-#' # function 'read_spss' to automatically perform this step.
-#' efc <- set_var_labels(efc, get_var_labels(efc))
 #'
 #' # get variable lable
 #' get_var_labels(efc$e42dep)
 #'
 #' # alternative way
 #' get_var_labels(efc)["e42dep"]
+#'
+#' # simple barplot
+#' barplot(table(efc$e42dep))
+#' # get value labels to annotate barplot
+#' barplot(table(efc$e42dep),
+#'         names.arg = get_val_labels(efc$e42dep),
+#'         main = get_var_labels(efc$e42dep))
 #'
 #' @export
 get_var_labels <- function(x) {
@@ -775,18 +788,21 @@ get_var_labels <- function(x) {
         label <- attr(x[[i]], attr.string)
         # any label?
         if (!is.null(label)) {
+          # name label
+          names(label) <- colnames(x)[i]
+          # append to return result
           all.labels <- c(all.labels, label)
         } else {
           all.labels <- c(all.labels, "")
         }
       }
-      return (all.labels)
+      return(all.labels)
     } else {
       return(attr(x, "variable.labels"))
     }
   } else {
     # nothing found? then leave...
-    if (is.null(attr.string)) return (NULL)
+    if (is.null(attr.string)) return(NULL)
     # else return attribute
     return(attr(x, attr.string))
   }
@@ -798,7 +814,7 @@ get_var_labels <- function(x) {
 #' @description This function sets variable labels to a single variable or to
 #'                a set of variables in a data frame. To each variable, the
 #'                attribute \code{"label"} or \code{"variable.label"} with the related variable
-#'                name is attached. Most of this package's functions can automatically
+#'                name is attached. Most functions of the \emph{sjPlot} package can automatically
 #'                retrieve the variable name to use it as axis labels or plot title
 #'                (see details).
 #'
@@ -812,6 +828,9 @@ get_var_labels <- function(x) {
 #' @param lab If \code{x} is a vector (single variable), use a single character string with
 #'          the variable label for \code{x}. If \code{x} is a \code{\link{data.frame}}, use a
 #'          vector with character labels of same length as \code{ncol(x)}.
+#'          Use \code{lab = ""} to remove labels-attribute from \code{x}, resp.
+#'          set any value of vector \code{lab} to \code{""} to remove specific variable
+#'          label attributes from a data frame's variable.
 #' @param attr.string The attribute string for the variable label. To ensure
 #'          compatibility to the \code{foreign}-package, use the default string
 #'          \code{"variable.label"}. If you want to save data with the \code{haven}
@@ -819,37 +838,19 @@ get_var_labels <- function(x) {
 #'          \code{\link{write_spss}} to save SPSS files, so you don't need to take
 #'          care of this.
 #' @return \code{x}, with attached variable label attribute(s), which contains the
-#'           variable name(s).
+#'           variable name(s); or with removed label-attribute if
+#'            \code{lab = ""}.
 #'
-#' @details This package can add (and read) value and variable labels either in \code{foreign}
-#'            package style (\emph{value.labels} and \emph{variable.label}) or in
-#'            \code{haven} package style (\emph{labels} and \emph{label}). By default,
-#'            the \code{haven} package style is used. The \code{sjPlot} package accesses
-#'            these attributes to automatically read label attributes for labelling
-#'            axes categories and titles or table rows and columns. \cr Furthermore,
-#'            value and variable labels are used when saving data, e.g. to SPSS
-#'            (see \code{\link{write_spss}}), which means that the written SPSS file
-#'            contains proper labels for each variable. \cr
-#'            You can set a default label style via \code{options(value_labels = "haven")}
-#'            or \code{options(value_labels = "foreign")}.
+#' @details See 'Details' in \code{\link{get_val_labels}}
 #'
-#' @note With attached value and variable labels, most functions of this package
-#'       automatically detect labels and uses them as axis, legend or title labels
-#'       in plots (\code{sjp.}-functions) respectively as column or row headers
-#'       in table outputs (\code{sjt.}-functions). Use \code{options(autoSetValueLabels = FALSE)}
-#'       and \code{options(autoSetVariableLabels = FALSE)} to turn off automatic
-#'       label detection.
+#' @note See 'Note' in \code{\link{get_val_labels}}
 #'
 #' @examples
-#' # sample data set, imported from SPSS. Variable labels are attached
-#' # as attribute to the data frame (so variables currently don't have this attribute)
+#' # sample data set, imported from SPSS.
 #' data(efc)
-#' # get variable labels
-#' variable.labels <- get_var_labels(efc)
-#' # set variable labels as attribute to each single variable of data frame
-#' efc <- set_var_labels(efc, variable.labels)
 #'
 #' \dontrun{
+#' library(sjPlot)
 #' sjt.frq(efc$e42dep)
 #' sjt.frq(data.frame(efc$e42dep, efc$e16sex))}
 #'
@@ -862,7 +863,27 @@ get_var_labels <- function(x) {
 #' # auto-detection of value labels by default, auto-detection of
 #' # variable labels if parameter "title" set to NULL.
 #' \dontrun{
+#' library(sjPlot)
 #' sjp.frq(dummy, title = NULL)}
+#'
+#' # ---------------------------------------------
+#' # Set variable labels for data frame
+#' # ---------------------------------------------
+#' dummy <- data.frame(a = sample(1:4, 10, replace = TRUE),
+#'                     b = sample(1:4, 10, replace = TRUE),
+#'                     c = sample(1:4, 10, replace = TRUE))
+#' dummy <- set_var_labels(dummy,
+#'                         c("Variable A",
+#'                           "Variable B",
+#'                           "Variable C"))
+#' str(dummy)
+#'
+#' # remove one variable label
+#' dummy <- set_var_labels(dummy,
+#'                         c("Variable A",
+#'                           "",
+#'                           "Variable C"))
+#' str(dummy)
 #'
 #' @export
 set_var_labels <- function(x, lab, attr.string = NULL) {
@@ -887,20 +908,27 @@ set_var_labels <- function(x, lab, attr.string = NULL) {
                              max = ncol(x),
                              style = 3)
         for (i in 1:ncol(x)) {
-          # set variable label
-          attr(x[[i]], attr.string) <- lab[i]
-          # set names attribute. equals variable name
-          names(attr(x[[i]], attr.string)) <- colnames(x)[i]
+          if (nchar(lab[i]) == 0) {
+            attr(x[[i]], attr.string) <- NULL
+          } else {
+            # set variable label
+            attr(x[[i]], attr.string) <- lab[i]
+            # set names attribute. equals variable name
+            names(attr(x[[i]], attr.string)) <- colnames(x)[i]
+          }
           # update progress bar
           setTxtProgressBar(pb, i)
         }
         close(pb)
       }
     } else {
-      attr(x, attr.string) <- lab
+      if (nchar(lab) == 0)
+        attr(x, attr.string) <- NULL
+      else
+        attr(x, attr.string) <- lab
     }
   }
-  return (x)
+  return(x)
 }
 
 
@@ -917,12 +945,12 @@ set_var_labels <- function(x, lab, attr.string = NULL) {
 #'            retain labels) and \code{\link{to_value}} to convert a factor into
 #'            a numeric variable.
 #'
-#' @param x A variable of type \code{\link{numeric}}, \code{\link{atomic}}
+#' @param x A variable of type \code{\link{numeric}}, \code{\link{atomic}},
 #'          \code{\link{factor}} or \code{\link[haven]{labelled}} (see \code{haven} package)
 #'          \emph{with associated value labels} (see \code{\link{set_val_labels}}),
 #'          respectively a data frame with such variables.
 #' @return A factor variable with the associated value labels as factor levels, or a
-#'           data frame with such factor variables (if \code{x} was a data frame.
+#'           data frame with such factor variables (if \code{x} was a data frame).
 #'
 #' @note Value and variable label attributes (see, for instance, \code{\link{get_val_labels}}
 #'         or \code{\link{set_val_labels}}) will be removed  when converting variables to factors.
@@ -937,6 +965,9 @@ set_var_labels <- function(x, lab, attr.string = NULL) {
 #' table(efc$e42dep)
 #' table(to_label(efc$e42dep))
 #'
+#' head(efc$e42dep)
+#' head(to_label(efc$e42dep))
+#'
 #' # structure of numeric values won't be changed
 #' # by this function, it only applies to labelled vectors
 #' # (typically categorical or factor variables)
@@ -947,9 +978,9 @@ set_var_labels <- function(x, lab, attr.string = NULL) {
 to_label <- function(x) {
   if (is.matrix(x) || is.data.frame(x)) {
     for (i in 1:ncol(x)) x[[i]] <- to_label_helper(x[[i]])
-    return (x)
+    return(x)
   } else {
-    return (to_label_helper(x))
+    return(to_label_helper(x))
   }
 }
 
@@ -959,7 +990,7 @@ to_label_helper <- function(x) {
   if (is.factor(x) && !is_num_fac(x)) {
     # if not, stop here
     warning("'x' may have numeric factor levels only.", call. = F)
-    return (x)
+    return(x)
   }
   # get value labels
   vl <- get_val_labels(x)
@@ -978,7 +1009,7 @@ to_label_helper <- function(x) {
     }
   }
   # return as factor
-  return (x)
+  return(x)
 }
 
 
@@ -987,7 +1018,7 @@ to_label_helper <- function(x) {
 #'
 #' @description This function converts a variable into a factor, but keeps
 #'                variable and value labels, if these are attached as attributes
-#'                to the variale \code{var}. See examples.
+#'                to the variale. See examples.
 #'
 #' @seealso \code{\link{to_value}} to convert a factor into a numeric value and
 #'            \code{\link{to_label}} to convert a value into a factor with labelled
@@ -999,15 +1030,19 @@ to_label_helper <- function(x) {
 #'           a data frame with factor variables (including variable and value labels)
 #'           if \code{x} was a data frame.
 #'
-#' @note This function only works with vectors that have value and variable
-#'        labels attached. This is automatically done by importing SPSS data sets
-#'        with the \code{\link{read_spss}} function and can manually be applied
-#'        with the \code{\link{set_val_labels}} and \code{\link{set_var_labels}}
-#'        functions.
+#' @note This function is intended for use with vectors that have value and variable
+#'        labels attached. Unlike \code{\link{as.factor}}, \code{to_fac} converts
+#'        a variable into a factor and retains the value and variable label attributes.
+#'        \cr \cr
+#'        Attaching labels is automatically done by importing data sets
+#'        with one of the \code{read_*}-functions, like \code{\link{read_spss}}.
+#'        Else, value and variable labels can be manually added to vectors
+#'        with \code{\link{set_val_labels}} and \code{\link{set_var_labels}}.
 #'
 #' @examples
 #' \dontrun{
 #' data(efc)
+#' library(sjPlot)
 #' # normal factor conversion, loses value attributes
 #' efc$e42dep <- as.factor(efc$e42dep)
 #' sjt.frq(efc$e42dep)
@@ -1021,9 +1056,9 @@ to_label_helper <- function(x) {
 to_fac <- function(x) {
   if (is.matrix(x) || is.data.frame(x)) {
     for (i in 1:ncol(x)) x[[i]] <- to_fac_helper(x[[i]])
-    return (x)
+    return(x)
   } else {
-    return (to_fac_helper(x))
+    return(to_fac_helper(x))
   }
 }
 
@@ -1039,7 +1074,7 @@ to_fac_helper <- function(x) {
   x <- set_val_labels(x, lab)
   # set back variable labels
   x <- set_var_labels(x, varlab)
-  return (x)
+  return(x)
 }
 
 
@@ -1092,9 +1127,9 @@ to_fac_helper <- function(x) {
 to_value <- function(x, startAt = NULL, keep.labels = TRUE) {
   if (is.matrix(x) || is.data.frame(x)) {
     for (i in 1:ncol(x)) x[[i]] <- to_value_helper(x[[i]], startAt, keep.labels)
-    return (x)
+    return(x)
   } else {
-    return (to_value_helper(x, startAt, keep.labels))
+    return(to_value_helper(x, startAt, keep.labels))
   }
 }
 
@@ -1128,5 +1163,5 @@ to_value_helper <- function(x, startAt, keep.labels) {
   }
   # check if we should attach former labels as value labels
   if (keep.labels) new_value <- set_val_labels(new_value, labels)
-  return (new_value)
+  return(new_value)
 }

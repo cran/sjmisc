@@ -21,7 +21,7 @@ A vector with standardiized beta coefficients of the fitted linear model, or a d
 \description{
 Returns the standardized beta coefficients and confidence intervals
                of a fitted linear (mixed) models, i.e. \code{fit} must either
-               be of class \code{lm} or \code{lmerMod} (lme4-package).
+               be of class \code{lm} or \code{\link[lme4]{merMod}}.
 }
 \note{
 "Standardized coefficients refer to how many standard deviations a dependent variable will change,

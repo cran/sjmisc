@@ -16,38 +16,25 @@ the value range of \code{x}, i.e. if \code{x} has values from 1 to 3,
 If \code{x} is a data frame, \code{labels} may also be a \code{\link{list}} of
 character vectors. If \code{labels} is a list, it must have the same length as
 number of columns of \code{x}. If \code{labels} is a vector and \code{x} is a data frame,
-the \code{labels} will be applied to each column of \code{x}.}
+the \code{labels} will be applied to each column of \code{x}.
+Use \code{labels = ""} to remove labels-attribute from \code{x}.}
 }
 \value{
-\code{x} with attached value labels.
+\code{x} with attached value labels; or with removed label-attribute if
+           \code{labels = ""}.
 }
 \description{
 This function attaches character labels as \code{"value.labels"} attribute
                to a variable or vector \code{"x"}, resp. to all variables of a data frame
                if \code{"x"} is a \code{\link{data.frame}}. These value labels will be accessed
-               by most of this package's functions, in order to automatically set values
+               by functions of the \emph{sjPlot} package, in order to automatically set values
                or legend labels.
 }
 \details{
-This package can add (and read) value and variable labels either in \code{foreign}
-           package style (\emph{value.labels} and \emph{variable.label}) or in
-           \code{haven} package style (\emph{labels} and \emph{label}). By default,
-           the \code{haven} package style is used. The \code{sjPlot} package accesses
-           these attributes to automatically read label attributes for labelling
-           axes categories and titles or table rows and columns. \cr Furthermore,
-           value and variable labels are used when saving data, e.g. to SPSS
-           (see \code{\link{write_spss}}), which means that the written SPSS file
-           contains proper labels for each variable. \cr
-           You can set a default label style via \code{options(value_labels = "haven")}
-           or \code{options(value_labels = "foreign")}.
+See 'Details' in \code{\link{get_val_labels}}
 }
 \note{
-With attached value and variable labels, most functions of this package
-      automatically detect labels and uses them as axis, legend or title labels
-      in plots (\code{sjp.}-functions) respectively as column or row headers
-      in table outputs (\code{sjt.}-functions). Use \code{options(autoSetValueLabels = FALSE)}
-      and \code{options(autoSetVariableLabels = FALSE)} to turn off automatic
-      label detection.
+See 'Note' in \code{\link{get_val_labels}}
 }
 \examples{
 \dontrun{

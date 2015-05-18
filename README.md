@@ -15,6 +15,10 @@ devtools::install_github("sjPlot/sjmisc")
 ```
 
 #### Officiale, stable release
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/sjmisc)](http://cran.r-project.org/web/packages/sjmisc)
+&#160;&#160;
+[![downloads](http://cranlogs.r-pkg.org/badges/sjmisc)](http://cranlogs.r-pkg.org/)
+
 To install the latest stable release from CRAN, type following command into the R console:
 
 ```r
@@ -31,22 +35,22 @@ install.packages("sjmisc")
 In case you want / have to cite my package, please use `citation('sjmisc')` for citation information. 
 
 
-### Changelog of current development build 1.0.1
+### Changelog of current stable build 1.0.2
 
 #### New functions
-* `is_crossed` to check whether two factors are crossed.
-* `is_nested` to check whether two factors are nested.
-* `is_num_fac` to check whether a factor has only numeric levels.
+* `icc` to compute intraclass-correlations for random-intercepts of mixed models.
+* `hoslem_gof` to perform a Hosmer-Lemeshow-Goodness-of-Fit-test for logistic regression models.
+* `cod` to compute the Coefficient of Discrimination, aka Tjur's Pseudo-R2, for logistic regression models.
+* `pseudo_r2` to compute the Nagelkerke's and Cox-Snell's Pseudo-R2 for logistic regression models.
 
 #### Changes to functions
-* `std_beta` now accepts `plm`-objects.
-* `to_value` now auto-detects lowest minimum value of numeric factors, instead of always setting minimum value to 1.
-* `set_na`, `dicho`, `to_fac`, `to_value` and `to_label` now also accept data frames as parameter.
+* Functions `std_beta` and `cv` now support `merModLmerTest` objects (fitted by `lmerTest` package).
+* `mean_n` has a `digit` parameter to round returned mean values.
+* `rec`, `recode_to` and `std_e` now also accept data frames as parameter.
+* `chisq_gof` now accepts `glm`-objects, however, computing the Chi-squared-Goodness-of-Fit-test for logistic regression models sometime may fail.
+* `set_val_labels` and `set_var_labels` can now remove label-attributes.
+* `set_na` removes label-attribute, if removed `NA` values were the last labelled values.
 
 #### Bug fixes
-* `std_beta` did not work in some cases - fixed.
-* `mwu` did not accept factors as grouping levels - fixed.
-* `mwu` did not work when value range of `grp` vector was not continuously - fixed.
-* `cv` did not work with `lme`-objects (from `nlme`-package) - fixed.
-* `cramer`, `phi` and `table_values` did not work with tables of class `xtabs` - fixed.
-* `to_value` (resp. `set_val_labels`) did not work in certain situations when factor had not continuously numeric levels - fixed.
+* `set_na` did not work with logical vectors - fixed.
+* `recode_to` did not work when `var` had value-label-attributes - fixed.

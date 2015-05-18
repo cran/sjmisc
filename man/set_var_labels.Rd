@@ -11,7 +11,10 @@ set_var_labels(x, lab, attr.string = NULL)
 
 \item{lab}{If \code{x} is a vector (single variable), use a single character string with
 the variable label for \code{x}. If \code{x} is a \code{\link{data.frame}}, use a
-vector with character labels of same length as \code{ncol(x)}.}
+vector with character labels of same length as \code{ncol(x)}.
+Use \code{lab = ""} to remove labels-attribute from \code{x}, resp.
+set any value of vector \code{lab} to \code{""} to remove specific variable
+label attributes from a data frame's variable.}
 
 \item{attr.string}{The attribute string for the variable label. To ensure
 compatibility to the \code{foreign}-package, use the default string
@@ -22,47 +25,29 @@ care of this.}
 }
 \value{
 \code{x}, with attached variable label attribute(s), which contains the
-          variable name(s).
+          variable name(s); or with removed label-attribute if
+           \code{lab = ""}.
 }
 \description{
 This function sets variable labels to a single variable or to
                a set of variables in a data frame. To each variable, the
                attribute \code{"label"} or \code{"variable.label"} with the related variable
-               name is attached. Most of this package's functions can automatically
+               name is attached. Most functions of the \emph{sjPlot} package can automatically
                retrieve the variable name to use it as axis labels or plot title
                (see details).
 }
 \details{
-This package can add (and read) value and variable labels either in \code{foreign}
-           package style (\emph{value.labels} and \emph{variable.label}) or in
-           \code{haven} package style (\emph{labels} and \emph{label}). By default,
-           the \code{haven} package style is used. The \code{sjPlot} package accesses
-           these attributes to automatically read label attributes for labelling
-           axes categories and titles or table rows and columns. \cr Furthermore,
-           value and variable labels are used when saving data, e.g. to SPSS
-           (see \code{\link{write_spss}}), which means that the written SPSS file
-           contains proper labels for each variable. \cr
-           You can set a default label style via \code{options(value_labels = "haven")}
-           or \code{options(value_labels = "foreign")}.
+See 'Details' in \code{\link{get_val_labels}}
 }
 \note{
-With attached value and variable labels, most functions of this package
-      automatically detect labels and uses them as axis, legend or title labels
-      in plots (\code{sjp.}-functions) respectively as column or row headers
-      in table outputs (\code{sjt.}-functions). Use \code{options(autoSetValueLabels = FALSE)}
-      and \code{options(autoSetVariableLabels = FALSE)} to turn off automatic
-      label detection.
+See 'Note' in \code{\link{get_val_labels}}
 }
 \examples{
-# sample data set, imported from SPSS. Variable labels are attached
-# as attribute to the data frame (so variables currently don't have this attribute)
+# sample data set, imported from SPSS.
 data(efc)
-# get variable labels
-variable.labels <- get_var_labels(efc)
-# set variable labels as attribute to each single variable of data frame
-efc <- set_var_labels(efc, variable.labels)
 
 \dontrun{
+library(sjPlot)
 sjt.frq(efc$e42dep)
 sjt.frq(data.frame(efc$e42dep, efc$e16sex))}
 
@@ -75,7 +60,27 @@ dummy <- set_var_labels(dummy, "Dummy-variable")
 # auto-detection of value labels by default, auto-detection of
 # variable labels if parameter "title" set to NULL.
 \dontrun{
+library(sjPlot)
 sjp.frq(dummy, title = NULL)}
+
+# ---------------------------------------------
+# Set variable labels for data frame
+# ---------------------------------------------
+dummy <- data.frame(a = sample(1:4, 10, replace = TRUE),
+                    b = sample(1:4, 10, replace = TRUE),
+                    c = sample(1:4, 10, replace = TRUE))
+dummy <- set_var_labels(dummy,
+                        c("Variable A",
+                          "Variable B",
+                          "Variable C"))
+str(dummy)
+
+# remove one variable label
+dummy <- set_var_labels(dummy,
+                        c("Variable A",
+                          "",
+                          "Variable C"))
+str(dummy)
 }
 \seealso{
 \itemize{

@@ -8,7 +8,7 @@ group_labels(var, groupsize = 5, rightInterval = FALSE,
   autoGroupCount = 30)
 }
 \arguments{
-\item{var}{The scale variable, which should recoded into groups.}
+\item{var}{The variable, which should recoded into groups.}
 
 \item{groupsize}{The group-size, i.e. the range for grouping. By default, for each 5 categories
 new group is built, i.e. \code{groupsize=5}. Use \code{groupsize="auto"} to automatically
@@ -33,6 +33,9 @@ A string vector containing labels based on the grouped counts of \code{var},
 Creates the related labels for the grouped variable created by
                the \code{\link{group_var}} function.
 }
+\details{
+See 'Details' in \code{\link{group_var}}.
+}
 \note{
 Usually you should use the same values for \code{groupsize} and
         \code{rightInterval} as used in the \code{\link{group_var}} function
@@ -51,26 +54,22 @@ print(age.grpvar)
 # histogram with EUROFAMCARE sample dataset
 # variable not grouped
 data(efc)
-efc.val <- get_val_labels(efc)
-efc.var <- get_var_labels(efc)
 \dontrun{
 library(sjPlot)
 sjp.frq(efc$e17age,
-        title = efc.var[['e17age']],
+        title = get_var_labels(efc$e17age),
         type = "h",
         showValueLabels = FALSE)}
 
 # bar plot with EUROFAMCARE sample dataset
 # grouped variable
 data(efc)
-efc.val <- get_val_labels(efc)
-efc.var <- get_var_labels(efc)
 ageGrp <- group_var(efc$e17age)
 ageGrpLab <- group_labels(efc$e17age)
 \dontrun{
 library(sjPlot)
 sjp.frq(ageGrp,
-        title = efc.var[['e17age']],
+        title = get_var_labels(efc$e17age),
         axisLabels.x = ageGrpLab)}
 }
 \seealso{

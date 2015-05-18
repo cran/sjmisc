@@ -33,6 +33,16 @@ A grouped variable, either as numeric or as factor (see paramter \code{asNumeric
 \description{
 Recode count variables into grouped factors.
 }
+\details{
+If \code{groupsize} is set to a specific value, the variable is recoded
+           into several groups, where each group has a maximum range of \code{groupsize}.
+           Hence, the amount of groups differ depending on the range of \code{var}.
+           \cr \cr
+           If \code{groupsize = "auto"}, the variable is recoded into a maximum of
+           \code{autoGroupCount} groups. Hence, independent from the range of
+           \code{var}, always the same amount of groups are created, so the range
+           within each group differs (depending on \code{var}'s range).
+}
 \examples{
 age <- abs(round(rnorm(100, 65, 20)))
 age.grp <- group_var(age, 10)
@@ -42,26 +52,22 @@ hist(age.grp)
 # histogram with EUROFAMCARE sample dataset
 # variable not grouped
 data(efc)
-efc.val <- get_val_labels(efc)
-efc.var <- get_var_labels(efc)
 \dontrun{
 library(sjPlot)
 sjp.frq(efc$e17age,
-        title = efc.var[['e17age']],
+        title = get_var_labels(efc$e17age),
         type = "h",
         showValueLabels = FALSE)}
 
 # bar plot with EUROFAMCARE sample dataset
 # grouped variable
 data(efc)
-efc.val <- get_val_labels(efc)
-efc.var <- get_var_labels(efc)
 ageGrp <- group_var(efc$e17age)
 ageGrpLab <- group_labels(efc$e17age)
 \dontrun{
 library(sjPlot)
 sjp.frq(ageGrp,
-        title = efc.var[['e17age']],
+        title = get_var_labels(efc$e17age),
         axisLabels.x = ageGrpLab)}
 }
 \seealso{
