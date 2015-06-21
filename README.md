@@ -1,6 +1,12 @@
 sjmisc - Miscellaneous Data Management Tools
 ------------------------------------------------------------------------------
-This package contains some tools that are useful when carrying out data analysis or interpreting data (especially intended for people coming from SPSS and/or who are new to R). These tool functions support reading and writing data (SPSS, SAS and STATA), variable recoding and weighting, statistical tests, reliability tests and much more.
+This package contains utility functions that are useful when carrying out data analysis or basic statistical tests, performing common recode and data transformation tasks or working with labelled data (especially intended for people coming from 'SPSS' and/or who are new to R).
+
+Basically, this package covers four domains of functionality:
+* reading and writing data between other statistical packages (like 'SPSS') and R, based on the haven and foreign packages
+* hence, this package also includes functions to make working with labelled data easier
+* frequently used statistical tests and computation of statistical coefficients, or at least convenient wrappers for such test functions
+* frequently applied recoding and variable transformation tasks
 
 
 ### Installation
@@ -15,7 +21,7 @@ devtools::install_github("sjPlot/sjmisc")
 ```
 
 #### Officiale, stable release
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/sjmisc)](http://cran.r-project.org/web/packages/sjmisc)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/sjmisc)](http://cran.r-project.org/package=sjmisc)
 &#160;&#160;
 [![downloads](http://cranlogs.r-pkg.org/badges/sjmisc)](http://cranlogs.r-pkg.org/)
 
@@ -35,22 +41,29 @@ install.packages("sjmisc")
 In case you want / have to cite my package, please use `citation('sjmisc')` for citation information. 
 
 
-### Changelog of current stable build 1.0.2
+### Changelog of current development build 1.0.3
 
-#### New functions
-* `icc` to compute intraclass-correlations for random-intercepts of mixed models.
-* `hoslem_gof` to perform a Hosmer-Lemeshow-Goodness-of-Fit-test for logistic regression models.
-* `cod` to compute the Coefficient of Discrimination, aka Tjur's Pseudo-R2, for logistic regression models.
-* `pseudo_r2` to compute the Nagelkerke's and Cox-Snell's Pseudo-R2 for logistic regression models.
+#### New function
+* `add_labels` to set back labels from subsetted data frame, or remove any label attributes from data frames.
+* `remove_labels` to remove any label attributes from data frames or vectors.
+* `get_values` to return values associated with value labels from labelled vectors.
+* `replace_na` to replace `NA`'s with specific value (counterpart to `set_na`).
+* `is_even` and `is_odd` to check whether values are odd or even.
+* `is_empty` to check whether a string is empty or not.
 
 #### Changes to functions
-* Functions `std_beta` and `cv` now support `merModLmerTest` objects (fitted by `lmerTest` package).
-* `mean_n` has a `digit` parameter to round returned mean values.
-* `rec`, `recode_to` and `std_e` now also accept data frames as parameter.
-* `chisq_gof` now accepts `glm`-objects, however, computing the Chi-squared-Goodness-of-Fit-test for logistic regression models sometime may fail.
-* `set_val_labels` and `set_var_labels` can now remove label-attributes.
-* `set_na` removes label-attribute, if removed `NA` values were the last labelled values.
+* `dicho` now also dichotomizes non-numeric values.
+* `rec` now can keep (copy) not yet recoded values with `else=copy`.
+* `get_val_labels` gains a `include.values` parameter to also return values associated with the value labels.
+* `get_val_labels`, `get_var_labels`, `set_val_labels` and `set_var_labels` now also accept `list`-objects with variables.
+* `dicho`, `rec`, `set_na` and `recode_to` now also accept `list`-objects with variables.
+* `set_val_labels` gets parameter `force.labels` to force using all labels, even if length of labels if longer than unique values of vector.
+* `rec` gets a `asFac` parameter, to return recoded variable as factor.
+* `dicho`, `group_var` and `group_labels` keep variable label attributes.
+* `rec` and `dicho` get `varLabel` and `valLabels` parameters, to optionally add value and variable label attributes for recoded or dichotomized variables.
 
 #### Bug fixes
-* `set_na` did not work with logical vectors - fixed.
-* `recode_to` did not work when `var` had value-label-attributes - fixed.
+* `get_var_labels` returned `NULL` if first variable in `data.frame` had no variable label (but other variables had) - fixed.
+* Fixed code with non-exact matching of `haven`-attributes `label` and `labels`, which in certain situation may return wrong vector attributes.
+* `rec` did not recode `NA`s into values, if followed by `else`-token.
+* `to_value` no longer drops unused factor levels.

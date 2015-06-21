@@ -2,12 +2,12 @@
 % Please edit documentation in R/sjStatistics.R
 \name{phi}
 \alias{phi}
-\title{Phi value for a contingency table}
+\title{Phi value for contingency tables}
 \usage{
 phi(tab)
 }
 \arguments{
-\item{tab}{A simple \code{\link{table}} or \code{\link{ftable}}. Tables of class
+\item{tab}{a \code{\link{table}} or \code{\link{ftable}}. Tables of class
 \code{\link{xtabs}} and other will be coerced to \code{\link{ftable}} objects.}
 }
 \value{

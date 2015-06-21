@@ -2,12 +2,12 @@
 % Please edit documentation in R/sjStatistics.R
 \name{pseudo_r2}
 \alias{pseudo_r2}
-\title{Compute Nagelkerke's and Cox-Snell's Pseudo R-squared}
+\title{Nagelkerke's and Cox-Snell's Pseudo R-squared}
 \usage{
 pseudo_r2(x)
 }
 \arguments{
-\item{x}{a fitted \code{\link{glm}}.}
+\item{x}{a fitted \code{\link{glm}} model.}
 }
 \value{
 An object of class \code{pseudo_r2} with
@@ -19,8 +19,8 @@ An object of class \code{pseudo_r2} with
 }
 \description{
 This method calculates Nagelkerke's and Cox-Snell's
-               pseudo-r-squared-values of \code{\link{glm}}s for
-               binary data.
+               pseudo-r-squared-values of generalized linear models
+               for binary data.
 }
 \examples{
 data(efc)
@@ -33,6 +33,6 @@ fit <- glm(services ~ neg_c_7 + c161sex + e42dep,
 pseudo_r2(fit)
 }
 \seealso{
-\code{\link{cod}}
+\code{\link{cod}} for Tjur's Coefficient of Discrimination.
 }
 

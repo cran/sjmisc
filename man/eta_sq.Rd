@@ -2,12 +2,12 @@
 % Please edit documentation in R/sjStatistics.R
 \name{eta_sq}
 \alias{eta_sq}
-\title{Compute eta-squared of fitted anova}
+\title{Eta-squared of fitted anova}
 \usage{
 eta_sq(...)
 }
 \arguments{
-\item{...}{A fitted one-way-anova model or a dependent and grouping variable (see examples).}
+\item{...}{A fitted one-way-anova model or a dependent and grouping variable (see 'Examples').}
 }
 \value{
 The eta-squared value.

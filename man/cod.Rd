@@ -2,12 +2,12 @@
 % Please edit documentation in R/sjStatistics.R
 \name{cod}
 \alias{cod}
-\title{Computes Tjur's Coefficient of Discrimination}
+\title{Tjur's Coefficient of Discrimination}
 \usage{
 cod(x)
 }
 \arguments{
-\item{x}{a fitted \code{\link{glm}} or \code{\link[lme4]{glmer}}.}
+\item{x}{a fitted \code{\link{glm}} or \code{\link[lme4]{glmer}} model.}
 }
 \value{
 The \code{D} Coefficient of Discrimination, also known as
@@ -15,8 +15,8 @@ The \code{D} Coefficient of Discrimination, also known as
 }
 \description{
 This method calculates the Coefficient of Discrimination \code{D}
-               for \code{\link{glm}}s or \code{\link[lme4]{glmer}}s for
-               binary data. It is an alternative to other Pseudo-R-squared values
+               for generalized linear (mixed) models for binary data. It is
+               an alternative to other Pseudo-R-squared values
                like Nakelkerke's R2 or Cox-Snell R2.
 }
 \note{
@@ -37,5 +37,9 @@ cod(fit)
 Tjur T (2009) Coefficients of determination in logistic regression models -
               a new proposal: The coefficient of discrimination. The American Statistician,
               63(4): 366-372
+}
+\seealso{
+\code{\link{pseudo_r2}} for Nagelkerke's and Cox and Snell's pseudo
+           r-squared coefficients.
 }
 

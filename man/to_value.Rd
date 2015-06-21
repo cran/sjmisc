@@ -2,7 +2,7 @@
 % Please edit documentation in R/sjImportSPSS.R
 \name{to_value}
 \alias{to_value}
-\title{Converts factors to numeric variables}
+\title{Convert factors to numeric variables}
 \usage{
 to_value(x, startAt = NULL, keep.labels = TRUE)
 }
@@ -44,6 +44,11 @@ table(to_value(test, 5))
 # numeric factor keeps values
 dummy <- factor(c("3", "4", "6"))
 table(to_value(dummy))
+
+# do not drop unused factor levels
+dummy <- ordered(c(rep("No", 5), rep("Maybe", 3)),
+                 levels = c("Yes", "No", "Maybe"))
+to_value(dummy)
 
 # non-numeric factor is converted to numeric
 # starting at 1

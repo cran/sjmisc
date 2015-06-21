@@ -16,7 +16,7 @@ elements as similar or equal.}
 \item{method}{Method for distance calculation. The default is \code{"lv"}. See
 \code{\link[stringdist]{stringdist}} package for details.}
 
-\item{strict}{if \code{TRUE}, value matching is more strictly. See examples for details.}
+\item{strict}{if \code{TRUE}, value matching is more strictly. See 'Examples'.}
 
 \item{trim.whitespace}{if \code{TRUE} (default), leading and trailing white spaces will
 be removed from string values.}
@@ -46,7 +46,14 @@ sjt.frq(data.frame(oldstring, newstring),
         removeStringVectors = FALSE,
         autoGroupStrings = FALSE)
 
-newstring <- group_str(oldstring, strict = TRUE)
+# larger groups
+newstring <- group_str(oldstring, maxdist = 3)
+sjt.frq(data.frame(oldstring, newstring),
+        removeStringVectors = FALSE,
+        autoGroupStrings = FALSE)
+
+# be more strict with matching pairs
+newstring <- group_str(oldstring, maxdist = 3, strict = TRUE)
 sjt.frq(data.frame(oldstring, newstring),
         removeStringVectors = FALSE,
         autoGroupStrings = FALSE)}

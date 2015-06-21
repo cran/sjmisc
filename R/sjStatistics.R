@@ -2,11 +2,11 @@
 if (getRversion() >= "2.15.1") utils::globalVariables(c("fit"))
 
 
-#' @title Compute eta-squared of fitted anova
+#' @title Eta-squared of fitted anova
 #' @name eta_sq
 #' @description Returns the eta-squared value for one-way-anovas.
 #'
-#' @param ... A fitted one-way-anova model or a dependent and grouping variable (see examples).
+#' @param ... A fitted one-way-anova model or a dependent and grouping variable (see 'Examples').
 #' @return The eta-squared value.
 #'
 #' @note Interpret eta-squared like r-squared or R-squared; a rule of thumb (Cohen):
@@ -63,7 +63,7 @@ eta_sq <- function(...) {
 }
 
 
-#' @title Compute std. beta coefficients and ci of lm and mixed models
+#' @title Standardized Beta coefficients and CI of lm and mixed models
 #' @name std_beta
 #' @description Returns the standardized beta coefficients and confidence intervals
 #'                of a fitted linear (mixed) models, i.e. \code{fit} must either
@@ -141,7 +141,7 @@ sjs.stdmm <- function(fit) {
 }
 
 
-#' @title Performs a Mann-Whitney-U-Test
+#' @title Mann-Whitney-U-Test
 #' @name mwu
 #' @description This function performs a Mann-Whitney-U-Test (or \code{Wilcoxon rank sum test},
 #'                see \code{\link{wilcox.test}} and \code{\link[coin]{wilcox_test}})
@@ -179,7 +179,7 @@ sjs.stdmm <- function(fit) {
 #' mwu(efc$e17age, efc$e42dep)
 #'
 #' @export
-mwu <- function(var, grp, distribution="asymptotic", weights=NULL) {
+mwu <- function(var, grp, distribution = "asymptotic", weights = NULL) {
   # ------------------------
   # check if suggested package is available
   # ------------------------
@@ -312,7 +312,7 @@ mwu <- function(var, grp, distribution="asymptotic", weights=NULL) {
 }
 
 
-#' @title Performs a Chi-square goodness-of-fit-test
+#' @title Chi-square goodness-of-fit-test
 #' @name chisq_gof
 #'
 #' @description This method performs a Chi-square goodness-of-fit-test (GOF)
@@ -408,22 +408,21 @@ chisq_gof <- function(x, prob = NULL, weights = NULL) {
 }
 
 
-#' @title Performs a Hosmer-Lemeshow Goodness-of-fit-test
+#' @title Hosmer-Lemeshow Goodness-of-fit-test
 #' @name hoslem_gof
 #'
 #' @description This method performs a Hosmer-Lemeshow goodness-of-fit-test
-#'                for \code{\link{glm}}s or \code{\link[lme4]{glmer}}s for
-#'                binary data.
+#'                for generalized linear (mixed) models for binary data.
 #'
-#' @param x a fitted \code{\link{glm}} or \code{\link[lme4]{glmer}}.
-#' @param g number of bins to divide the data Default is 10.
+#' @param x a fitted \code{\link{glm}} or \code{\link[lme4]{glmer}} model.
+#' @param g number of bins to divide the data. Default is 10.
 #'
 #' @return An object of class \code{hoslem_test} with
 #'           following values:
 #'           \itemize{
 #'            \item \code{chisq} the Hosmer-Lemeshow chi-squared statistic
 #'            \item \code{df} degrees of freedom
-#'            \item \code{p.value}	the p-value for the goodness-of-fit test
+#'            \item \code{p.value} the p-value for the goodness-of-fit test
 #'           }
 #'
 #' @note A well-fitting model shows no significant difference between
@@ -481,14 +480,14 @@ hoslem_gof <- function(x, g = 10) {
 }
 
 
-#' @title Compute Nagelkerke's and Cox-Snell's Pseudo R-squared
+#' @title Nagelkerke's and Cox-Snell's Pseudo R-squared
 #' @name pseudo_r2
 #'
 #' @description This method calculates Nagelkerke's and Cox-Snell's
-#'                pseudo-r-squared-values of \code{\link{glm}}s for
-#'                binary data.
+#'                pseudo-r-squared-values of generalized linear models
+#'                for binary data.
 #'
-#' @param x a fitted \code{\link{glm}}.
+#' @param x a fitted \code{\link{glm}} model.
 #'
 #' @return An object of class \code{pseudo_r2} with
 #'           following values:
@@ -497,7 +496,7 @@ hoslem_gof <- function(x, g = 10) {
 #'            \item \code{Nagelkerke} Nagelkerke's pseudo-r-squared-value
 #'           }
 #'
-#' @seealso \code{\link{cod}}
+#' @seealso \code{\link{cod}} for Tjur's Coefficient of Discrimination.
 #'
 #' @examples
 #' data(efc)
@@ -520,15 +519,15 @@ pseudo_r2 <- function(x) {
 }
 
 
-#' @title Computes Tjur's Coefficient of Discrimination
+#' @title Tjur's Coefficient of Discrimination
 #' @name cod
 #'
 #' @description This method calculates the Coefficient of Discrimination \code{D}
-#'                for \code{\link{glm}}s or \code{\link[lme4]{glmer}}s for
-#'                binary data. It is an alternative to other Pseudo-R-squared values
+#'                for generalized linear (mixed) models for binary data. It is
+#'                an alternative to other Pseudo-R-squared values
 #'                like Nakelkerke's R2 or Cox-Snell R2.
 #'
-#' @param x a fitted \code{\link{glm}} or \code{\link[lme4]{glmer}}.
+#' @param x a fitted \code{\link{glm}} or \code{\link[lme4]{glmer}} model.
 #'
 #' @return The \code{D} Coefficient of Discrimination, also known as
 #'           Tjur's R-squared value.
@@ -539,6 +538,9 @@ pseudo_r2 <- function(x) {
 #' @references Tjur T (2009) Coefficients of determination in logistic regression models -
 #'               a new proposal: The coefficient of discrimination. The American Statistician,
 #'               63(4): 366-372
+#'
+#' @seealso \code{\link{pseudo_r2}} for Nagelkerke's and Cox and Snell's pseudo
+#'            r-squared coefficients.
 #'
 #' @examples
 #' data(efc)
@@ -581,17 +583,17 @@ cod <- function(x) {
   return(abs(m2 - m1))
 }
 
-#' @title Calculates Cronbach's Alpha for a matrix
+#' @title Cronbach's Alpha for a matrix or data frame
 #' @name cronb
 #' @description This function calculates the Cronbach's alpha value for each column
 #'                of a data frame or matrix.
 #'
 #' @seealso \code{\link{reliab_test}}
 #'
-#' @param df A data frame or matrix with more than 2 columns.
+#' @param df a data frame or matrix with more than 2 columns.
 #' @return The Cronbach's alpha value for \code{df}.
 #'
-#' @note See examples from \code{\link[sjPlot]{sjp.pca}} and \code{\link[sjPlot]{sjt.pca}}.
+#' @note See 'Examples' from \code{\link[sjPlot]{sjp.pca}} and \code{\link[sjPlot]{sjt.pca}}.
 #'
 #' @export
 cronb <- function(df) {
@@ -627,9 +629,7 @@ cronb <- function(df) {
 #'         of the remaining items (which are thus treated as one item).
 #'
 #' @examples
-#' # -------------------------------
 #' # Data from the EUROFAMCARE sample dataset
-#' # -------------------------------
 #' data(efc)
 #'
 #' # retrieve variable and value labels
@@ -674,7 +674,7 @@ cronb <- function(df) {
 #'  }}
 #'
 #' @export
-reliab_test <- function(x, scaleItems=FALSE, digits=3) {
+reliab_test <- function(x, scaleItems = FALSE, digits = 3) {
   # -----------------------------------
   # remove missings, so correlation works
   # -----------------------------------
@@ -748,16 +748,17 @@ reliab_test <- function(x, scaleItems=FALSE, digits=3) {
 }
 
 
-#' @title Compute mean inter-item-correlation
+#' @title Mean Inter-Item-Correlation
 #' @name mic
 #' @description This function calculates a mean inter-item-correlation, i.e.
 #'                a correlation matrix of \code{data} will be computed (unless
-#'                \code{data} is already a \code{\link{cor}}-object) and the mean
+#'                \code{data} is already a matrix as returned by the
+#'                \code{\link{cor}}-function) and the mean
 #'                of the sum of all item's correlation values is returned.
 #'                Requires either a data frame or a computed \code{\link{cor}}-object.
 #'
-#' @param data A correlation object (see \code{\link{cor}}-function), or a data frame
-#'          which correlations should be calculated.
+#' @param data A \code{matrix} as returned by the \code{\link{cor}}-function, or
+#'          a data frame which correlations should be calculated.
 #' @param corMethod Indicates the correlation computation method. May be one of
 #'          \code{"spearman"} (default), \code{"pearson"} or \code{"kendall"}.
 #'          You may use initial letter only.
@@ -778,7 +779,7 @@ reliab_test <- function(x, scaleItems=FALSE, digits=3) {
 #' mic(df)
 #'
 #' @export
-mic <- function(data, corMethod="pearson") {
+mic <- function(data, corMethod = "pearson") {
   # -----------------------------------
   # Check parameter
   # -----------------------------------
@@ -814,7 +815,7 @@ mic <- function(data, corMethod="pearson") {
 }
 
 
-#' @title Compute expected and relative table values
+#' @title Expected and relative table values
 #' @name table_values
 #' @description This function calculates a table's cell, row and column percentages as
 #'                well as expected values and returns all results as lists of tables.
@@ -839,7 +840,7 @@ mic <- function(data, corMethod="pearson") {
 #' table_values(tab)$cell
 #'
 #' @export
-table_values <- function(tab, digits=2) {
+table_values <- function(tab, digits = 2) {
   # convert to ftable object
   if (all(class(tab) != "ftable")) tab <- ftable(tab)
   tab.cell <- round(100 * prop.table(tab), digits)
@@ -857,13 +858,13 @@ table_values <- function(tab, digits=2) {
 }
 
 
-#' @title Phi value for a contingency table
+#' @title Phi value for contingency tables
 #' @name phi
 #' @description Compute Phi value for a contingency table.
 #'
 #' @seealso \code{\link{cramer}}
 
-#' @param tab A simple \code{\link{table}} or \code{\link{ftable}}. Tables of class
+#' @param tab a \code{\link{table}} or \code{\link{ftable}}. Tables of class
 #'          \code{\link{xtabs}} and other will be coerced to \code{\link{ftable}} objects.
 #' @return The table's Phi value.
 #'
@@ -888,7 +889,7 @@ phi <- function(tab) {
 #'
 #' @seealso \code{\link{phi}}
 #'
-#' @param tab A simple \code{\link{table}} or \code{\link{ftable}}. Tables of class
+#' @param tab a \code{\link{table}} or \code{\link{ftable}}. Tables of class
 #'          \code{\link{xtabs}} and other will be coerced to \code{\link{ftable}} objects.
 #' @return The table's Cramer's V.
 #'
@@ -905,7 +906,7 @@ cramer <- function(tab) {
 }
 
 
-#' @title Compute standard error for variables
+#' @title Standard Error for variables
 #' @name std_e
 #' @description Compute standard error for variable or for all variables
 #'                of a data frame.
@@ -947,7 +948,7 @@ std_e_helper <- function(x) sqrt(var(x, na.rm = TRUE) / length(na.omit(x)))
 
 
 
-#' @title Compute coefficient of variation
+#' @title Coefficient of Variation
 #' @name cv
 #' @description Compute coefficient of variation for single variables
 #'                (standard deviation divided by mean) or for fitted
@@ -997,14 +998,14 @@ cv <- function(x) {
         stop("Package 'lme4' needed for this function to work. Please install it.", call. = FALSE)
       }
       # dependent variable in lmerMod
-      dv <- lme4::getME(fit, "y")
+      dv <- lme4::getME(x, "y")
     } else if (any(class(x) == "lme")) {
       # check for package availability
       if (!requireNamespace("nlme", quietly = TRUE)) {
         stop("Package 'nlme' needed for this function to work. Please install it.", call. = FALSE)
       }
       # dependent variable in lme
-      dv <- unname(nlme::getResponse(fit))
+      dv <- unname(nlme::getResponse(x))
     }
     # compute mean of dependent variable
     mw <- mean(dv, na.rm = TRUE)
@@ -1029,7 +1030,7 @@ cv <- function(x) {
 }
 
 
-#' @title Compute root mean squared error (RMSE)
+#' @title Root Mean Squared Error (RMSE)
 #' @name rmse
 #' @description Compute root mean squared error  of fitted linear (mixed effects) models.
 #'
@@ -1240,7 +1241,7 @@ is_nested <- function(f1, f2) {
 }
 
 
-#' @title Compute Intra-Class-Correlation
+#' @title Intra-Class-Correlation Coefficient
 #' @name icc
 #' @description This function calculates the intraclass-correlation
 #'                (icc) for random intercepts of mixed effects models.

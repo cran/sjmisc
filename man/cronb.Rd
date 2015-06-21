@@ -2,12 +2,12 @@
 % Please edit documentation in R/sjStatistics.R
 \name{cronb}
 \alias{cronb}
-\title{Calculates Cronbach's Alpha for a matrix}
+\title{Cronbach's Alpha for a matrix or data frame}
 \usage{
 cronb(df)
 }
 \arguments{
-\item{df}{A data frame or matrix with more than 2 columns.}
+\item{df}{a data frame or matrix with more than 2 columns.}
 }
 \value{
 The Cronbach's alpha value for \code{df}.
@@ -17,7 +17,7 @@ This function calculates the Cronbach's alpha value for each column
                of a data frame or matrix.
 }
 \note{
-See examples from \code{\link[sjPlot]{sjp.pca}} and \code{\link[sjPlot]{sjt.pca}}.
+See 'Examples' from \code{\link[sjPlot]{sjp.pca}} and \code{\link[sjPlot]{sjt.pca}}.
 }
 \seealso{
 \code{\link{reliab_test}}
