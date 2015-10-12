@@ -1,3 +1,15 @@
+Version 1.2
+------------------------------------------------------------------------------
+New functions:
+* `converge_ok` to test convergence for merMod-objects (mixed effects models).
+
+Changes to functions:
+* `weight` gets a `digits` argument.
+
+Bug fixes:
+* Fixed bug in `to_na`, where in some cases `is_na` attribute was not properly set.
+* Fixed bug in `set_na`, where in some cases `is_na` attribute was not properly removed for character vectors.
+
 Version 1.1
 ------------------------------------------------------------------------------
 General:
