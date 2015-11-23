@@ -27,6 +27,7 @@
 #'            \item if \code{labels} is a vector and \code{x} is a data frame, \code{labels} will be applied to each column of \code{x}.
 #'            }
 #'          Use \code{labels = ""} to remove labels-attribute from \code{x}.
+#' @param value See \code{labels},
 #' @param force.labels Logical; if \code{TRUE}, all \code{labels} are added as value label
 #'          attribute, even if \code{x} has less unique values then length of \code{labels}
 #'          or if \code{x} has a smaller range then length of \code{labels}. See 'Examples'.
@@ -63,6 +64,10 @@
 #' # only two value labels
 #' x <- set_labels(x, c("1", "2", "3"))
 #' x
+#'
+#' # or use:
+#' # set_labels(x) <- c("1", "2", "3")
+#'
 #' \dontrun{
 #' sjp.frq(x)}
 #' # all three value labels
@@ -87,7 +92,7 @@
 #'
 #' x <- set_na(x, c(-2, 9), as.attr = TRUE)
 #' x
-#' summary(as_labelled(x))
+#' frq(as_labelled(x))
 #'
 #'
 #' # set labels via named vector,
@@ -95,10 +100,12 @@
 #' data(efc)
 #' get_labels(efc$e42dep)
 #'
-#' x <- set_labels(efc$e42dep, c(`1` = "independent",
-#'                               `4` = "severe dependency",
-#'                               `9` = "missing value"))
-#' get_labels(x, attr.only = TRUE, include.values = "p")
+#'x <- set_labels(efc$e42dep, c(`independent` = 1,
+#'                              `severe dependency` = 2,
+#'                              `missing value` = 9))
+#' get_labels(x, include.values = "p")
+#'
+#' get_labels(x, include.values = "p", include.non.labelled = TRUE)
 #'
 #'
 #' # setting same value labels to multiple vectors
@@ -119,18 +126,6 @@ set_labels <- function(x,
                        force.labels = FALSE,
                        force.values = TRUE) {
   return(set_labels_helper(x, labels, force.labels, force.values))
-}
-
-
-#' @name set_val_labels
-#' @rdname set_labels
-#' @export
-set_val_labels <- function(x,
-                           labels,
-                           force.labels = FALSE,
-                           force.values = TRUE) {
-  .Deprecated("set_labels")
-  return(set_labels(x, labels, force.labels, force.values))
 }
 
 
@@ -294,10 +289,30 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values) {
         # ---------------------------------------
       } else if (!is.null(names(labels))) {
         # ---------------------------------------
+        # check names and value attributes. value labels
+        # and values might be reversed
+        # ---------------------------------------
+        if (!anyNA(suppressWarnings(as.numeric(names(labels)))) &&
+            anyNA(suppressWarnings(as.numeric(labels))) &&
+            !anyNA(suppressWarnings(as.numeric(values)))) {
+          dummy.lab.values <- as.numeric(names((labels)))
+          dummy.lab.labels <- as.character(labels)
+          labels <- dummy.lab.values
+          names(labels) <- dummy.lab.labels
+        }
+        # ---------------------------------------
         # set attributes
         # ---------------------------------------
-        attr(x, attr.string) <- names(labels)
-        names(attr(x, attr.string)) <- labels
+        if (anyNA(suppressWarnings(as.numeric(labels)))) {
+          # here we have also non-numeric labels, so we set
+          # names as character string
+          attr(x, attr.string) <- labels
+        } else {
+          # we have only numeric labels, so we set them
+          # as numeric values
+          attr(x, attr.string) <- as.numeric(labels)
+        }
+        names(attr(x, attr.string)) <- as.character(names(labels))
         # ---------------------------------------
         # check for valid length of labels
         # if amount of labels and values are equal,
@@ -306,8 +321,14 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values) {
       } else if (length(values) == lablen) {
         # ---------------------------------------
         # set attributes
+        # check whether values is numeric, or - if character -
+        # only has numeric character values. If yes, add values
+        # as numeric labels-attribute
         # ---------------------------------------
-        attr(x, attr.string) <- as.character(values)
+        if (is.numeric(values) || !anyNA(suppressWarnings(as.numeric(values))))
+          attr(x, attr.string) <- as.numeric(values)
+        else
+          attr(x, attr.string) <- as.character(values)
         names(attr(x, attr.string)) <- labels
         # ---------------------------------------
         # check for valid length of labels
@@ -320,7 +341,7 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values) {
         # than values in variable?
         # ---------------------------------------
         if (force.labels) {
-          attr(x, attr.string) <- as.character(c(1:lablen))
+          attr(x, attr.string) <- as.numeric(c(1:lablen))
           names(attr(x, attr.string)) <- labels
         } else {
           # ---------------------------------------
@@ -328,7 +349,7 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values) {
           # labes as values are present
           # ---------------------------------------
           message(sprintf("More labels than values of \"%s\". Using first %i labels.", name.string, valrange))
-          attr(x, attr.string) <- as.character(c(minval:maxval))
+          attr(x, attr.string) <- as.numeric(c(minval:maxval))
           names(attr(x, attr.string)) <- labels[1:valrange]
         }
         # ---------------------------------------
@@ -359,7 +380,7 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values) {
           # ---------------------------------------
           # set attributes
           # ---------------------------------------
-          attr(x, attr.string) <- as.character(c(1:valrange))
+          attr(x, attr.string) <- as.numeric(c(1:valrange))
           names(attr(x, attr.string)) <- labels
         } else {
           # ---------------------------------------
@@ -367,14 +388,38 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values) {
           # ---------------------------------------
           message(sprintf("\"%s\" has more values than \"labels\", hence not all values are labelled.", name.string))
           # drop values with no associated labels
-          attr(x, attr.string) <- as.character(c(1:length(labels)))
+          attr(x, attr.string) <- as.numeric(c(1:length(labels)))
           names(attr(x, attr.string)) <- labels
         }
       } else {
-        attr(x, attr.string) <- as.character(c(minval:maxval))
+        attr(x, attr.string) <- as.numeric(c(minval:maxval))
         names(attr(x, attr.string)) <- labels
       }
     }
   }
   return(x)
+}
+
+#' @rdname set_labels
+#' @export
+`set_labels<-` <- function(x, force.labels = FALSE, force.values = TRUE, value) {
+  UseMethod("set_labels<-")
+}
+
+#' @export
+`set_labels<-.default` <- function(x, force.labels = FALSE, force.values = TRUE, value) {
+  x <- set_labels(x, value, force.labels, force.values)
+  x
+}
+
+
+#' @name set_val_labels
+#' @rdname set_labels
+#' @export
+set_val_labels <- function(x,
+                           labels,
+                           force.labels = FALSE,
+                           force.values = TRUE) {
+  .Deprecated("set_labels")
+  return(set_labels(x, labels, force.labels, force.values))
 }

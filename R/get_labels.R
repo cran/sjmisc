@@ -158,18 +158,6 @@ get_labels <- function(x,
 }
 
 
-#' @name get_val_labels
-#' @rdname get_labels
-#' @export
-get_val_labels <- function(x,
-                           attr.only = FALSE,
-                           include.values = NULL,
-                           include.non.labelled = FALSE) {
-  .Deprecated("get_labels")
-  return(get_labels(x, attr.only, include.values, include.non.labelled))
-}
-
-
 # Retrieve value labels of a data frame or variable
 # See 'get_labels'
 get_labels_helper <- function(x, attr.only, include.values, include.non.labelled) {
@@ -207,25 +195,28 @@ get_labels_helper <- function(x, attr.only, include.values, include.non.labelled
       if (include.non.labelled) {
         # get values of variable
         valid.vals <- sort(unique(stats::na.omit((as.vector(x)))))
-        # check if we have more values than labels
-        if (length(valid.vals) > length(labels)) {
+        # check if we have different amount values than labels
+        # or, if we have same amount of values and labels, whether
+        # values and labels match or not
+        if (length(valid.vals) != length(labels) || anyNA(match(values, valid.vals))) {
           # We now need to know, which values of "x" don't
-          # have labels. In case "x" is a character, we simply
-          # subtract amount of labelled value codes from the
-          # total value range of "x".
-          # If "x" is numeric, we remove all valid values - as returned
-          # by "get_values()" - from the value range.
-          if (is.character(x))
-            add_vals <- seq_len(length(valid.vals))[-seq_len(length(labels))]
-          else
-            add_vals <- valid.vals[!valid.vals %in% values]
+          # have labels.
+          add_vals <- valid.vals[!valid.vals %in% values]
           # add to labels
           labels <- c(labels, as.character(add_vals))
           # fix value prefix
           new_vals <- c(as.character(values), as.character(add_vals))
+          # check if values are numeric or not. if not,
+          # make sure it's character, so we can order
+          # consistently
+          if (suppressWarnings(anyNA(as.numeric(values)))) {
+            orderpart <- as.character(values)
+          } else {
+            orderpart <- as.numeric(values)
+          }
           # sort values and labels
-          labels <- labels[order(c(as.numeric(values), add_vals))]
-          new_vals <- new_vals[order(c(as.numeric(values), add_vals))]
+          labels <- labels[order(c(orderpart, add_vals))]
+          new_vals <- new_vals[order(c(orderpart, add_vals))]
           # set back new values
           values <- new_vals
         }
@@ -249,6 +240,24 @@ get_labels_helper <- function(x, attr.only, include.values, include.non.labelled
       }
     }
   }
+  # foreign? then reverse order
+  if (is_foreign(attr.string)) labels <- rev(labels)
   # return them
   return(labels)
+}
+
+
+
+#' @name get_val_labels
+#' @rdname get_labels
+#' @export
+get_val_labels <- function(x,
+                           attr.only = FALSE,
+                           include.values = NULL,
+                           include.non.labelled = FALSE) {
+  .Deprecated("get_labels")
+  return(get_labels(x,
+                    attr.only,
+                    include.values,
+                    include.non.labelled))
 }

@@ -21,6 +21,7 @@
 #'          Use \code{lab = ""} to remove labels-attribute from \code{x}, resp.
 #'          set any value of vector \code{lab} to \code{""} to remove specific variable
 #'          label attributes from a data frame's variable.
+#' @param value See \code{lab}.
 #' @param attr.string Attribute string for the variable label. \strong{Note:}
 #'          Usually, this argument should be ignored. It is only used internally
 #'          for the \code{\link{write_spss}} and \code{\link{write_stata}} functions.
@@ -47,6 +48,8 @@
 #' dummy <- set_labels(dummy, c("very low", "low", "mid", "hi"))
 #' dummy <- set_label(dummy, "Dummy-variable")
 #'
+#' # or use:
+#' # set_label(dummy) <- "Dummy-variable"
 #'
 #' # auto-detection of value labels by default, auto-detection of
 #' # variable labels if argument "title" set to NULL.
@@ -153,6 +156,19 @@ set_label <- function(x, lab, attr.string = NULL) {
     }
   }
   return(x)
+}
+
+
+#' @rdname set_label
+#' @export
+`set_label<-` <- function(x, attr.string = NULL, value) {
+  UseMethod("set_label<-")
+}
+
+#' @export
+`set_label<-.default` <- function(x, attr.string = NULL, value) {
+  x <- set_label(x, value, attr.string)
+  x
 }
 
 

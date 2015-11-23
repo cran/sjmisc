@@ -104,14 +104,16 @@ rec_to_helper <- function(x, lowest, highest) {
 #'                category values.
 #'
 #' @seealso \code{\link{set_na}} for setting \code{NA} values, \code{\link{replace_na}}
-#'            to replace \code{\link{NA}}'s with specific value and \code{\link{recode_to}}
-#'            for re-shifting value ranges.
+#'            to replace \code{\link{NA}}'s with specific value, \code{\link{recode_to}}
+#'            for re-shifting value ranges and \code{\link{ref_lvl}} to change the
+#'            reference level of (numeric) factors.
 #'
 #' @param x Numeric variable (vector) or a \code{\link{factor}} with numeric
 #'          levels that should be recoded; or a \code{data.frame} or \code{list} of
 #'          variables.
 #' @param recodes String with recode pairs of old and new values. See 'Details' for
 #'          examples.
+#' @param value See \code{recodes}.
 #' @param as.fac Logical, if \code{TRUE}, recoded variable is returned as factor.
 #'          Default is \code{FALSE}, thus a numeric variable is returned.
 #' @param var.label Optional string, to set variable label attribute for the
@@ -153,6 +155,10 @@ rec_to_helper <- function(x, lowest, highest) {
 #'
 #' # recode 1 to 2 into 1 and 3 to 4 into 2
 #' table(rec(efc$e42dep, "1,2=1; 3,4=2"), exclude = NULL)
+#'
+#' # or:
+#' # rec(efc$e42dep) <- "1,2=1; 3,4=2"
+#' # table(efc$e42dep, exclude = NULL)
 #'
 #' # keep value labels. variable label is automatically preserved
 #' str(rec(efc$e42dep,
@@ -244,10 +250,14 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
     # create recodes-string
     recodes <- paste(sprintf("%i=%i", ov, nv), collapse = ";")
     # when we simply reverse values, we can keep value labels
-    val_lab <- rev(get_labels(x,
-                              attr.only = TRUE,
-                              include.values = NULL,
-                              include.non.labelled = TRUE))
+    if (is.null(val_lab)) {
+      val_lab <- rev(get_labels(
+        x,
+        attr.only = TRUE,
+        include.values = NULL,
+        include.non.labelled = TRUE
+      ))
+    }
   }
   # -------------------------------
   # prepare and clean recode string
@@ -389,9 +399,21 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   # replace remaining -Inf with NA
   if (any(is.infinite(new_var))) new_var[which(new_var == -Inf)] <- NA
   # set back variable and value labels
-  new_var <- suppressWarnings(set_label(new_var, var_lab))
-  new_var <- suppressWarnings(set_labels(new_var, val_lab))
+  new_var <- suppressWarnings(set_label(x = new_var, lab = var_lab))
+  new_var <- suppressWarnings(set_labels(x = new_var, labels = val_lab))
   # return result as factor?
   if (as.fac) new_var <- to_factor(new_var)
   return(new_var)
+}
+
+#' @rdname rec
+#' @export
+`rec<-` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, value) {
+  UseMethod("rec<-")
+}
+
+#' @export
+`rec<-.default` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, value) {
+  x <- rec(x = x, recodes = value, as.fac = as.fac, var.label = var.label, val.labels = val.labels)
+  x
 }
