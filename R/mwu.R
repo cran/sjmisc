@@ -35,6 +35,7 @@
 #' mwu(efc$e17age, efc$e42dep)
 #'
 #' @importFrom stats na.omit wilcox.test kruskal.test
+#' @importFrom coin wilcox_test pvalue statistic
 #' @export
 mwu <- function(x, grp, distribution = "asymptotic", weights = NULL) {
   # ------------------------
@@ -51,7 +52,10 @@ mwu <- function(x, grp, distribution = "asymptotic", weights = NULL) {
   grp_values <- sort(unique(stats::na.omit(grp)))
   # length of value range
   cnt <- length(grp_values)
-  labels <- autoSetValueLabels(grp)
+  labels <- get_labels(grp,
+                       attr.only = F,
+                       include.values = NULL,
+                       include.non.labelled = T)
   message("Performing Mann-Whitney-U-Test...")
   message("---------------------------------")
   message("showing statistics between groups (x|y)")
