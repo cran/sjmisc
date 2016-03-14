@@ -36,7 +36,7 @@ This function converts wide data into long format. It allows
                from wide to long format in one single step.
 }
 \details{
-This function enhances \code{tidyr}'s \code{\link[tidyr]{gather}}
+This function enhances \pkg{tidyr}'s \code{\link[tidyr]{gather}}
            function that you can gather multiple column groups at once.
            Value and variable labels for non-gathered variables are preserved.
            However, gathered variables may have different variable label
@@ -70,7 +70,12 @@ to_long(mydat, "time", c("score", "speed"),
         c("speed_t1", "speed_t2", "speed_t3"),
         recode.key = TRUE)
 
-# gather multiple columns, use numeric key-value
+# gather multiple columns, use separate key-column for each value-vector
+to_long(mydat, c("time_score", "time_speed"), c("score", "speed"),
+        c("score_t1", "score_t2", "score_t3"),
+        c("speed_t1", "speed_t2", "speed_t3"))
+
+# gather multiple columns, label columns
 mydat <- to_long(mydat, "time", c("score", "speed"),
                  c("score_t1", "score_t2", "score_t3"),
                  c("speed_t1", "speed_t2", "speed_t3"),
@@ -78,6 +83,7 @@ mydat <- to_long(mydat, "time", c("score", "speed"),
 
 str(mydat$score)
 get_label(mydat$speed)
+lbl_df(mydat)
 
 }
 

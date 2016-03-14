@@ -118,7 +118,7 @@ set_label <- function(x, lab, attr.string = NULL) {
       # check for matching length of supplied labels
       # ----------------------------
       if (nvars != length(lab)) {
-        message("argument \"lab\" must be of same length as numbers of columns in \"x\".")
+        message("Argument `lab` must be of same length as numbers of columns in `x`.")
       } else {
         # ----------------------------
         # do we have a data frame? If yes, save column names
@@ -169,13 +169,4 @@ set_label <- function(x, lab, attr.string = NULL) {
 `set_label<-.default` <- function(x, attr.string = NULL, value) {
   x <- set_label(x, value, attr.string)
   x
-}
-
-
-#' @name set_var_labels
-#' @rdname set_label
-#' @export
-set_var_labels <- function(x, lab, attr.string = NULL) {
-  .Deprecated("set_label")
-  return(set_label(x, lab, attr.string))
 }

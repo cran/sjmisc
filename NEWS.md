@@ -1,12 +1,22 @@
-# sjmisc 1.5
+# sjmisc 1.6
 
 ## New functions
-* `to_long` to gather (transform from wide to long format) multiple column groups at once.
-* S3-method `model.matrix` for `nlme::gls` class.
+
+* `rec_pattern` to generate recode patterns for the `rec` function.
+* `drop_labels` to drop labels from values with zero-counts.
+* `str_contains` to check whether a string contains another string pattern.
+* `r2` to compute R-squared values for linear (mixed) models.
+* `lbl_df` to create a labelled data frame, and related S3-generic print method for `lbl_df` objects.
 
 ## Changes to functions
-* `std_beta` now supports `nlme::gls` models.
+
+* `cv` now accepts multiple arguments.
+* `icc` now accepts multiple arguments.
+* `weight` now also weights character vectors.
+* `overdisp` now wraps `AER::dispersiontest` to also support simple glm's.
+* Removed deprecated functions.
 
 ## Bug fixes
-* `word_wrap` now removes `NA` values from `labels` before wrapping strings.
-* `set_na` now drops unused factor levels that have been replaced with `NA` values ([#15](https://github.com/sjPlot/sjmisc/issues/15)).
+
+* Fixed bug in `ref_lvl`, where value labels were not correctly re-ordered for factors that had a `0` as level.
+* Fixed bug in `rec`, where value labels were not automatically re-ordered when `x` was a numeric factor.

@@ -55,9 +55,9 @@ If \code{groupsize} is set to a specific value, the variable is recoded
            a range from 46-50 as first group, even if values from 46 to 49
            are not present. See 'Examples' in \code{\link{group_labels}}.
            \cr \cr
-           \emph{If you want to split a variable into a certain amount of equal
+           If you want to split a variable into a certain amount of equal
            sized groups (instead of having groups where values have all the same
-           range), use the \code{\link{split_var}} function!}
+           range), use the \code{\link{split_var}} function!
 }
 \note{
 Variable label attributes (see, for instance, \code{\link{set_label}}) are preserved.
@@ -84,10 +84,10 @@ barplot(table(ageGrp),
 
 }
 \seealso{
-\itemize{
-           \item \code{\link{split_var}}
-           \item \code{\link{group_labels}}
-           \item \code{\link{group_str}}
-         }
+\code{\link{group_labels}} to create the associated value labels for
+         grouped variables, \code{\link{split_var}} to split variables into
+         equal sized groups, \code{\link{group_str}} for grouping string vectors
+         or \code{\link{rec_pattern}} and \code{\link{rec}} for another
+         convenbient way of recoding variables into smaller groups.
 }
 
