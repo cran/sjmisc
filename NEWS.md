@@ -1,22 +1,22 @@
-# sjmisc 1.6
+# sjmisc 1.7
+
+# General
+
+* Package is now depending on R >= 3.2, because some macros for RD-files did not work on older R-releases.
 
 ## New functions
 
-* `rec_pattern` to generate recode patterns for the `rec` function.
-* `drop_labels` to drop labels from values with zero-counts.
-* `str_contains` to check whether a string contains another string pattern.
-* `r2` to compute R-squared values for linear (mixed) models.
-* `lbl_df` to create a labelled data frame, and related S3-generic print method for `lbl_df` objects.
+* `merge_df` to fully join labelled data frame and preserve value and variable labels.
+* `wtd_sd` to compute weighted standard deviations.
+* `wtd_se` to compute weighted standard errors.
+* `get_note` and `set_note` to annotate vectors.
+* `re_var` to print random effect variances of `merMod`-objects. This function is just a convenient wrapper for `print.icc.lme4` with `comp`-argument.
+* `print.labelled` generic method for printing labelled class vectors. Unlike 'haven's print-method, this method also prints variable labels and, if available, vector annotations and missing value attributes.
+* S3-method `model.frame.gls`.
 
 ## Changes to functions
 
-* `cv` now accepts multiple arguments.
-* `icc` now accepts multiple arguments.
-* `weight` now also weights character vectors.
-* `overdisp` now wraps `AER::dispersiontest` to also support simple glm's.
-* Removed deprecated functions.
-
-## Bug fixes
-
-* Fixed bug in `ref_lvl`, where value labels were not correctly re-ordered for factors that had a `0` as level.
-* Fixed bug in `rec`, where value labels were not automatically re-ordered when `x` was a numeric factor.
+* `icc` now also returns variance parameters of random effects as attributes.
+* `print.icc.lme4` gets a `comp`-argument to also print variance parameters (see `?icc` for details).
+* `r2` also computes pseudo-R2 based on random effect variances.
+* S3-method `mean.labelled` only prints a message instead of warning, when `x` has labelled missing values.
