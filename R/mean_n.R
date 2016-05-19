@@ -55,27 +55,22 @@
 #'
 #' @export
 mean_n <- function(dat, n, digits = 2) {
-  # ---------------------------------------
   # is 'n' indicating a proportion?
-  # ---------------------------------------
   digs <- n %% 1
   if (digs != 0) n <- round(ncol(dat) * digs)
-  # ---------------------------------------
+
   # coerce matrix to data frame
-  # ---------------------------------------
   if (is.matrix(dat)) dat <- as.data.frame(dat)
-  # ---------------------------------------
+
   # check if we have a data framme with at least two columns
-  # ---------------------------------------
   if (!is.data.frame(dat) || ncol(dat) < 2) {
-    warning("'dat' must be a data.frame with at least two columns.", call. = F)
+    warning("`dat` must be a data frame with at least two columns.", call. = TRUE)
     return(NA)
   }
-  # ---------------------------------------
+
   # n may not be larger as df's amount of columns
-  # ---------------------------------------
   if (ncol(dat) < n) {
-    warning("'n' must be smaller or equal to data.frame's amount of columns.", call. = F)
+    warning("`n` must be smaller or equal to number of columns in data frame.", call. = TRUE)
     return(NA)
   }
   round(apply(dat, 1, function(x) ifelse(sum(!is.na(x)) >= n, mean(x, na.rm = TRUE), NA)), digits)

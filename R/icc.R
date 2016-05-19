@@ -17,6 +17,7 @@
 #' @references \itemize{
 #'               \item Aguinis H, Gottfredson RK, Culpepper SA. 2013. Best-Practice Recommendations for Estimating Cross-Level Interaction Effects Using Multilevel Modeling. Journal of Management 39(6): 1490–1528 (\doi{10.1177/0149206313478188})
 #'               \item Aly SS, Zhao J, Li B, Jiang J. 2014. Reliability of environmental sampling culture results using the negative binomial intraclass correlation coefficient. Springerplus [Internet] 3. Available from: \url{http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3916583/}
+#'               \item Hox J. 2002. Multilevel analysis: techniques and applications. Mahwah, NJ: Erlbaum
 #'               \item Stryhn H, Sanchez J, Morley P, Booker C, Dohoo IR. 2006. Interpretation of variance parameters in multilevel Poisson regression models. Proceedings of the 11th International Symposium on Veterinary Epidemiology and Economics, 2006 Available at \url{http://www.sciquest.org.nz/node/64294}
 #'               \item Wu S, Crespi CM, Wong WK. 2012. Comparison of methods for estimating the intraclass correlation coefficient for binary responses in cancer prevention cluster randomized trials. Contempory Clinical Trials 33: 869-880 (\doi{10.1016/j.cct.2012.05.004})
 #'               \item \href{http://stats.stackexchange.com/questions/18088/intraclass-correlation-icc-for-an-interaction/28100#28100}{CrossValidated (2012) \emph{Intraclass correlation (ICC) for an interaction?}}
@@ -24,32 +25,52 @@
 #'               \item \href{http://stats.stackexchange.com/questions/67247/how-to-partition-the-variance-explained-at-group-level-and-individual-level/67356#67356}{CrossValidated (2014) \emph{how to partition the variance explained at group level and individual level}}
 #'             }
 #'
-#' @details Some notes on why the ICC is useful, based on Grace-Martin K: \emph{The Intraclass Correlation Coefficient in Mixed Models}, \href{http://www.theanalysisfactor.com/the-intraclass-correlation-coefficient-in-mixed-models/}{web}:
+#'
+#' @note Some notes on why the ICC is useful, based on Grace-Martin K: \emph{The Intraclass Correlation Coefficient in Mixed Models}, \href{http://www.theanalysisfactor.com/the-intraclass-correlation-coefficient-in-mixed-models/}{web}:
 #'       \itemize{
-#'        \item It can help you determine whether or not a linear mixed model is even necessary. If you find that the correlation is zero, that means the observations within clusters are no more similar than observations from different clusters.  Go ahead and use a simpler analysis technique.
-#'        \item It can be theoretically meaningful to understand how much of the overall variation in the response is explained simply by clustering.  For example, in a repeated measures psychological study you can tell to what extent mood is a trait (varies among people, but not within a person on different occasions) or state (varies little on average among people, but varies a lot across occasions).
+#'        \item It can help you determine whether or not a linear mixed model is even necessary. If you find that the correlation is zero, that means the observations within clusters are no more similar than observations from different clusters. Go ahead and use a simpler analysis technique.
+#'        \item It can be theoretically meaningful to understand how much of the overall variation in the response is explained simply by clustering. For example, in a repeated measures psychological study you can tell to what extent mood is a trait (varies among people, but not within a person on different occasions) or state (varies little on average among people, but varies a lot across occasions).
 #'        \item It can also be meaningful to see how the ICC (as well as the between and within cluster variances) changes as variable are added to the model.
 #'       }
+#'       In short, the ICC can be interpreted as "the proportion of the variance
+#'       explained by the grouping structure in the population" (Hox 2002: 15).
+#'       \cr \cr
+#'       \strong{Caution:} For three-level-models, depending on the nested structure
+#'       of the model, the ICC only reports the proportion of variance explained
+#'       for each grouping level. However, the proportion of variance for specific
+#'       levels related to each other (e.g., similarity of level-1-units within
+#'       level-2-units or level-2-units within level-3-units) must be computed
+#'       manually. Use \code{\link{get_re_var}} to get the between-group-variances
+#'       and residual variance of the model, and calculate the ICC for the various level
+#'       correlations.
+#'       \cr \cr
+#'       For example, for the ICC between level 1 and 2: \cr
+#'       \code{sum(get_re_var(fit)) / (sum(get_re_var(fit)) + get_re_var(fit, "sigma_2"))}
+#'       \cr \cr
+#'       or for the ICC between level 2 and 3: \cr
+#'       \code{get_re_var(fit)[2] / sum(get_re_var(fit))}
 #'
-#' @note The calculation of the ICC for generalized linear mixed models with binary outcome is based on
+#' @details The calculation of the ICC for generalized linear mixed models with binary outcome is based on
 #'       Wu et al. (2012). For Poisson multilevel models, please refere to Stryhn et al. (2006). Aly et al. (2014)
 #'       describe computation of ICC for negative binomial models.
 #'       \cr \cr
 #'       There is a \code{print}-method that prints the variance parameters using
 #'       the \code{comp}-argument set to \code{"var"}: \code{print(x, comp = "var")}
-#'       (see 'Examples').
+#'       (see 'Examples'). The \code{\link{re_var}}-function is a convenient wrapper.
 #'       \cr \cr
 #'       The random effect variances indicate the between- and within-group
 #'         variances as well as random-slope variance and random-slope-intercept
-#'         correlation are returned. The components are denoted as following:
+#'         correlation. The components are denoted as following:
 #'         \itemize{
-#'          \item Within-group variance: sigma_2
-#'          \item Between-group-variance: tau.00
-#'          \item Random-slope-variance: tau.11
+#'          \item Within-group (residual) variance: sigma_2
+#'          \item Between-group-variance: tau.00 (variation between individual intercepts and average intercept)
+#'          \item Random-slope-variance: tau.11 (variation between individual slopes and average slope)
 #'          \item Random-Intercept-Slope-covariance: tau.01
 #'          \item Random-Intercept-Slope-correlation: rho.01
 #'         }
 #'
+#' @seealso \code{\link{re_var}} to print random effect variances and \code{\link{get_re_var}}
+#'            to get the values from a particular variance component.
 #'
 #' @examples
 #' \dontrun{
@@ -92,43 +113,34 @@ icc <- function(x, ...) {
 #' @importFrom lme4 VarCorr fixef getME
 #' @importFrom stats family formula
 icc.lme4 <- function(fit) {
-  # ------------------------
   # check if suggested package is available
-  # ------------------------
   if (!requireNamespace("lme4", quietly = TRUE)) {
-    stop("Package 'lme4' needed for this function to work. Please install it.", call. = FALSE)
+    stop("Package `lme4` needed for this function to work. Please install it.", call. = FALSE)
   }
-  # ------------------------
+
   # check object class
-  # ------------------------
-  if (any(class(fit) == "glmerMod") || any(class(fit) == "lmerMod") || any(class(fit) == "merModLmerTest")) {
-    # ------------------------
+  if (is_merMod(fit)) {
     # get family
-    # ------------------------
     fitfam <- stats::family(fit)$family
     # is neg. binomoal?
     is_negbin <- str_contains(fitfam, "Negative Binomial", ignore.case = TRUE)
-    # ------------------------
+
     # random effects variances
     # for details on tau and sigma, see
     # Aguinis H, Gottfredson RK, Culpepper SA2013. Best-Practice Recommendations for Estimating Cross-Level Interaction Effects Using Multilevel Modeling. Journal of Management 39(6): 1490–1528. doi:10.1177/0149206313478188.
-    # ------------------------
     reva <- lme4::VarCorr(fit)
     # retrieve only intercepts
     vars <- lapply(reva, function(x) x[[1]])
-    # ------------------------
+
     # random intercept-variances, i.e.
     # between-subject-variance (tau 00)
-    # ------------------------
     tau.00 <- sapply(vars, function(x) x[1])
-    # ------------------------
+
     # random slope-variances (tau 11)
-    # ------------------------
     tau.11 <- unlist(lapply(reva, function(x) diag(x)[-1]))
-    # ------------------------
+
     # residual variances, i.e.
     # within-cluster-variance (sigma^2)
-    # ------------------------
     if (any(class(fit) == "glmerMod") && fitfam == "binomial") {
       # for logistic models, we use pi / 3
       resid_var <- (pi ^ 2) / 3
@@ -155,12 +167,12 @@ icc.lme4 <- function(fit) {
       # random intercept icc
       ri.icc <- tau.00 / total_var
     }
-    # ----------------------------------
+
     # get random slope random intercep correlations
-    # ----------------------------------
     # do we have any rnd slopes?
     has_rnd_slope <- unlist(lapply(reva, function(x) dim(attr(x, "correlation"))[1] > 1))
     tau.01 <- rho.01 <- NULL
+
     # get rnd slopes
     if (any(has_rnd_slope)) {
       rnd_slope <- reva[has_rnd_slope]
@@ -170,16 +182,18 @@ icc.lme4 <- function(fit) {
       std_ <- lapply(rnd_slope, function(x) prod(attr(x, "stddev")))
       # bind to matrix
       tau.01 <- apply(as.matrix(cbind(unlist(cor_), unlist(std_))), MARGIN = 1, FUN = prod)
-      rho.01 <- cor_
+      rho.01 <- unlist(cor_)
     }
+
     # name values
     names(ri.icc) <- names(reva)
+
     # add attributes, for print method
     class(ri.icc) <- c("icc.lme4", class(ri.icc))
     attr(ri.icc, "family") <- stats::family(fit)$family
     attr(ri.icc, "link") <- stats::family(fit)$link
     attr(ri.icc, "formula") <- stats::formula(fit)
-    attr(ri.icc, "model") <- ifelse(isTRUE(any(class(fit) == "glmerMod")), "Generalized inear mixed model", "Linear mixed model")
+    attr(ri.icc, "model") <- ifelse(any(class(fit) == "glmerMod"), "Generalized inear mixed model", "Linear mixed model")
     attr(ri.icc, "tau.00") <- tau.00
     attr(ri.icc, "tau.01") <- tau.01
     attr(ri.icc, "rho.01") <- rho.01
@@ -188,7 +202,7 @@ icc.lme4 <- function(fit) {
     # return results
     return(ri.icc)
   } else {
-    warning("Function `icc` currently only supports `merMod` objects (package `lme4`).", call. = F)
+    warning("Function `icc` currently only supports `merMod` objects (package `lme4`).", call. = TRUE)
   }
 }
 
@@ -207,7 +221,7 @@ icc.lme4 <- function(fit) {
 #'
 #' @references Aguinis H, Gottfredson RK, Culpepper SA. 2013. Best-Practice Recommendations for Estimating Cross-Level Interaction Effects Using Multilevel Modeling. Journal of Management 39(6): 1490–1528 (\doi{10.1177/0149206313478188})
 #'
-#' @seealso \code{\link{icc}}
+#' @seealso \code{\link{icc}} and \code{\link{get_re_var}}
 #'
 #' @examples
 #' library(lme4)
@@ -224,4 +238,66 @@ re_var <- function(x) {
   # return value
   revar_ <- icc(x)
   print(revar_, comp = "var")
+}
+
+
+#' @title Random effect variances
+#' @name get_re_var
+#' @description This function extracts specific components from the random effect
+#'                variances or the random-intercept-slope-correlation of mixed
+#'                effects models. Currently, only \code{\link[lme4]{merMod}} objects
+#'                are supported.
+#'
+#' @param x An object of class \code{icc.lme4}, as returned by the \code{\link{icc}} function,
+#'          or a fitted mixed effects model (\code{\link[lme4]{merMod}}-class).
+#' @param comp Name of the variance component to be returned. See 'Details'.
+#'
+#' @return The required variance component.
+#'
+#' @seealso \code{\link{icc}} and \code{\link{re_var}}
+#'
+#' @details The random effect variances indicate the between- and within-group
+#'         variances as well as random-slope variance and random-slope-intercept
+#'         correlation. Use following values for \code{comp} to get the particular
+#'         variance component:
+#'         \describe{
+#'          \item{\code{"sigma_2"}}{Within-group (residual) variance}
+#'          \item{\code{"tau.00"}}{Between-group-variance (variation between individual intercepts and average intercept)}
+#'          \item{\code{"tau.11"}}{Random-slope-variance (variation between individual slopes and average slope)}
+#'          \item{\code{"tau.01"}}{Random-Intercept-Slope-covariance}
+#'          \item{\code{"rho.01"}}{Random-Intercept-Slope-correlation}
+#'         }
+#'
+#' @examples
+#' library(lme4)
+#' fit <- lmer(Reaction ~ Days + (Days | Subject), sleepstudy)
+#'
+#' # icc
+#' icc(fit)
+#'
+#' # all random effect variance components
+#' re_var(fit)
+#'
+#' # just the rand. slope-intercept covariance
+#' get_re_var(fit, "tau.01")
+#'
+#' sleepstudy$mygrp <- sample(1:45, size = 180, replace = TRUE)
+#' fit <- lmer(Reaction ~ Days + (1 | mygrp) + (Days | Subject), sleepstudy)
+#' get_re_var(fit, "rho.01")
+#'
+#' @export
+get_re_var <- function(x, comp = c("tau.00", "tau.01", "tau.11", "rho.01", "sigma_2")) {
+  # check if we have a valid object
+  if (!any(class(x) == "icc.lme4") && !is_merMod(x)) {
+    stop("`x` must either be an object returned by the `icc` function, or a merMod-object.", call. = F)
+  }
+
+  # check arguments
+  comp <- match.arg(comp)
+
+  # do we have a merMod object? If yes, get ICC and var components
+  if (is_merMod(x)) x <- icc(x)
+
+  # return results
+  return(attr(x, comp, exact = TRUE))
 }

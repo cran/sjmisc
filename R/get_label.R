@@ -57,15 +57,11 @@
 #'         main = get_label(efc$e42dep))
 #'
 #' # get labels from multiple variables
-#' get_label(list(efc$e42dep,
-#'                efc$e16sex,
-#'                efc$e15relat))
+#' get_label(list(efc$e42dep, efc$e16sex, efc$e15relat))
 #'
 #' @export
 get_label <- function(x, def.value = NULL) {
-  # ----------------------------
   # auto-detect variable label attribute
-  # ----------------------------
   attr.string <- getVarLabelAttribute(x)
   # do we have a df?
   if (is.data.frame(x) || is.matrix(x)) {

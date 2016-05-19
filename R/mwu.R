@@ -38,14 +38,12 @@
 #' @importFrom coin wilcox_test pvalue statistic
 #' @export
 mwu <- function(x, grp, distribution = "asymptotic", weights = NULL) {
-  # ------------------------
   # check if suggested package is available
-  # ------------------------
   if (!requireNamespace("coin", quietly = TRUE)) {
     stop("Package 'coin' needed for this function to work. Please install it.", call. = FALSE)
   }
-  # do we have a factor? if yes, make numeric
-  if (is.factor(grp)) grp <- to_value(grp)
+  # coerce factor and character to numeric
+  if (is.factor(grp) || is.character(grp)) grp <- to_value(grp)
   # group "counter" (index) should start with 1, not 0
   if (min(grp, na.rm = TRUE) == 0) grp <- grp + 1
   # retrieve unique group values. need to iterate all values
@@ -97,19 +95,12 @@ mwu <- function(x, grp, distribution = "asymptotic", weights = NULL) {
         n_grp2 <- length(xsub[which(ysub.n == grp_values[j])])
         # print to console
         if (is.null(labels)) {
-          cat(sprintf("Groups (%i|%i), n = %i/%i:\n",
-                      grp_values[i],
-                      grp_values[j],
-                      n_grp1,
-                      n_grp2))
+          cat(sprintf("Groups (%i|%i), n = %i/%i:\n", grp_values[i],
+                      grp_values[j], n_grp1, n_grp2))
         } else {
           cat(sprintf("Groups %i = %s (n = %i) | %i = %s (n = %i):\n",
-                      grp_values[i],
-                      labels[i],
-                      n_grp1,
-                      grp_values[j],
-                      labels[j],
-                      n_grp2))
+                      grp_values[i], labels[i], n_grp1, grp_values[j],
+                      labels[j], n_grp2))
         }
         if (p < 0.001) {
           p <- 0.001
@@ -118,20 +109,10 @@ mwu <- function(x, grp, distribution = "asymptotic", weights = NULL) {
           p.string <- "="
         }
         cat(sprintf("  U = %.3f, W = %.3f, p %s %.3f, Z = %.3f\n  effect-size r = %.3f\n  rank-mean(%i) = %.2f\n  rank-mean(%i) = %.2f\n\n", u, w, p.string, p, z, r, i, rkm.i, j, rkm.j))
-        df <- rbind(df,
-                    cbind(grp1 = grp_values[i],
-                          grp1.label = labels[i],
-                          grp1.n = n_grp1,
-                          grp2 = grp_values[j],
-                          grp2.label = labels[j],
-                          grp2.n = n_grp2,
-                          u = u,
-                          w = w,
-                          p = p,
-                          z = z,
-                          r = r,
-                          rank.mean.grp1 = rkm.i,
-                          rank.mean.grp2 = rkm.j))
+        df <- rbind(df, cbind(grp1 = grp_values[i], grp1.label = labels[i],
+                              grp1.n = n_grp1, grp2 = grp_values[j], grp2.label = labels[j],
+                              grp2.n = n_grp2, u = u, w = w, p = p, z = z, r = r,
+                              rank.mean.grp1 = rkm.i, rank.mean.grp2 = rkm.j))
       }
     }
   }
@@ -152,12 +133,8 @@ mwu <- function(x, grp, distribution = "asymptotic", weights = NULL) {
     cat(sprintf("p %s %.3f\n", p.string, p))
   }
   # prepare a data frame that can be used for 'sjt.df'.
-  tab.df <- data.frame(Groups = sprintf("%s<br>%s",
-                                        df$grp1.label,
-                                        df$grp2.label),
-                       N = sprintf("%s<br>%s",
-                                   df$grp1.n,
-                                   df$grp2.n),
+  tab.df <- data.frame(Groups = sprintf("%s<br>%s", df$grp1.label, df$grp2.label),
+                       N = sprintf("%s<br>%s", df$grp1.n, df$grp2.n),
                        'Mean Rank' = sprintf("%.2f<br>%.2f",
                                              as.numeric(as.character(df$rank.mean.grp1)),
                                              as.numeric(as.character(df$rank.mean.grp2))),

@@ -34,8 +34,7 @@
 #'                    grp = efc$grp)
 #' # fit glmer
 #' fit <- glmer(hi_qol ~ sex + c12hour + neg_c_7 + (1|grp),
-#'              data = mydf,
-#'              family = binomial("logit"))
+#'              data = mydf, family = binomial("logit"))
 #'
 #' converge_ok(fit)
 #'
@@ -47,7 +46,7 @@ converge_ok <- function(x, tolerance = 0.001) {
     stop("Package `Matrix` needed for this function to work. Please install it.", call. = FALSE)
   }
   # is 'x' an lmer object?
-  if (any(class(x) == "glmerMod") || any(class(x) == "lmerMod") || any(class(x) == "merModLmerTest")) {
+  if (is_merMod(x)) {
     relgrad <- with(x@optinfo$derivs, Matrix::solve(Hessian, gradient))
     # copy logical value, TRUE if convergence is OK
     retval <- max(abs(relgrad)) < tolerance

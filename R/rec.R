@@ -97,10 +97,10 @@ rec_to_helper <- function(x, lowest, highest) {
 }
 
 
-#' @title Recode numeric variables
+#' @title Recode variables
 #' @name rec
 #'
-#' @description Recodes the categories of a (numeric) variable \code{x} into new
+#' @description Recodes the categories / values of a variable \code{x} into new
 #'                category values.
 #'
 #' @seealso \code{\link{set_na}} for setting \code{NA} values, \code{\link{replace_na}}
@@ -108,11 +108,10 @@ rec_to_helper <- function(x, lowest, highest) {
 #'            for re-shifting value ranges and \code{\link{ref_lvl}} to change the
 #'            reference level of (numeric) factors.
 #'
-#' @param x Numeric variable (vector) or a \code{\link{factor}} with numeric
-#'          levels that should be recoded; or a \code{data.frame} or \code{list} of
-#'          variables.
-#' @param recodes String with recode pairs of old and new values. See 'Details' for
-#'          examples.
+#' @param x Numeric, charactor or factor variable that should be recoded;
+#'          or a \code{data.frame} or \code{list} of variables.
+#' @param recodes String with recode pairs of old and new values. See
+#'          'Details' for examples.
 #' @param value See \code{recodes}.
 #' @param as.fac Logical, if \code{TRUE}, recoded variable is returned as factor.
 #'          Default is \code{FALSE}, thus a numeric variable is returned.
@@ -122,9 +121,9 @@ rec_to_helper <- function(x, lowest, highest) {
 #' @param val.labels Optional character vector, to set value label attributes
 #'          of recoded variable (see \code{\link{set_labels}}).
 #'          If \code{NULL} (default), no value labels will be set.
-#' @return A numeric variable (or a factor, if \code{as.fac = TRUE}) with
-#'           recoded category values, or a data frame or \code{list}-object
-#'           with recoded categories for all variables.
+#' @return A numeric variable (or a factor, if \code{as.fac = TRUE} or if \code{x}
+#'           was a character vector) with recoded category values, or a data
+#'           frame or \code{list}-object with recoded categories for all variables.
 #'
 #' @details  The \code{recodes} string has following syntax:
 #'           \describe{
@@ -161,8 +160,7 @@ rec_to_helper <- function(x, lowest, highest) {
 #' # table(efc$e42dep, exclude = NULL)
 #'
 #' # keep value labels. variable label is automatically preserved
-#' str(rec(efc$e42dep,
-#'         "1,2=1; 3,4=2",
+#' str(rec(efc$e42dep, "1,2=1; 3,4=2",
 #'         val.labels = c("low dependency", "high dependency")))
 #'
 #' # recode 1 to 3 into 4 into 2
@@ -189,6 +187,16 @@ rec_to_helper <- function(x, lowest, highest) {
 #' lapply(dummy, table, exclude = NULL)
 #' # show recodes
 #' lapply(rec(dummy, "1,2=1; NA=9; else=copy"), table, exclude = NULL)
+#'
+#'
+#' # recode character vector
+#' dummy <- c("M", "F", "F", "X")
+#' rec(dummy, "M=Male; F=Female; X=Refused")
+#'
+#'
+#' # recode non-numeric factors
+#' data(iris)
+#' rec(iris$Species, "setosa=huhu; else=copy")
 #'
 #' @export
 rec <- function(x,
@@ -223,35 +231,36 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   val_lab <- val.labels
   # remember if NA's have been recoded...
   na_recoded <- FALSE
-  # -------------------------------
+
   # do we have a factor with "x"?
-  # -------------------------------
   if (is.factor(x)) {
-    # factor may only have numeric levels!
-    if (!is_num_fac(x)) {
-      stop("`x` may only have numeric factor levels.", call. = F)
-    } else {
-      # save variable labels before in case we just want
-      # to reverse the order
-      if (is.null(val_lab) && recodes == "rev") {
-        val_lab <- rev(get_labels(
-          x,
-          attr.only = TRUE,
-          include.values = NULL,
-          include.non.labelled = TRUE
-        ))
-      }
+    # save variable labels before in case we just want
+    # to reverse the order
+    if (is.null(val_lab) && recodes == "rev") {
+      val_lab <- rev(get_labels(
+        x,
+        attr.only = TRUE,
+        include.values = NULL,
+        include.non.labelled = TRUE
+      ))
+    }
+
+    if (is_num_fac(x)) {
+      # numeric factors coerced to numeric
       x <- as.numeric(as.character(x))
+    } else {
+      # non-numeric factors coerced to character
+      x <- as.character(x)
+      # non-numeric factors will always be factor again
+      as.fac = TRUE
     }
   }
-  # -------------------------------
+
   # retrieve min and max values
-  # -------------------------------
   min_val <- min(x, na.rm = T)
   max_val <- max(x, na.rm = T)
-  # -------------------------------
+
   # do we have special recode-token?
-  # -------------------------------
   if (recodes == "rev") {
     # retrieve unique valus, sorted
     ov <- sort(unique(stats::na.omit(as.vector(x))))
@@ -269,9 +278,8 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
       ))
     }
   }
-  # -------------------------------
+
   # prepare and clean recode string
-  # -------------------------------
   # retrieve each single recode command
   rec_string <- unlist(strsplit(recodes, ";", fixed = TRUE))
   # remove spaces
@@ -283,31 +291,27 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   rec_string <- gsub("hi", as.character(max_val), rec_string, fixed = TRUE)
   # retrieve all recode-pairs, i.e. all old-value = new-value assignments
   rec_pairs <- strsplit(rec_string, "=", fixed = TRUE)
-  # -------------------------------
+
   # check for correct syntax
-  # -------------------------------
   correct_syntax <- unlist(lapply(rec_pairs, function(r) if (length(r) != 2) r else NULL))
   # found any errors in syntax?
   if (!is.null(correct_syntax)) {
     stop(sprintf("?Syntax error in argument \"%s\"", paste(correct_syntax, collapse = "=")), call. = F)
   }
-  # -------------------------------
+
   # the new, recoded variable
-  # -------------------------------
   new_var <- rep(-Inf, length(x))
-  # -------------------------------
+
   # now iterate all recode pairs
   # and do each recoding step
-  # -------------------------------
   for (i in 1:length(rec_pairs)) {
     # retrieve recode pairs as string, and start with separaring old-values
     # at comma separator
     old_val_string <- unlist(strsplit(rec_pairs[[i]][1], ",", fixed = TRUE))
     new_val_string <- rec_pairs[[i]][2]
     new_val <- c()
-    # -------------------------------
+
     # check if new_val_string is correct syntax
-    # -------------------------------
     if (new_val_string == "NA") {
       # here we have a valid NA specification
       new_val <- NA
@@ -321,19 +325,17 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
       new_val <- suppressWarnings(as.numeric(new_val_string))
       # if not, assignment is wrong
       if (is.na(new_val)) {
-        stop(sprintf("?Syntax error in argument \"%s\"", paste(rec_pairs[[i]], collapse = "=")), call. = F)
+        new_val <- new_val_string
       }
     }
-    # -------------------------------
+
     # retrieve and check old values
-    # -------------------------------
     old_val <- c()
     for (j in 1:length(old_val_string)) {
       # copy to shorten code
       ovs <- old_val_string[j]
-      # -------------------------------
+
       # check if old_val_string is correct syntax
-      # -------------------------------
       if (ovs == "NA") {
         # here we have a valid NA specification
         # add value to vector of old values that
@@ -361,16 +363,16 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
         ovn <- suppressWarnings(as.numeric(ovs))
         # if not, assignment is wrong
         if (is.na(ovn)) {
-          stop(sprintf("?Syntax error in argument \"%s\"", ovs), call. = F)
+          # stop(sprintf("?Syntax error in argument \"%s\"", ovs), call. = F)
+          ovn <- ovs
         }
         # add old recode values to final vector of values
         old_val <- c(old_val, ovn)
       }
     }
-    # --------------------------------------
+
     # now we have all recode values and want
     # to replace old with new values...
-    # --------------------------------------
     for (k in 1:length(old_val)) {
       # check for "else" token
       if (is.infinite(old_val[k])) {

@@ -18,8 +18,8 @@
 #'          from an imported SPSS, SAS or STATA data set, via \code{\link{read_spss}},
 #'          \code{\link{read_sas}} or \code{\link{read_stata}}); a variable
 #'          (vector) with value label attributes; or a \code{list} of variables
-#'          with values label attributes. If \code{x} has no label \code{\link{attributes}},
-#'          factor \code{\link{levels}} are returned. See 'Examples'.
+#'          with values label attributes. If \code{x} has no label attributes,
+#'          factor levels are returned. See 'Examples'.
 #' @param include.values String, indicating whether the values associated with the
 #'          value labels are returned as well. If \code{include.values = "as.name"}
 #'          (or \code{include.values = "n"}), values are set as \code{\link{names}}
@@ -104,9 +104,7 @@
 #' get_labels(efc$e42dep, include.values = "as.prefix")
 #'
 #' # get labels from multiple variables
-#' get_labels(list(efc$e42dep,
-#'                 efc$e16sex,
-#'                 efc$e15relat))
+#' get_labels(list(efc$e42dep, efc$e16sex, efc$e15relat))
 #'
 #'
 #' # create a dummy factor
@@ -181,7 +179,7 @@ get_labels_helper <- function(x, attr.only, include.values, include.non.labelled
     # check if we have anything
     if (!is.null(lab)) {
       # retrieve values associated with labels
-      if (is.character(x))
+      if (is.character(x) || (is.factor(x) && !is_num_fac(x)))
         values <- unname(lab)
       else
         values <- as.numeric(unname(lab))
@@ -190,7 +188,7 @@ get_labels_helper <- function(x, attr.only, include.values, include.non.labelled
       # do we want to include non-labelled values as well?
       if (include.non.labelled) {
         # get values of variable
-        valid.vals <- sort(unique(stats::na.omit((as.vector(x)))))
+        valid.vals <- sort(unique(stats::na.omit(as.vector(x))))
         # check if we have different amount values than labels
         # or, if we have same amount of values and labels, whether
         # values and labels match or not
@@ -221,8 +219,7 @@ get_labels_helper <- function(x, attr.only, include.values, include.non.labelled
       if (!is.null(include.values)) {
         # for backwards compatibility, we also accept "TRUE"
         # here we set values as names-attribute
-        if ((is.logical(include.values) &&
-             include.values == TRUE) ||
+        if ((is.logical(include.values) && isTRUE(include.values)) ||
             include.values == "as.name" || include.values == "n") {
           names(labels) <- values
         }

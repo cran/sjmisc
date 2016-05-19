@@ -42,8 +42,9 @@ For linear models, the r-squared and adjusted r-squared value is returned,
         correlation between the fitted and observed values, as suggested by
         Byrnes (2008), is returned as well as the Omega-squared value as
         suggested by Xu (2003), unless \code{n} is specified. If \code{n}
-        is given, pseudo r-squared measures based on the random intercept (tau 00)
-        and random intercept (tau 11) variances are returned.
+        is given, pseudo r-squared measures based on the variances of random
+        intercept (tau 00, between-group-variance) and random slope (tau 11,
+        random-slope-variance) are returned.
         \cr \cr
         For generalized linear models, Cox & Snell's and Nagelkerke's
         pseudo r-squared values are returned.
@@ -63,8 +64,7 @@ r2(fit)
 # Pseudo-R-squared values
 efc$services <- dicho(efc$tot_sc_e, "v", 0, as.num = TRUE)
 fit <- glm(services ~ neg_c_7 + c161sex + e42dep,
-           data = efc,
-           family = binomial(link = "logit"))
+           data = efc, family = binomial(link = "logit"))
 r2(fit)
 
 # Pseudo-R-squared values for random effect variances

@@ -3,6 +3,10 @@
 
 is_foreign <- function(x) return(!is.null(x) && x == "value.labels")
 
+is_merMod <- function(fit) {
+  return(any(class(fit) %in% c("lmerMod", "glmerMod", "nlmerMod", "merModLmerTest")))
+}
+
 
 # auto-detect attribute style for variable labels.
 # either haven style ("label") or foreign style
@@ -37,9 +41,7 @@ getVarLabelAttribute <- function(x) {
   if (!is.null(attr(x, "variable.label", exact = T))) attr.string <- "variable.label"
   # not found any label yet?
   if (is.null(attr.string)) {
-    # ----------------------------
     # check value_labels option
-    # ----------------------------
     opt <- getOption("value_labels")
     if (!is.null(opt)) attr.string <- ifelse(opt == "haven", "label", "variable.label")
   }
@@ -73,9 +75,7 @@ getValLabelAttribute <- function(x) {
   }
   # not found any label yet?
   if (is.null(attr.string)) {
-    # ----------------------------
     # check value_labels option
-    # ----------------------------
     opt <- getOption("value_labels")
     if (!is.null(opt)) attr.string <- ifelse(opt == "haven", "label", "variable.label")
   }
