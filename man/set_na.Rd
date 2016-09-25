@@ -3,49 +3,36 @@
 \name{set_na}
 \alias{set_na}
 \alias{set_na<-}
-\title{Set NA for specific variable values}
+\title{Replace specific values in vector with NA}
 \usage{
-set_na(x, value, as.attr = FALSE)
+set_na(x, value)
 
-set_na(x, as.attr = FALSE) <- value
+set_na(x) <- value
 }
 \arguments{
 \item{x}{Variable (vector), \code{data.frame} or \code{list} of variables where new
 missing values should be defined. If \code{x} is a \code{data.frame}, each
 column is assumed to be a new variable, where missings should be defined.}
 
-\item{value}{Numeric vector with values that should be replaced with \code{\link{NA}}'s.
-Thus, for each variable in \code{x}, \code{value} are replaced by \code{NA}'s.
-Or: a logical vector describing which values should be translated
-to missing values. See 'Details' and 'Examples'.}
-
-\item{as.attr}{Logical, if \code{TRUE}, \code{value} of \code{x} will \strong{not}
-be converted to \code{NA}. Rather, the missing code values of \code{value}
-will be added as missing-attribute \code{is_na} to the vector. See
-\code{\link{labelled}} for more details, and 'Examples'.}
+\item{value}{Numeric vector with values that should be replaced with a
+\code{\link[haven]{tagged_na}}.
+Thus, for each variable in \code{x}, \code{value} are replaced by
+tagged \code{NA} values.}
 }
 \value{
-\code{x}, where each value of \code{value} is replaced by an \code{NA}.
+\code{x}, where each value of \code{value} is replaced by an a tagged
+          \code{NA}.
 }
 \description{
-This function sets specific values of a variable, data frame
-               or list of variables as missings (\code{NA}).
+This function replaces specific values of a variable, data frame
+               or list of variables with missings (\code{NA}).
 }
 \details{
-\code{set_na} converts those values to \code{NA} that are
-           specified in the function's \code{value} argument; hence,
-           by default, \code{set_na} ignores any missing code attributes
-           like \code{is_na}. \code{\link{to_na}}, by contrast, converts
-           values to \code{NA}, which are defined as missing through the
-           \code{is_na}-attribute of a vector (see \code{\link{labelled}}).
-           \cr \cr
-           If \code{as.attr = TRUE}, \code{value} in \code{x} will \strong{not}
-           be converted to \code{NA}. Instead, the attribute \code{is_na}
-           will be added to \code{x}, indicating which values should be coded
-           as missing. \code{value} may either be numeric, with each number
-           indicating a value that should be defined as missing; or a vector
-           of logicals, describing which values should be translated to
-           missing values (see 'Examples').
+\code{set_na} converts all values defined in \code{value} with
+           a related tagged \code{NA} (see \code{\link[haven]{tagged_na}}).
+           Tagged \code{NA}s work exactly like regular R missing values
+           except that they store one additional byte of information: a tag,
+           which is usually a letter ("a" to "z") or character number ("0" to "9").
            \cr \cr
            Furthermore, see 'Details' in \code{\link{get_na}}.
 }
@@ -61,45 +48,33 @@ table(dummy)
 # set value 1 and 8 as missings
 dummy <- set_na(dummy, c(1, 8))
 # show value distribution, including missings
-table(dummy, exclude = NULL)
+table(dummy, useNA = "always")
+
+# add named vector as further missing value
+set_na(dummy, c("Refused" = 5))
+# see different missing types
+library(haven)
+print_tagged_na(set_na(dummy, c("Refused" = 5)))
+
 
 # create sample data frame
 dummy <- data.frame(var1 = sample(1:8, 100, replace = TRUE),
                     var2 = sample(1:10, 100, replace = TRUE),
                     var3 = sample(1:6, 100, replace = TRUE))
-# show head of data frame
-head(dummy)
 # set value 2 and 4 as missings
-dummy <- set_na(dummy, c(2, 4))
-# show head of new data frame
-head(dummy)
+library(dplyr)
+dummy \%>\% set_na(c(2, 4)) \%>\% head()
+dummy \%>\% set_na(c(2, 4)) \%>\% get_na()
+dummy \%>\% set_na(c(2, 4)) \%>\% get_values()
 
 # create list of variables
 data(efc)
 dummy <- list(efc$c82cop1, efc$c83cop2, efc$c84cop3)
 # check original distribution of categories
-lapply(dummy, table, exclude = NULL)
+lapply(dummy, table, useNA = "always")
 # set 3 to NA
-lapply(set_na(dummy, 3), table, exclude = NULL)
+lapply(set_na(dummy, 3), table, useNA = "always")
 
-# create random variable
-dummy <- sample(1:5, 100, replace = TRUE)
-# declare missing values, but only as attribute
-dummy <- set_na(dummy, c(3, 5), as.attr = TRUE)
-
-str(dummy)
-table(dummy)
-get_na(dummy)
-
-# create random variable
-dummy <- sample(1:5, 100, replace = TRUE)
-# declare missing values, but only as attribute
-# missing code definition may be logical indices
-dummy <- set_na(dummy, c(FALSE, FALSE, FALSE, TRUE, TRUE), as.attr = TRUE)
-
-str(dummy)
-table(dummy)
-get_na(dummy)
 
 }
 \seealso{
@@ -107,7 +82,6 @@ get_na(dummy)
            values, \code{\link{rec}} for general recoding of variables and
            \code{\link{recode_to}} for re-shifting value ranges. See
            \code{\link{get_na}} to get values of missing values in
-           labelled vectors and \code{\link{to_na}} to convert missing value
-           codes into \code{NA}.
+           labelled vectors.
 }
 

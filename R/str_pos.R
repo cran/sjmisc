@@ -9,7 +9,7 @@
 #' @param searchString Character vector with string elements.
 #' @param findTerm String that should be matched against the elements of \code{searchString}.
 #' @param maxdist Maximum distance between two string elements, which is allowed to treat them
-#'          as similar or equal.
+#'          as similar or equal. Smaller values mean less tolerance in matching.
 #' @param part.dist.match Activates similar matching (close distance strings) for parts (substrings)
 #'          of the \code{searchString}. Following values are accepted:
 #'          \itemize{
@@ -72,12 +72,6 @@ str_pos <- function(searchString,
   # find element indices from partial matching of string and find term
   pos <- as.numeric(grep(findTerm, searchString, ignore.case = T))
   if (length(pos) > 0) indices <- c(indices, pos)
-
-  # check if required package is available
-  if (!requireNamespace("stringdist", quietly = TRUE)) {
-    warning("Package 'stringdist' needed for this function to fully work. Please install it. Only partial matching indices are returned.", call. = F)
-    return(indices)
-  }
 
   # find element indices from similar strings
   pos <- which(stringdist::stringdist(tolower(findTerm), tolower(searchString)) <= maxdist)

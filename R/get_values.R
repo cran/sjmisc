@@ -9,7 +9,8 @@
 #' @seealso \code{\link{get_labels}} for getting value labels and \code{\link{get_na}}
 #'            to get values for missing values.
 #'
-#' @param x Variable (vector) with value label attributes.
+#' @param x Variable (vector) with value label attributes; or a data frame or
+#'          list with such variables.
 #' @param sort.val Logical, if \code{TRUE} (default), values of associated value labels
 #'          are sorted.
 #' @param drop.na Logical, if \code{TRUE}, missing code values are excluded from
@@ -30,19 +31,43 @@
 #' get_values(efc$e42dep)
 #' get_labels(efc$e42dep)
 #'
-#' # create labelled integer, with missing flag
-#' x <- labelled(c(1, 2, 1, 3, 4, 1),
-#'               c(Male = 1, Female = 2, Refused = 3, "N/A" = 4),
-#'               c(FALSE, FALSE, TRUE, TRUE))
+#' library(haven)
+#' x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
+#'               c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+#'                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
 #' # get all values
 #' get_values(x)
 #' # drop NA
-#' get_values(x, , TRUE)
+#' get_values(x, drop.na = TRUE)
 #'
+#' # data frame as input
+#' y <- labelled(c(2:3, 3:1, tagged_na("y"), 4:1),
+#'               c("Agreement" = 1, "Disagreement" = 4, "Why" = tagged_na("y")))
+#' get_values(data.frame(x, y))
 #'
+#' @importFrom haven is_tagged_na na_tag
 #' @export
 get_values <- function(x, sort.val = FALSE, drop.na = FALSE) {
-  # haven or sjPlot?
+  UseMethod("get_values")
+}
+
+#' @export
+get_values.data.frame <- function(x, sort.val = FALSE, drop.na = FALSE) {
+  lapply(x, FUN = get_values_helper, sort.val, drop.na)
+}
+
+#' @export
+get_values.list <- function(x, sort.val = FALSE, drop.na = FALSE) {
+  lapply(x, FUN = get_values_helper, sort.val, drop.na)
+}
+
+#' @export
+get_values.default <- function(x, sort.val = FALSE, drop.na = FALSE) {
+  get_values_helper(x, sort.val, drop.na)
+}
+
+get_values_helper <- function(x, sort.val = FALSE, drop.na = FALSE) {
+  # haven or foreign?
   attr.string <- getValLabelAttribute(x)
   # nothing found? then leave...
   if (is.null(attr.string)) return(NULL)
@@ -51,15 +76,14 @@ get_values <- function(x, sort.val = FALSE, drop.na = FALSE) {
     values <- unname(attr(x, attr.string, exact = T))
   else
     values <- as.numeric(unname(attr(x, attr.string, exact = T)))
+  # do we have any tagged NAs?
+  if (any(haven::is_tagged_na(values)) && !drop.na) {
+    values[haven::is_tagged_na(values)] <- paste0("NA(", haven::na_tag(values[haven::is_tagged_na(values)]), ")")
+  }
   # sort values
   if (sort.val) values <- sort(values)
   # remove missing value codes?
-  if (drop.na) {
-    # get NA logicals
-    na.flag <- get_na_flags(x)
-    # do we have missing flag? if yes, remove missing code value
-    if (!is.null(na.flag)) values <- values[!na.flag]
-  }
+  if (drop.na) values <- values[!is.na(values)]
   # foreign? then reverse order
   if (is_foreign(attr.string)) values <- rev(values)
   # return sorted

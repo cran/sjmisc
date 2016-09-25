@@ -1,28 +1,34 @@
-# sjmisc 1.8
+# sjmisc 2.0.0
+
+## General
+
+* **sjmisc** now supports _tagged_ `NA` values, a new structure for labelled missing values introduced by the [haven-package](https://cran.r-project.org/package=haven). This means that functions or arguments that are no longer useful, have been removed while other functions dealing with NA values have been largely revised.
+* All statistical functions have been removed and are now in a separate package, [sjstats](https://cran.r-project.org/package=sjstats).
+* Removed some S3-methods for `labelled`-class, as these are now provided by the haven-package.
+* Functions no longer check input for type `matrix`, to avoid conflicts with scaled vectors (that were recognized as matrix and hence treated as data frame).
+* `table(*, exclude = NULL)` was changed to `table(*, useNA = "always")`, because of planned changes in upcoming R version 3.4.
+* More functions (like `trim()` or `frq()`) now also have data frame- or list-methods.
 
 ## New functions
 
-* `smpsize_lmm` to compute approximated sample size for two-level linear mixed models.
-* `deff` to compute the design effect for two-level linear mixed models.
-* `get_re_var` to get specific components of the random effect variances from mixed models.
+* `zap_na_tags()` to turn tagged NA values into regular NA values.
+* `spread_coef()` to spread coefficients of multiple fitted models in nested data frames into columns.
+* `merge_imputations()` to find the most likely imputed value for a missing value.
+* `flat_table()` to print flat (proportional) tables of labelled variables.
+* Added `to_character()` method.
+* `big_mark()` to format large numbers with big marks.
+* `empty_cols()` and `empty_rows()` to find variables or observations with exclusively NA values in a data frame.
+* `remove_empty_cols()` and `remove_empty_rows()` to remove variables or observations with exclusively NA values from a data frame.
 
 ## Changes to functions
-
-* `to_long` can now also gather columns according to their column numbers.
-* `merge_df` now optionally merges more than two data frames at once.
-* `frq` and `get_frq` now also return frequencies (counts) of character vectors.
-* `rec` now also works for character vectors and non-numeric factors.
-* `set_labels` now also works for character vectors.
-* `drop_labels` now also works for character vectors.
-* `to_value` now keeps labels of character vectors.
-* `to_label` now also works for character vectors and non-numeric factors.
-* `mwu` now also works when `grp` is a character vector.
-* Generally, a better support for character vectors in label functions.
-* Argument `enc` now also applies to `read_spss` for haven-option.
+* `str_contains()` gets a `switch` argument to switch the role of `x` and `pattern`.
+* `word_wrap()` coerces vectors to character if necessary.
+* `to_label()` gets a `var.label` and `drop.levels` argument, and now preserves variable labels by default.
+* Argument `def.value` in `get_label()` now also applies to data frame arguments.
+* If factor levels are numeric and factor has value labels, these are used in `to_value()` by default.
+* `to_factor()` no longer generates `NA` or `NaN`-levels when converting input into factors.
 
 ## Bug fixes
-
-* `merge_df` did not copy all variable and value labels from second data frame.
-* `merge_df` did not work when data frames had no matching columns.
-* `std_beta` did not work when fitted model had no intercept.
-* `set_labels` now also works correctly for ordered factors.
+* `rec()` did not recode values, when these were the first element of a multi-line string of the `recodes` argument.
+* `is_empty()` returned `NA` instead of `TRUE` for empty character vectors.
+* Fixed bug with erroneous assignment of value labels to subset data when using `copy_labels()` ([#20](https://github.com/sjPlot/sjmisc/issues/20))

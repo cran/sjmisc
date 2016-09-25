@@ -11,10 +11,11 @@
 #'
 #' @param x Variable (vector), \code{list} of variables or a \code{data.frame}
 #'          where value label attributes should be removed.
-#' @param value Either a numeric vector, indicating one or more label attributes that
-#'          should be removed (see \code{\link{get_labels}} to retrieve a vector's
-#'          label attributes), or a character vector with names of label attributes
-#'          that should be removed.
+#' @param value Either a numeric vector, indicating the position of one or more label
+#'          attributes that should be removed (see \code{\link{get_labels}} to
+#'          retrieve a vector's label attributes); a character vector with names
+#'          of label attributes that should be removed; or a \code{\link[haven]{tagged_na}}
+#'          to remove the labels from specific NA values.
 #'
 #' @return \code{x} with removed value labels.
 #'
@@ -28,40 +29,62 @@
 #' x <- remove_labels(efc$e42dep, "independent")
 #' get_labels(x, include.values = "p")
 #'
+#' library(haven)
+#' x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
+#'               c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+#'                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
+#' # get current NA values
+#' get_na(x)
+#' get_na(remove_labels(x, tagged_na("c")))
+#'
 #'
 #' @export
 remove_labels <- function(x, value) {
-  if (is.matrix(x) || is.data.frame(x) || is.list(x)) {
-    # get length of data frame or list, i.e.
-    # determine number of variables
-    if (is.data.frame(x) || is.matrix(x))
-      nvars <- ncol(x)
-    else
-      nvars <- length(x)
-    # dichotomize all
-    for (i in 1:nvars) x[[i]] <- remove_labels_helper(x[[i]], value)
-    return(x)
-  } else {
-    return(remove_labels_helper(x, value))
-  }
+  UseMethod("remove_labels")
+}
+
+#' @export
+remove_labels.data.frame <- function(x, value) {
+  tibble::as_tibble(lapply(x, FUN = remove_labels_helper, value))
+}
+
+#' @export
+remove_labels.list <- function(x, value) {
+  lapply(x, FUN = remove_labels_helper, value)
+}
+
+#' @export
+remove_labels.default <- function(x, value) {
+  remove_labels_helper(x, value)
 }
 
 
+#' @importFrom haven is_tagged_na na_tag
 remove_labels_helper <- function(x, value) {
+  # value needs to be specified
+  if (is.null(value)) stop("`value` must not be NULL.", call. = F)
+  # if value is NA, it must be tagged
+  if ((is.na(value) && !haven::is_tagged_na(value))) stop("`value` must be a tagged NA.", call. = F)
+
   # get current labels of `x`
   current.labels <- get_labels(x,
                                attr.only = T,
                                include.values = "n",
                                include.non.labelled = F)
 
+  # get current NA values
+  current.na <- get_na(x)
+
   # if we have no labels, return
-  if (is.null(current.labels)) {
-    message("`x` has no value label attributes.")
+  if (is.null(current.labels) && is.null(current.na)) {
+    message("`x` has no value labels.")
     return(x)
   }
 
   # remove by index?
-  if (is.numeric(value)) {
+  if (haven::is_tagged_na(value)) {
+    current.na <- current.na[haven::na_tag(current.na) != haven::na_tag(value)]
+  } else if (is.numeric(value)) {
     current.labels <- current.labels[-value]
   } else if (is.character(value)) {
     # find value labels that should be removes
@@ -80,7 +103,7 @@ remove_labels_helper <- function(x, value) {
   all.labels <- all.labels[order(as.numeric(all.labels))]
 
   # set back labels
-  x <- set_labels(x, labels = all.labels)
+  x <- set_labels(x, labels = c(all.labels, current.na))
   return(x)
 }
 
@@ -92,6 +115,5 @@ remove_labels_helper <- function(x, value) {
 
 #' @export
 `remove_labels<-.default` <- function(x, value) {
-  x <- remove_labels(x, value)
-  x
+  remove_labels(x, value)
 }

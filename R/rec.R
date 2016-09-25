@@ -1,102 +1,3 @@
-#' @title Recode variable categories into new values
-#' @name recode_to
-#'
-#' @description Recodes (or "renumbers") the categories of \code{var} into new category values, beginning
-#'                with the lowest value specified by \code{lowest}. Useful if you want
-#'                to recode dummy variables with 1/2 coding to 0/1 coding, or recoding scales from
-#'                1-4 to 0-3 etc.
-#'
-#' @seealso \code{\link{rec}} for general recoding of variables and \code{\link{set_na}}
-#'            for setting \code{\link{NA}} values.
-#'
-#' @param x Variable (vector), \code{data.frame} or \code{list} of variables that should be recoded.
-#' @param lowest Indicating the lowest category value for recoding. Default is 0, so the new
-#'          variable starts with value 0.
-#' @param highest If specified and larger than \code{lowest}, all category values larger than
-#'          \code{highest} will be set to \code{NA}. Default is \code{-1}, i.e. this argument is ignored
-#'          and no NA's will be produced.
-#' @return A new variable with recoded category values, where \code{lowest} indicates the lowest
-#'           value; or a data frame or list of variables where variables have
-#'           been recoded as described.
-#'
-#' @note Value and variable label attributes (see, for instance, \code{\link{get_labels}}
-#'         or \code{\link{set_labels}}) are preserved.
-#'
-#' @examples
-#' # recode 1-4 to 0-3
-#' dummy <- sample(1:4, 10, replace = TRUE)
-#' recode_to(dummy)
-#'
-#' # recode 3-6 to 0-3
-#' # note that numeric type is returned
-#' dummy <- as.factor(3:6)
-#' recode_to(dummy)
-#'
-#' # lowest value starting with 1
-#' dummy <- sample(11:15, 10, replace = TRUE)
-#' recode_to(dummy, 1)
-#'
-#' # lowest value starting with 1, highest with 3
-#' # all others set to NA
-#' dummy <- sample(11:15, 10, replace = TRUE)
-#' recode_to(dummy, 1, 3)
-#'
-#' # create list of variables
-#' data(efc)
-#' dummy <- list(efc$c82cop1, efc$c83cop2, efc$c84cop3)
-#' # check original distribution of categories
-#' lapply(dummy, table)
-#' # renumber from 1 to 0
-#' lapply(recode_to(dummy), table)
-#'
-#' @export
-recode_to <- function(x, lowest = 0, highest = -1) {
-  if (is.matrix(x) || is.data.frame(x) || is.list(x)) {
-    # get length of data frame or list, i.e.
-    # determine number of variables
-    if (is.data.frame(x) || is.matrix(x))
-      nvars <- ncol(x)
-    else
-      nvars <- length(x)
-    # dichotomize all
-    for (i in 1:nvars) x[[i]] <- rec_to_helper(x[[i]], lowest, highest)
-    return(x)
-  } else {
-    return(rec_to_helper(x, lowest, highest))
-  }
-}
-
-
-rec_to_helper <- function(x, lowest, highest) {
-  # retrieve value labels
-  val_lab <- get_labels(x,
-                        attr.only = TRUE,
-                        include.values = NULL,
-                        include.non.labelled = TRUE)
-  # retrieve variable label
-  var_lab <- get_label(x)
-  # check if factor
-  if (is.factor(x)) {
-    # try to convert to numeric
-    x <- as.numeric(as.character(x))
-  }
-  # retrieve lowest category
-  minval <- min(x, na.rm = TRUE)
-  # check substraction difference between current lowest value
-  # and requested lowest value
-  downsize <- minval - lowest
-  x <- sapply(x, function(y) y - downsize)
-  # check for highest range
-  # set NA to all values out of range
-  if (highest > lowest) x[x > highest] <- NA
-  # set back labels, if we have any
-  if (!is.null(val_lab)) x <- suppressWarnings(set_labels(x, val_lab))
-  if (!is.null(var_lab)) x <- suppressWarnings(set_label(x, var_lab))
-  # return recoded x
-  return(x)
-}
-
-
 #' @title Recode variables
 #' @name rec
 #'
@@ -111,13 +12,15 @@ rec_to_helper <- function(x, lowest, highest) {
 #' @param x Numeric, charactor or factor variable that should be recoded;
 #'          or a \code{data.frame} or \code{list} of variables.
 #' @param recodes String with recode pairs of old and new values. See
-#'          'Details' for examples.
+#'          'Details' for examples. \code{\link{rec_pattern}} is a convenient
+#'          function to create recode strings for grouping variables.
 #' @param value See \code{recodes}.
 #' @param as.fac Logical, if \code{TRUE}, recoded variable is returned as factor.
 #'          Default is \code{FALSE}, thus a numeric variable is returned.
 #' @param var.label Optional string, to set variable label attribute for the
-#'          recoded variable (see \code{\link{set_label}}). If \code{NULL}
+#'          returned variable (see \code{\link{set_label}}). If \code{NULL}
 #'          (default), variable label attribute of \code{x} will be used (if present).
+#'          If empty, variable label attributes will be removed.
 #' @param val.labels Optional character vector, to set value label attributes
 #'          of recoded variable (see \code{\link{set_labels}}).
 #'          If \code{NULL} (default), no value labels will be set.
@@ -131,7 +34,7 @@ rec_to_helper <- function(x, lowest, highest) {
 #'            \item{multiple values}{multiple old values that should be recoded into a new single value may be separated with comma, e.g. \code{"1,2=1; 3,4=2"}}
 #'            \item{value range}{a value range is indicated by a colon, e.g. \code{"1:4=1; 5:8=2"} (recodes all values from 1 to 4 into 1, and from 5 to 8 into 2)}
 #'            \item{\code{"min"} and \code{"max"}}{minimum and maximum values are indicates by \emph{min} (or \emph{lo}) and \emph{max} (or \emph{hi}), e.g. \code{"min:4=1; 5:max=2"} (recodes all values from minimum values of \code{x} to 4 into 1, and from 5 to maximum values of \code{x} into 2)}
-#'            \item{\code{"else"}}{all other values except specified are indicated by \emph{else}, e.g. \code{"3=1; 1=2; else=3"} (recodes 3 into 1, 1 into 2 and all other values into 3)}
+#'            \item{\code{"else"}}{all other values, which have not been specified yet, are indicated by \emph{else}, e.g. \code{"3=1; 1=2; else=3"} (recodes 3 into 1, 1 into 2 and all other values into 3)}
 #'            \item{\code{"copy"}}{the \code{"else"}-token can be combined with \emph{copy}, indicating that all remaining, not yet recoded values should stay the same (are copied from the original value), e.g. \code{"3=1; 1=2; else=copy"} (recodes 3 into 1, 1 into 2 and all other values like 2, 4 or 5 etc. will not be recoded, but copied, see 'Examples')}
 #'            \item{\code{NA}'s}{\code{\link{NA}} values are allowed both as old and new value, e.g. \code{"NA=1; 3:5=NA"} (recodes all NA from old value into 1, and all old values from 3 to 5 into NA in the new variable)}
 #'            \item{\code{"rev"}}{\code{"rev"} is a special token that reverses the value order (see 'Examples')}
@@ -141,36 +44,41 @@ rec_to_helper <- function(x, lowest, highest) {
 #'       \itemize{
 #'         \item the \code{"else"}-token should always be the last argument in the \code{recodes}-string.
 #'         \item Non-matching values will be set to \code{\link{NA}}, unless captured by the \code{"else"}-token.
+#'         \item Tagged NA values (see \code{\link[haven]{tagged_na}}) and their value labels will be preserved when copying NA values to the recoded vector with  \code{"else=copy"}.
 #'         \item Variable label attributes (see, for instance, \code{\link{get_label}}) are preserved (unless changes via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
 #'         \item If \code{x} is a \code{data.frame} or \code{list} of variables, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
 #'       }
 #'
 #' @examples
 #' data(efc)
-#' table(efc$e42dep, exclude = NULL)
+#' table(efc$e42dep, useNA = "always")
 #'
 #' # replace NA with 5
-#' table(rec(efc$e42dep, "1=1;2=2;3=3;4=4;NA=5"), exclude = NULL)
+#' table(rec(efc$e42dep, "1=1;2=2;3=3;4=4;NA=5"), useNA = "always")
 #'
 #' # recode 1 to 2 into 1 and 3 to 4 into 2
-#' table(rec(efc$e42dep, "1,2=1; 3,4=2"), exclude = NULL)
+#' table(rec(efc$e42dep, "1,2=1; 3,4=2"), useNA = "always")
 #'
 #' # or:
 #' # rec(efc$e42dep) <- "1,2=1; 3,4=2"
-#' # table(efc$e42dep, exclude = NULL)
+#' # table(efc$e42dep, useNA = "always")
 #'
 #' # keep value labels. variable label is automatically preserved
-#' str(rec(efc$e42dep, "1,2=1; 3,4=2",
-#'         val.labels = c("low dependency", "high dependency")))
+#' library(dplyr)
+#' efc %>%
+#'   select(e42dep) %>%
+#'   rec(recodes = "1,2=1; 3,4=2",
+#'       val.labels = c("low dependency", "high dependency")) %>%
+#'   str()
 #'
 #' # recode 1 to 3 into 4 into 2
-#' table(rec(efc$e42dep, "min:3=1; 4=2"), exclude = NULL)
+#' table(rec(efc$e42dep, "min:3=1; 4=2"), useNA = "always")
 #'
 #' # recode 2 to 1 and all others into 2
-#' table(rec(efc$e42dep, "2=1; else=2"), exclude = NULL)
+#' table(rec(efc$e42dep, "2=1; else=2"), useNA = "always")
 #'
 #' # reverse value order
-#' table(rec(efc$e42dep, "rev"), exclude = NULL)
+#' table(rec(efc$e42dep, "rev"), useNA = "always")
 #'
 #' # recode only selected values, copy remaining
 #' table(efc$e15relat)
@@ -184,41 +92,59 @@ rec_to_helper <- function(x, lowest, highest) {
 #' # variables with same value-range
 #' dummy <- list(efc$c82cop1, efc$c83cop2, efc$c84cop3)
 #' # show original distribution
-#' lapply(dummy, table, exclude = NULL)
+#' lapply(dummy, table, useNA = "always")
 #' # show recodes
-#' lapply(rec(dummy, "1,2=1; NA=9; else=copy"), table, exclude = NULL)
-#'
+#' lapply(rec(dummy, "1,2=1; NA=9; else=copy"), table, useNA = "always")
 #'
 #' # recode character vector
 #' dummy <- c("M", "F", "F", "X")
 #' rec(dummy, "M=Male; F=Female; X=Refused")
 #'
-#'
 #' # recode non-numeric factors
 #' data(iris)
 #' rec(iris$Species, "setosa=huhu; else=copy")
 #'
+#' # preserve tagged NAs
+#' library(haven)
+#' x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
+#'               c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+#'                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
+#' # get current value labels
+#' x
+#' # recode 2 into 5; Values of tagged NAs are preserved
+#' rec(x, "2=5;else=copy")
+#' na_tag(rec(x, "2=5;else=copy"))
+#'
 #' @export
-rec <- function(x,
-                recodes,
-                as.fac = FALSE,
-                var.label = NULL,
-                val.labels = NULL) {
-  if (is.matrix(x) || is.data.frame(x) || is.list(x)) {
-    # get length of data frame or list, i.e.
-    # determine number of variables
-    if (is.data.frame(x) || is.matrix(x))
-      nvars <- ncol(x)
-    else
-      nvars <- length(x)
-    # dichotomize all
-    for (i in 1:nvars) x[[i]] <- rec_helper(x[[i]], recodes, as.fac, var.label, val.labels)
-    return(x)
-  } else {
-    return(rec_helper(x, recodes, as.fac, var.label, val.labels))
-  }
+rec <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL) {
+  UseMethod("rec")
 }
 
+#' @export
+rec.data.frame <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL) {
+  tibble::as_tibble(lapply(x, FUN = rec_helper, recodes, as.fac, var.label, val.labels))
+}
+
+#' @export
+rec.list <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL) {
+  lapply(x, FUN = rec_helper, recodes, as.fac, var.label, val.labels)
+}
+
+#' @export
+rec.default <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL) {
+  rec_helper(x, recodes, as.fac, var.label, val.labels)
+}
+
+#' @rdname rec
+#' @export
+`rec<-` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, value) {
+  UseMethod("rec<-")
+}
+
+#' @export
+`rec<-.default` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, value) {
+  rec(x = x, recodes = value, as.fac = as.fac, var.label = var.label, val.labels = val.labels)
+}
 
 #' @importFrom stats na.omit
 rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
@@ -231,18 +157,16 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   val_lab <- val.labels
   # remember if NA's have been recoded...
   na_recoded <- FALSE
+  # get current NA values
+  current.na <- get_na(x)
 
   # do we have a factor with "x"?
   if (is.factor(x)) {
     # save variable labels before in case we just want
     # to reverse the order
     if (is.null(val_lab) && recodes == "rev") {
-      val_lab <- rev(get_labels(
-        x,
-        attr.only = TRUE,
-        include.values = NULL,
-        include.non.labelled = TRUE
-      ))
+      val_lab <- rev(get_labels(x, attr.only = TRUE, include.values = NULL,
+                                include.non.labelled = TRUE, drop.na = TRUE))
     }
 
     if (is_num_fac(x)) {
@@ -270,12 +194,8 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
     recodes <- paste(sprintf("%i=%i", ov, nv), collapse = ";")
     # when we simply reverse values, we can keep value labels
     if (is.null(val_lab)) {
-      val_lab <- rev(get_labels(
-        x,
-        attr.only = TRUE,
-        include.values = NULL,
-        include.non.labelled = TRUE
-      ))
+      val_lab <- rev(get_labels(x, attr.only = TRUE, include.values = NULL,
+                                include.non.labelled = TRUE, drop.na = TRUE))
     }
   }
 
@@ -284,6 +204,9 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   rec_string <- unlist(strsplit(recodes, ";", fixed = TRUE))
   # remove spaces
   rec_string <- gsub(" ", "", rec_string, fixed = TRUE)
+  # remove line breaks
+  rec_string <- gsub("\n", "", rec_string, fixed = F)
+  rec_string <- gsub("\r", "", rec_string, fixed = F)
   # replace min and max placeholders
   rec_string <- gsub("min", as.character(min_val), rec_string, fixed = TRUE)
   rec_string <- gsub("lo", as.character(min_val), rec_string, fixed = TRUE)
@@ -304,7 +227,7 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
 
   # now iterate all recode pairs
   # and do each recoding step
-  for (i in 1:length(rec_pairs)) {
+  for (i in seq_len(length(rec_pairs))) {
     # retrieve recode pairs as string, and start with separaring old-values
     # at comma separator
     old_val_string <- unlist(strsplit(rec_pairs[[i]][1], ",", fixed = TRUE))
@@ -324,14 +247,12 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
       # can new value be converted to numeric?
       new_val <- suppressWarnings(as.numeric(new_val_string))
       # if not, assignment is wrong
-      if (is.na(new_val)) {
-        new_val <- new_val_string
-      }
+      if (is.na(new_val)) new_val <- new_val_string
     }
 
     # retrieve and check old values
     old_val <- c()
-    for (j in 1:length(old_val_string)) {
+    for (j in seq_len(length(old_val_string))) {
       # copy to shorten code
       ovs <- old_val_string[j]
 
@@ -362,10 +283,7 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
         # can new value be converted to numeric?
         ovn <- suppressWarnings(as.numeric(ovs))
         # if not, assignment is wrong
-        if (is.na(ovn)) {
-          # stop(sprintf("?Syntax error in argument \"%s\"", ovs), call. = F)
-          ovn <- ovs
-        }
+        if (is.na(ovn)) ovn <- ovs
         # add old recode values to final vector of values
         old_val <- c(old_val, ovn)
       }
@@ -373,12 +291,12 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
 
     # now we have all recode values and want
     # to replace old with new values...
-    for (k in 1:length(old_val)) {
+    for (k in seq_len(length(old_val))) {
       # check for "else" token
       if (is.infinite(old_val[k])) {
         # else-token found. we first need to preserve NA, but only,
         # if these haven't been copied before
-        if (!na_recoded) new_var[which(is.na(x))] <- NA
+        if (!na_recoded) new_var[which(is.na(x))] <- x[which(is.na(x))]
         # find replace-indices. since "else"-token has to be
         # the last argument in the "recodes"-string, the remaining,
         # non-recoded values are still "-Inf". Hence, find positions
@@ -410,22 +328,26 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   }
   # replace remaining -Inf with NA
   if (any(is.infinite(new_var))) new_var[which(new_var == -Inf)] <- NA
+  # add back NA labels
+  if (!is.null(current.na) && length(current.na) > 0) {
+    # first, we need a named vector for value labels, so labels from
+    # "val_lab" need to become the name attribute, and the values
+    # from "new_var" need to become the values of "val_lab"
+    if (!is.null(val_lab)) {
+      # save value labels
+      vln <- val_lab
+      # set values
+      val_lab <- stats::na.omit(sort(unique(new_var)))
+      # name values
+      names(val_lab) <- vln
+    }
+    # add named missings
+    val_lab <- c(val_lab, current.na)
+  }
   # set back variable and value labels
   new_var <- suppressWarnings(set_label(x = new_var, lab = var_lab))
   new_var <- suppressWarnings(set_labels(x = new_var, labels = val_lab))
   # return result as factor?
   if (as.fac) new_var <- to_factor(new_var)
   return(new_var)
-}
-
-#' @rdname rec
-#' @export
-`rec<-` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, value) {
-  UseMethod("rec<-")
-}
-
-#' @export
-`rec<-.default` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, value) {
-  x <- rec(x = x, recodes = value, as.fac = as.fac, var.label = var.label, val.labels = val.labels)
-  x
 }

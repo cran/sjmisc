@@ -4,16 +4,20 @@
 \alias{read_sas}
 \title{Import SAS dataset as data frame into R}
 \usage{
-read_sas(path, path.cat = NULL, atomic.to.fac = FALSE)
+read_sas(path, path.cat = NULL, atomic.to.fac = FALSE, enc = NULL)
 }
 \arguments{
 \item{path}{File path to the data file.}
 
 \item{path.cat}{Optional, the file path to the SAS catalog file.}
 
-\item{atomic.to.fac}{Logical, if \code{TRUE}, factor variables imported from
-the dataset (which are imported as \code{\link{atomic}}) will be converted
-to \code{\link{factor}}s.}
+\item{atomic.to.fac}{Logical, if \code{TRUE}, categorical variables imported
+from the dataset (which are imported as \code{\link{atomic}}) will be
+converted to factors.}
+
+\item{enc}{The character encoding used for the file. This defaults to the encoding
+specified in the file, or UTF-8. Use this argument to override the default
+encoding stored in the file.}
 }
 \value{
 A data frame containing the SAS data. Retrieve value labels with \code{\link{get_labels}}

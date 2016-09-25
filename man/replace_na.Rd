@@ -5,9 +5,9 @@
 \alias{replace_na<-}
 \title{Replace NA with specific values}
 \usage{
-replace_na(x, value, na.label = NULL)
+replace_na(x, value, na.label = NULL, tagged.na = NULL)
 
-replace_na(x, na.label = NULL) <- value
+replace_na(x, na.label = NULL, tagged.na = NULL) <- value
 }
 \arguments{
 \item{x}{Variable (vector), \code{data.frame} or \code{list} of variables where
@@ -15,15 +15,29 @@ missing values should be replaced with \code{value}.}
 
 \item{value}{Value that will replace the \code{\link{NA}}'s.}
 
-\item{na.label}{Optional character vector, used to label the NA-value (i.e.
-adding a \code{labels} attribute to \code{x}).}
+\item{na.label}{Optional character vector, used to label the the former NA-value
+(i.e. adding a \code{labels} attribute for \code{value} to \code{x}).}
+
+\item{tagged.na}{Optional single character, specifies a \code{\link[haven]{tagged_na}} value
+that will be replaced by \code{value}. Herewith it is possible
+to replace only specific \code{NA} values of \code{x}.}
 }
 \value{
 \code{x}, where \code{NA}'s are replaced with \code{value}.
 }
 \description{
-This function replaces NA's of a variable, data frame
+This function replaces (tagged) NA's of a variable, data frame
                or list of variables with \code{value}.
+}
+\details{
+While regular \code{NA} values can only be \emph{completely} replaced with
+           a single value, \code{\link[haven]{tagged_na}} allows to differentiate
+           between different qualitative values of \code{NA}s.
+           Tagged \code{NA}s work exactly like regular R missing values
+           except that they store one additional byte of information: a tag,
+           which is usually a letter ("a" to "z") or character number ("0" to "9").
+           Therewith it is possible to replace only specific NA values, while
+           other NA values are preserved.
 }
 \note{
 Value and variable label attributes (see, for instance, \code{\link{get_labels}}
@@ -31,14 +45,46 @@ Value and variable label attributes (see, for instance, \code{\link{get_labels}}
 }
 \examples{
 data(efc)
-table(efc$e42dep, exclude = NULL)
-table(replace_na(efc$e42dep, 99), exclude = NULL)
+table(efc$e42dep, useNA = "always")
+table(replace_na(efc$e42dep, 99), useNA = "always")
+
+# the original labels
+get_labels(replace_na(efc$e42dep, 99))
+# NA becomes "99", and is labelled as "former NA"
+get_labels(replace_na(efc$e42dep, 99, na.label = "former NA"),
+           include.values = "p")
 
 dummy <- list(efc$c82cop1, efc$c83cop2, efc$c84cop3)
 # show original distribution
-lapply(dummy, table, exclude = NULL)
+lapply(dummy, table, useNA = "always")
 # show variables, NA's replaced with 99
-lapply(replace_na(dummy, 99), table, exclude = NULL)
+lapply(replace_na(dummy, 99), table, useNA = "always")
+
+library(haven)
+x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
+              c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+                "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
+# get current NA values
+x
+get_na(x)
+
+# replace only the NA, which is tagged as NA(c)
+replace_na(x, 2, tagged.na = "c")
+get_na(replace_na(x, 2, tagged.na = "c"))
+
+table(x)
+table(replace_na(x, 2, tagged.na = "c"))
+
+# tagged NA also works for non-labelled class
+# init vector
+x <- c(1, 2, 3, 4)
+# set values 2 and 3 as NA, will automatically become
+# tagged NAs by 'set_na()'.
+set_na(x) <- c(2, 3)
+# see result
+x
+# now replace only NA tagged with 2 with value 5
+replace_na(x, 5, tagged.na = "2")
 
 }
 \seealso{

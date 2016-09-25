@@ -1,13 +1,12 @@
 sjmisc - Data Transformation and Labelled Data Utility Functions
 ------------------------------------------------------------------------------
-This package contains utility functions that are useful when carrying out data analysis or basic statistical tests, performing common recode and data transformation tasks or working with labelled data (especially intended for people coming from 'SPSS' and/or who are new to R).
+This package contains utility functions that are useful when carrying out data analysis, performing common recode and data transformation tasks or working with labelled data (especially intended for people coming from 'SPSS', 'SAS' or 'Stata' and/or who are new to R).
 
-Basically, this package covers four domains of functionality:
+Basically, this package covers three domains of functionality:
 
 * reading and writing data between other statistical packages (like 'SPSS') and R, based on the haven and foreign packages
 * hence, this package also includes functions to make working with labelled data easier
-* frequently used statistical tests and computation of statistical coefficients, or at least convenient wrappers for such test functions
-* frequently applied recoding and variable transformation tasks
+* frequently applied recoding and variable transformation tasks, also with support for labelled data
 
 
 ## Installation
@@ -23,9 +22,11 @@ devtools::install_github("sjPlot/sjmisc")
 
 ### Officiale, stable release
 
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/sjmisc)](http://cran.r-project.org/package=sjmisc)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/sjmisc)](https://cran.r-project.org/package=sjmisc)
 &#160;&#160;
 [![downloads](http://cranlogs.r-pkg.org/badges/sjmisc)](http://cranlogs.r-pkg.org/)
+&#160;&#160;
+[![total](http://cranlogs.r-pkg.org/badges/grand-total/sjmisc)](http://cranlogs.r-pkg.org/)
 
 To install the latest stable release from CRAN, type following command into the R console:
 

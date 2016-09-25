@@ -2,37 +2,42 @@
 % Please edit documentation in R/frq.R
 \name{frq}
 \alias{frq}
-\title{Summary of labelled vectors}
+\title{Frequencies of labelled variables}
 \usage{
-frq(x, print.frq = TRUE)
+frq(x, sort.frq = c("none", "asc", "desc"))
 }
 \arguments{
 \item{x}{A labelled vector.}
 
-\item{print.frq}{Optional logical, if \code{TRUE} (default), frequency
-table will be printed to the console.}
+\item{sort.frq}{Logical, if \code{TRUE}, rows will be sorted according to
+value frequencies.}
 }
 \value{
-A data frame with the summary information of \code{x}.
+A data frame with values, value labels, frequencies, raw, valid and
+          cumulative percentages of \code{x}.
 }
 \description{
-This function prints a summary, including frequency table,
-               of labelled vectors. Unlike \code{\link{summary}}, the
-               \code{frq} method also prints label and missing attributes.
+This function returns a frequency table of labelled vectors, as data frame.
 }
 \examples{
-# create labelled factor, with missing flag
-x <- labelled(c("M", "M", "F", "X", "N/A"),
-              c(Male = "M", Female = "F",
-                Refused = "X", "Not applicable" = "N/A"),
-              c(FALSE, FALSE, TRUE, TRUE))
+library(haven)
+# create labelled integer
+x <- labelled(c(1, 2, 1, 3, 4, 1),
+              c(Male = 1, Female = 2, Refused = 3, "N/A" = 4))
 frq(x)
 
-# create labelled numeric vector, with missing flag
-x <- labelled(c(1, 2, 1, 3, 4, 1, NA, 5),
-              c(Male = 1, Female = 2, Refused = 5),
-              c(FALSE, FALSE, TRUE))
+x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
+              c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+                "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
 frq(x)
 
+# in a pipe
+data(efc)
+library(dplyr)
+efc \%>\% select(e42dep, e15relat, c172code) \%>\% frq()
+
+}
+\seealso{
+\code{\link{flat_table}} for labelled (proportional) tables.
 }
 

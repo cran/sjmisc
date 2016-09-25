@@ -60,29 +60,22 @@
 #' @importFrom stats quantile
 #' @export
 split_var <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE) {
-  if (is.matrix(x) || is.data.frame(x) || is.list(x)) {
-    # get length of data frame or list, i.e.
-    # determine number of variables
-    if (is.data.frame(x) || is.matrix(x))
-      nvars <- ncol(x)
-    else
-      nvars <- length(x)
-    # na all
-    for (i in 1:nvars) x[[i]] <- split_var_helper(x[[i]],
-                                                  groupcount,
-                                                  as.num,
-                                                  val.labels,
-                                                  var.label,
-                                                  inclusive)
-    return(x)
-  } else {
-    return(split_var_helper(x,
-                            groupcount,
-                            as.num,
-                            val.labels,
-                            var.label,
-                            inclusive))
-  }
+  UseMethod("split_var")
+}
+
+#' @export
+split_var.data.frame <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE) {
+  tibble::as_tibble(lapply(x, FUN = split_var_helper, groupcount, as.num, val.labels, var.label, inclusive))
+}
+
+#' @export
+split_var.list <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE) {
+  lapply(x, FUN = split_var_helper, groupcount, as.num, val.labels, var.label, inclusive)
+}
+
+#' @export
+split_var.default <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE) {
+  split_var_helper(x, groupcount, as.num, val.labels, var.label, inclusive)
 }
 
 split_var_helper <- function(x, groupcount, as.num, val.labels, var.label, inclusive) {

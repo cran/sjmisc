@@ -4,15 +4,15 @@
 #' @description This function splits categorical or numeric vectors with
 #'                more than two categories into 0/1-coded dummy variables.
 #'
-#' @param x a \code{\link{vector}} (variable).
-#' @param var.name indicates how the new dummy variables are named. Use
+#' @param x A vector.
+#' @param var.name Indicates how the new dummy variables are named. Use
 #'          \code{"name"} to use the variable name or any other string that will
 #'          be used as is. See 'Examples'.
-#' @param suffix indicates which suffix will be added to each dummy variable.
+#' @param suffix Indicates which suffix will be added to each dummy variable.
 #'          Use \code{"numeric"} to number dummy variables, e.g. \emph{x_1},
 #'          \emph{x_2}, \emph{x_3} etc. Use \code{"label"} to add value label,
 #'          e.g. \emph{x_low}, \emph{x_mid}, \emph{x_high}. May be abbreviated.
-#' @param data optional, a data frame where the new dummy variables are appended
+#' @param data Optional, a data frame where the new dummy variables are appended
 #'          as additional columns.
 #' @return A data frame with dummy variables for each category of \code{x}, or
 #'           \code{data} where new dummy variables are appended as additional
@@ -31,11 +31,9 @@
 #' # use "dummy" as new variable name
 #' head(to_dummy(efc$e42dep, var.name = "dummy"))
 #'
+#'
 #' @export
-to_dummy <- function(x,
-                     var.name = "name",
-                     suffix = c("numeric", "label"),
-                     data = NULL) {
+to_dummy <- function(x, var.name = "name", suffix = c("numeric", "label"), data = NULL) {
   # check for abbr
   suffix <- match.arg(suffix)
   # save variable name
@@ -43,16 +41,9 @@ to_dummy <- function(x,
   # remove "data frame name"
   dollar_pos <- regexpr("$", varname, fixed = T)[1]
   if (dollar_pos != -1)
-    varname <-
-    substr(varname, start = dollar_pos + 1, stop = nchar(varname))
+    varname <- substr(varname, start = dollar_pos + 1, stop = nchar(varname))
   # check whether we have labels
-  labels <-
-    get_labels(
-      x,
-      attr.only = F,
-      include.values = "n",
-      include.non.labelled = T
-    )
+  labels <- get_labels(x, attr.only = F, include.values = "n", include.non.labelled = T)
   # get resp. set variable label for new dummy variables
   # get variable label
   label <- get_label(x, def.value = varname)
@@ -80,7 +71,7 @@ to_dummy <- function(x,
   # return value
   mydf <- data.frame()
   # create all dummy variables
-  for (i in 1:length(values)) {
+  for (i in seq_len(length(values))) {
     # create dummy var
     dummy <- rep(0, length(x))
     # set NA
@@ -103,7 +94,6 @@ to_dummy <- function(x,
     col.nam <- sprintf("%s_%s", col.nam, labels)
   colnames(mydf) <- col.nam
   # append data?
-  if (!is.null(data))
-    return(cbind(data, mydf))
+  if (!is.null(data)) return(cbind(data, mydf))
   return(mydf)
 }

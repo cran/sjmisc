@@ -4,7 +4,7 @@
 \alias{to_factor}
 \title{Convert variable into factor and keep value labels}
 \usage{
-to_factor(x, add.non.labelled = FALSE, drop.na = TRUE, ref.lvl = NULL)
+to_factor(x, add.non.labelled = FALSE, ref.lvl = NULL)
 }
 \arguments{
 \item{x}{Numeric, atomic or character vector or a data frame with
@@ -12,11 +12,6 @@ such vectors.}
 
 \item{add.non.labelled}{Logical, if \code{TRUE}, non-labelled values also
 get value labels.}
-
-\item{drop.na}{Logical, if \code{TRUE}, all types of missing value codes are
-converted into NA before \code{x} is converted as factor. If
-\code{FALSE}, missing values will be left as their original codes.
-See 'Examples' and \code{\link{get_na}}.}
 
 \item{ref.lvl}{Numeric, specifies the reference level for the new factor. Use
 this parameter if a different factor level than the lowest value
@@ -34,7 +29,10 @@ This function converts a variable into a factor, but preserves
                variable and value label attributes. See 'Examples'.
 }
 \details{
-See 'Details' in \code{\link{get_na}}.
+\code{to_factor} converts numeric values into a factor with numeric
+           levels. \code{\link{to_label}}, however, converts a vector into
+           a factor and uses value labels as factor levels.
+           Furthermore, see 'Details' in \code{\link{get_na}}.
 }
 \note{
 This function is intended for use with vectors that have value and variable
@@ -47,18 +45,15 @@ This function is intended for use with vectors that have value and variable
        with \code{\link{set_labels}} and \code{\link{set_label}}.
 }
 \examples{
-\dontrun{
 data(efc)
-library(sjPlot)
 # normal factor conversion, loses value attributes
-efc$e42dep <- as.factor(efc$e42dep)
-sjt.frq(efc$e42dep)
+x <- as.factor(efc$e42dep)
+frq(x)
 
 # factor conversion, which keeps value attributes
-efc$e42dep <- to_factor(efc$e42dep)
-sjt.frq(efc$e42dep)}
+x <- to_factor(efc$e42dep)
+frq(x)
 
-data(efc)
 # create parially labelled vector
 x <- set_labels(efc$e42dep, c(`1` = "independent", `4` = "severe dependency",
                               `9` = "missing value"))
@@ -70,16 +65,6 @@ get_labels(to_factor(x), include.values = "p")
 # also add labels to non-labelled values
 to_factor(x, add.non.labelled = TRUE)
 get_labels(to_factor(x, add.non.labelled = TRUE), include.values = "p")
-
-# create labelled integer, with missing flag
-x <- labelled(c(1, 2, 1, 3, 4, 1),
-              c(Male = 1, Female = 2, Refused = 3, "N/A" = 4),
-              c(FALSE, FALSE, TRUE, TRUE))
-# to factor, with missing labels
-to_factor(x, drop.na = FALSE)
-# to factor, missings removed
-to_factor(x, drop.na = TRUE)
-
 
 # Convert to factor, using different reference level
 x <- to_factor(efc$e42dep)

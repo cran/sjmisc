@@ -2,24 +2,34 @@
 % Please edit documentation in R/to_label.R
 \name{to_label}
 \alias{to_label}
-\title{Convert variable into factor and replaces values with associated value labels}
+\title{Convert variable into factor and replace values with associated value labels}
 \usage{
-to_label(x, add.non.labelled = FALSE, prefix = FALSE, drop.na = TRUE)
+to_label(x, add.non.labelled = FALSE, prefix = FALSE, var.label = NULL,
+  drop.na = TRUE, drop.levels = FALSE)
 }
 \arguments{
-\item{x}{A labelled vector (see \code{\link{set_labels}}),
-respectively a data frame with such variables.}
+\item{x}{A labelled vector (see \code{\link{set_labels}} or
+\code{\link[haven]{labelled}}), respectively a data frame with
+such variables.}
 
 \item{add.non.labelled}{logical, if \code{TRUE}, values without associated
 value label will also be converted to labels (as is). See 'Examples'.}
 
 \item{prefix}{Logical, if \code{TRUE}, the value labels used as factor levels
-will be prefixed with their associated values. See 'Examples'.}
+or character values will be prefixed with their associated values. See 'Examples'.}
 
-\item{drop.na}{logical, if \code{TRUE}, all types of missing value codes are
-converted into NA before \code{x} is converted as factor. If
-\code{FALSE}, missing values will be left as their original codes.
-See 'Examples' and \code{\link{get_na}}.}
+\item{var.label}{Optional string, to set variable label attribute for the
+returned variable (see \code{\link{set_label}}). If \code{NULL}
+(default), variable label attribute of \code{x} will be used (if present).
+If empty, variable label attributes will be removed.}
+
+\item{drop.na}{Logical, if \code{TRUE}, tagged \code{NA} values with value labels
+will be converted to regular NA's. Else, tagged \code{NA} values will be replaced
+with their value labels. See 'Examples' and \code{\link{get_na}}.}
+
+\item{drop.levels}{Logical, if \code{TRUE}, unused factor levels will be
+dropped (i.e. \code{\link{droplevels}} will be applied before returning
+the result).}
 }
 \value{
 A factor variable with the associated value labels as factor levels, or a
@@ -37,11 +47,8 @@ This function converts (replaces) variable values (also of factors
 See 'Details' in \code{\link{get_na}}.
 }
 \note{
-Value and variable label attributes (see, for instance, \code{\link{get_labels}}
-        or \code{\link{set_labels}}) will be removed  when converting variables to factors.
-        \cr \cr
-        Factors with non-numeric factor-levels won't be changed and returned "as is"
-        (see 'Examples').
+Value label attributes (see, for instance, \code{\link{get_labels}})
+      will be removed when converting variables to factors.
 }
 \examples{
 data(efc)
@@ -85,13 +92,16 @@ to_label(x, add.non.labelled = TRUE)
 
 
 # create labelled integer, with missing flag
-x <- labelled(c(1, 2, 1, 3, 4, 1),
-              c(Male = 1, Female = 2, Refused = 3, "N/A" = 4),
-              c(FALSE, FALSE, TRUE, TRUE))
+library(haven)
+x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
+              c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+                "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
 # to labelled factor, with missing labels
 to_label(x, drop.na = FALSE)
 # to labelled factor, missings removed
 to_label(x, drop.na = TRUE)
+# keep missings, and use non-labelled values as well
+to_label(x, add.non.labelled = TRUE, drop.na = FALSE)
 
 
 # convert labelled character to factor
@@ -100,10 +110,22 @@ set_labels(dummy) <- c(`M` = "Male", `F` = "Female", `X` = "Refused")
 get_labels(dummy,, "p")
 to_label(dummy)
 
+# drop unused factor levels, but preserve variable label
+x <- factor(c("a", "b", "c"), levels = c("a", "b", "c", "d"))
+set_labels(x) <- c("ape", "bear", "cat")
+set_label(x) <- "A factor!"
+x
+to_label(x, drop.levels = TRUE)
+
+# change variable label
+to_label(x, var.label = "New variable label!", drop.levels = TRUE)
+
 }
 \seealso{
 \code{\link{to_factor}} to convert a numeric variable into a factor (and
-           preserve labels) and \code{\link{to_value}} to convert a factor into
-           a numeric variable.
+           preserve labels); \code{\link{to_value}} to convert a factor into
+           a numeric variable and \code{\link{to_character}} to convert a
+           labelled vector into a character vector (using label attributes as
+           values).
 }
 

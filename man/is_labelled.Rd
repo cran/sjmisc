@@ -10,7 +10,7 @@ is_labelled(x)
 \item{x}{An object.}
 }
 \value{
-Logical, \code{TRUE} if \code{any(class(x))} is \code{labelled},
+Logical, \code{TRUE} if \code{x} inherits from class \code{labelled},
           \code{FALSE} otherwise.
 }
 \description{

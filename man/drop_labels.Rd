@@ -4,17 +4,22 @@
 \alias{drop_labels}
 \title{Drop labels of zero-count values}
 \usage{
-drop_labels(x)
+drop_labels(x, drop.na = TRUE)
 }
 \arguments{
 \item{x}{Variable (vector), \code{data.frame} or \code{list} of variables
 with partially added value labels (see \code{\link[haven]{labelled}}).}
+
+\item{drop.na}{Logical, whether existing value labels of tagged NA values
+(see \code{\link[haven]{tagged_na}}) should be removed (\code{drop.na = TRUE},
+the default) or preserved (\code{drop.na = FALSE}).
+See \code{\link{get_na}} for more details on tagged NA values.}
 }
 \value{
 \code{x}, where value labels for non-existing values are removed.
 }
 \description{
-This function drops all value labels for those values that have
+This function drops all value labels for unused values that have
                no cases (frequencies) in a vector.
 }
 \examples{
@@ -27,12 +32,22 @@ data(efc)
 x <- rec(efc$c160age, rp$pattern)
 # add value labels to new vector
 set_labels(x) <- rp$labels
+
 # watch result. due to recode-pattern, we have age groups with
 # no observations (zero-counts)
-frq(as_labelled(x))
-
+frq(x)
 # now, let's drop zero's
-frq(as_labelled(drop_labels(x)))
+frq(drop_labels(x))
+
+# drop labels, also drop NA value labels, then also zap tagged NA
+library(haven)
+x <- labelled(c(1:3, tagged_na("z"), 4:1),
+              c("Agreement" = 1, "Disagreement" = 4, "Unused" = 5,
+                "Not home" = tagged_na("z")))
+x
+drop_labels(x, drop.na = FALSE)
+drop_labels(x)
+zap_na_tags(drop_labels(x))
 
 }
 \seealso{

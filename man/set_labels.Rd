@@ -5,9 +5,9 @@
 \alias{set_labels<-}
 \title{Add value labels to variables}
 \usage{
-set_labels(x, labels, force.labels = FALSE, force.values = TRUE)
+set_labels(x, labels, force.labels = FALSE, force.values = TRUE, drop.na = TRUE)
 
-set_labels(x, force.labels = FALSE, force.values = TRUE) <- value
+set_labels(x, force.labels = FALSE, force.values = TRUE, drop.na = TRUE) <- value
 }
 \arguments{
 \item{x}{Variable (vector), \code{list} of variables or a \code{data.frame}
@@ -35,7 +35,12 @@ elements than unique values of \code{x}, additional values not covered
 by \code{labels} will be added as label as well. See 'Examples'.
 This parameter will be ignored, if \code{labels} is a named vector.}
 
-\item{value}{See \code{labels},}
+\item{drop.na}{Logical, whether existing value labels of tagged NA values
+(see \code{\link[haven]{tagged_na}}) should be removed (\code{drop.na = TRUE},
+the default) or preserved (\code{drop.na = FALSE}).
+See \code{\link{get_na}} for more details on tagged NA values.}
+
+\item{value}{See \code{labels}.}
 }
 \value{
 \code{x} with value label attributes; or with removed label-attributes if
@@ -63,13 +68,11 @@ See 'Details' in \code{\link{get_labels}}.
         Furthermore, see 'Note' in \code{\link{get_labels}}.
 }
 \examples{
-\dontrun{
-library(sjPlot)
 dummy <- sample(1:4, 40, replace = TRUE)
-sjp.frq(dummy)
+frq(dummy)
 
 dummy <- set_labels(dummy, c("very low", "low", "mid", "hi"))
-sjp.frq(dummy)}
+frq(dummy)
 
 # force using all labels, even if not all labels
 # have associated values in vector
@@ -77,17 +80,15 @@ x <- c(2, 2, 3, 3, 2)
 # only two value labels
 x <- set_labels(x, c("1", "2", "3"))
 x
+frq(x)
 
 # or use:
 # set_labels(x) <- c("1", "2", "3")
 
-\dontrun{
-sjp.frq(x)}
 # all three value labels
 x <- set_labels(x, c("1", "2", "3"), force.labels = TRUE)
 x
-\dontrun{
-sjp.frq(x)}
+frq(x)
 
 # create vector
 x <- c(1, 2, 3, 2, 4, NA)
@@ -102,10 +103,20 @@ x
 x <- c(1, 1, 1, 2, 2, -2, 3, 3, 3, 3, 3, 9)
 x <- set_labels(x, c("Refused", "One", "Two", "Three", "Missing"))
 x
+set_na(x, c(-2, 9))
 
-x <- set_na(x, c(-2, 9), as.attr = TRUE)
+
+library(haven)
+x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
+              c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+                "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
+# get current NA values
 x
-frq(as_labelled(x))
+get_na(x)
+# lose value labels from tagged NA by default, if not specified
+set_labels(x, c("New Three" = 3))
+# do not drop na
+set_labels(x, c("New Three" = 3), drop.na = FALSE)
 
 
 # set labels via named vector,
@@ -114,12 +125,20 @@ data(efc)
 get_labels(efc$e42dep)
 
 x <- set_labels(efc$e42dep, c(`independent` = 1,
-                             `severe dependency` = 2,
-                             `missing value` = 9))
+                              `severe dependency` = 2,
+                              `missing value` = 9))
 get_labels(x, include.values = "p")
-
 get_labels(x, include.values = "p", include.non.labelled = TRUE)
 
+# labels can also be set for tagged NA value
+# create numeric vector
+x <- c(1, 2, 3, 4)
+# set 2 and 3 as missing, which will automatically set as
+# tagged NA by 'set_na()'
+set_na(x) <- c(2, 3)
+x
+# set label via named vector just for tagged NA(3)
+set_labels(x, c(`New Value` = tagged_na("3")))
 
 # setting same value labels to multiple vectors
 # create a set of dummy variables

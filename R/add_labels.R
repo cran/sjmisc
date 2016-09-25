@@ -1,31 +1,34 @@
-#' @title Add value labels to variables
+#' @title Add or replace value labels of variables
 #' @name add_labels
 #'
 #' @description This function adds additional labels as attribute to a variable
 #'                or vector \code{x}, resp. to a set of variables in a
 #'                \code{data.frame} or \code{list}-object. Unlike \code{\link{set_labels}},
-#'                \code{add_labels} does not replace existing value labels, but adds
-#'                \code{value} to the existing value labels of \code{x}.
+#'                \code{add_labels} does not \emph{completely} replace existing value labels
+#'                (and hence, it does not remove non-specified labels), but adds \code{value}
+#'                to the existing value labels of \code{x}. \code{add_labels} also
+#'                replaces existing value labels, but unlike \code{set_labels},
+#'                preserves the remaining labels. See 'Note'.
 #'
 #' @seealso \code{\link{set_label}} to manually set variable labels or
 #'            \code{\link{get_label}} to get variable labels; \code{\link{set_labels}} to
-#'            add value labels, replacing the existing ones.
+#'            add value labels, replacing the existing ones (and removing non-specified
+#'            value labels).
 #'
 #' @param x Variable (vector), \code{list} of variables or a \code{data.frame}
-#'          where value label attributes should be added. Does not replaces former
-#'          value labels.
-#' @param value Named character vector of labels that will be added to \code{x} as
-#'          \code{"labels"} or \code{"value.labels"} attribute. If \code{x} is
-#'          a data frame, \code{value} may also be a \code{\link{list}} of
-#'          named character vectors. If \code{value} is a list, it must have
-#'          the same length as number of columns of \code{x}. If \code{value}
-#'          is a vector and \code{x} is a data frame, \code{value} will be applied
-#'          to each column of \code{x}.
+#'          where value label attributes should be added.
+#' @param value Named (numeric) vector of labels that will be added to \code{x} as
+#'          label attribute. If \code{x} is a data frame, \code{value} may also
+#'          be a \code{\link{list}} of named character vectors. If \code{value}
+#'          is a list, it must have the same length as number of columns of \code{x}.
+#'          If \code{value} is a vector and \code{x} is a data frame, \code{value}
+#'          will be applied to each column of \code{x}.
 #'
 #' @return \code{x} with additional value labels.
 #'
 #' @note Existing labelled values will be replaced by new labelled values
-#'         in \code{value}. See 'Examples'.
+#'         in \code{value}. See 'Examples'. \code{replace_labels} is a simple
+#'         wrapper and just calls \code{add_labels}.
 #'
 #' @examples
 #' data(efc)
@@ -42,33 +45,56 @@
 #' get_labels(x, include.values = "p")
 #'
 #' # replace values, alternative function call
-#' add_labels(x) <- c(`new second` = 2)
+#' replace_labels(x) <- c(`new second` = 2)
+#'
+#' # replace specific missing value (tagged NA)
+#' library(haven)
+#' x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
+#'               c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+#'                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
+#' # get current NA values
+#' x
+#' # tagged NA(c) has currently the value label "First", will be
+#' # replaced by "Second" now.
+#' replace_labels(x, c("Second" = tagged_na("c")))
 #'
 #'
+#' @importFrom tibble as_tibble
 #' @export
 add_labels <- function(x, value) {
-  if (is.matrix(x) || is.data.frame(x) || is.list(x)) {
-    # get length of data frame or list, i.e.
-    # determine number of variables
-    if (is.data.frame(x) || is.matrix(x))
-      nvars <- ncol(x)
-    else
-      nvars <- length(x)
-    # dichotomize all
-    for (i in 1:nvars) x[[i]] <- add_labels_helper(x[[i]], value)
-    return(x)
-  } else {
-    return(add_labels_helper(x, value))
-  }
+  # check for valid value. value must be a named vector
+  if (is.null(value)) stop("`value` is NULL.", call. = F)
+  if (is.null(names(value))) stop("`value` must be a named vector.", call. = F)
+
+  UseMethod("add_labels")
 }
 
+#' @export
+add_labels.data.frame <- function(x, value) {
+  tibble::as_tibble(lapply(x, FUN = add_labels_helper, value))
+}
 
+#' @export
+add_labels.list <- function(x, value) {
+  lapply(x, FUN = add_labels_helper, value)
+}
+
+#' @export
+add_labels.default <- function(x, value) {
+  add_labels_helper(x, value)
+}
+
+#' @importFrom haven is_tagged_na na_tag
 add_labels_helper <- function(x, value) {
   # get current labels of `x`
   current.labels <- get_labels(x,
                                attr.only = T,
                                include.values = "n",
-                               include.non.labelled = F)
+                               include.non.labelled = F,
+                               drop.na = TRUE)
+
+  # get current NA values
+  current.na <- get_na(x)
 
   # if we had already labels, append new ones
   if (!is.null(current.labels)) {
@@ -92,9 +118,25 @@ add_labels_helper <- function(x, value) {
     all.labels <- value
   }
 
+  # replace tagged NA
+  if (any(haven::is_tagged_na(value))) {
+    # get tagged NAs
+    value_tag <- haven::na_tag(value)[haven::is_tagged_na(value)]
+    cna_tag <- haven::na_tag(current.na)
+    # find matches (replaced NA)
+    doubles <- na.omit(match(value_tag, cna_tag))
+    if (any(doubles)) {
+      message(sprintf("tagged NA '%s' was replaced with new value label.\n",
+                      names(current.na)[doubles]))
+    }
+    # remove multiple tagged NA
+    current.na <- current.na[-doubles]
+  }
+
   # sort labels by values
   all.labels <- all.labels[order(as.numeric(all.labels))]
-
+  # add NA
+  if (!is.null(current.na)) all.labels <- c(all.labels, current.na)
   # set back labels
   x <- set_labels(x, labels = all.labels)
   return(x)
@@ -108,6 +150,19 @@ add_labels_helper <- function(x, value) {
 
 #' @export
 `add_labels<-.default` <- function(x, value) {
-  x <- add_labels(x, value)
-  x
+  add_labels(x, value)
+}
+
+
+
+#' @rdname add_labels
+#' @export
+replace_labels <- function(x, value) {
+  UseMethod("add_labels")
+}
+
+#' @rdname add_labels
+#' @export
+`replace_labels<-` <- function(x, value) {
+  UseMethod("add_labels<-")
 }

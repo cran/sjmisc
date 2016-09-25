@@ -12,10 +12,6 @@
 #'          such vectors.
 #' @param add.non.labelled Logical, if \code{TRUE}, non-labelled values also
 #'          get value labels.
-#' @param drop.na Logical, if \code{TRUE}, all types of missing value codes are
-#'          converted into NA before \code{x} is converted as factor. If
-#'          \code{FALSE}, missing values will be left as their original codes.
-#'          See 'Examples' and \code{\link{get_na}}.
 #' @param ref.lvl Numeric, specifies the reference level for the new factor. Use
 #'          this parameter if a different factor level than the lowest value
 #'          should be used as reference level. If \code{NULL}, lowest value
@@ -34,21 +30,21 @@
 #'        Else, value and variable labels can be manually added to vectors
 #'        with \code{\link{set_labels}} and \code{\link{set_label}}.
 #'
-#' @details See 'Details' in \code{\link{get_na}}.
+#' @details \code{to_factor} converts numeric values into a factor with numeric
+#'            levels. \code{\link{to_label}}, however, converts a vector into
+#'            a factor and uses value labels as factor levels.
+#'            Furthermore, see 'Details' in \code{\link{get_na}}.
 #'
 #' @examples
-#' \dontrun{
 #' data(efc)
-#' library(sjPlot)
 #' # normal factor conversion, loses value attributes
-#' efc$e42dep <- as.factor(efc$e42dep)
-#' sjt.frq(efc$e42dep)
+#' x <- as.factor(efc$e42dep)
+#' frq(x)
 #'
 #' # factor conversion, which keeps value attributes
-#' efc$e42dep <- to_factor(efc$e42dep)
-#' sjt.frq(efc$e42dep)}
+#' x <- to_factor(efc$e42dep)
+#' frq(x)
 #'
-#' data(efc)
 #' # create parially labelled vector
 #' x <- set_labels(efc$e42dep, c(`1` = "independent", `4` = "severe dependency",
 #'                               `9` = "missing value"))
@@ -61,16 +57,6 @@
 #' to_factor(x, add.non.labelled = TRUE)
 #' get_labels(to_factor(x, add.non.labelled = TRUE), include.values = "p")
 #'
-#' # create labelled integer, with missing flag
-#' x <- labelled(c(1, 2, 1, 3, 4, 1),
-#'               c(Male = 1, Female = 2, Refused = 3, "N/A" = 4),
-#'               c(FALSE, FALSE, TRUE, TRUE))
-#' # to factor, with missing labels
-#' to_factor(x, drop.na = FALSE)
-#' # to factor, missings removed
-#' to_factor(x, drop.na = TRUE)
-#'
-#'
 #' # Convert to factor, using different reference level
 #' x <- to_factor(efc$e42dep)
 #' str(x)
@@ -81,39 +67,34 @@
 #' table(x)
 #'
 #' @export
-to_factor <- function(x, add.non.labelled = FALSE, drop.na = TRUE, ref.lvl = NULL) {
-  if (is.matrix(x) || is.data.frame(x)) {
-    for (i in 1:ncol(x)) x[[i]] <- to_fac_helper(x[[i]],
-                                                 add.non.labelled,
-                                                 drop.na,
-                                                 ref.lvl)
-    return(x)
-  } else {
-    return(to_fac_helper(x,
-                         add.non.labelled,
-                         drop.na,
-                         ref.lvl))
-  }
+to_factor <- function(x, add.non.labelled = FALSE, ref.lvl = NULL) {
+  UseMethod("to_factor")
+}
+
+#' @export
+to_factor.data.frame <- function(x, add.non.labelled = FALSE, ref.lvl = NULL) {
+  tibble::as_tibble(lapply(x, FUN = to_fac_helper, add.non.labelled, ref.lvl))
+}
+
+#' @export
+to_factor.list <- function(x, add.non.labelled = FALSE, ref.lvl = NULL) {
+  lapply(x, FUN = to_fac_helper, add.non.labelled, ref.lvl)
+}
+
+#' @export
+to_factor.default <- function(x, add.non.labelled = FALSE, ref.lvl = NULL) {
+  to_fac_helper(x, add.non.labelled, ref.lvl)
 }
 
 
-to_fac_helper <- function(x, add.non.labelled, drop.na, ref.lvl) {
+to_fac_helper <- function(x, add.non.labelled, ref.lvl) {
   # is already factor?
-  if (is.factor(x)) {
-    return(x)
-  }
-  # remove missings?
-  if (drop.na) x <- to_na(x)
+  if (is.factor(x)) return(x)
 
   # retrieve value labels
-  lab <- get_labels(x,
-                    attr.only = TRUE,
-                    include.values = "n",
-                    include.non.labelled = add.non.labelled)
+  lab <- get_labels(x, attr.only = TRUE, include.values = "n", include.non.labelled = add.non.labelled)
   # retrieve variable labels
   varlab <- get_label(x)
-  # retrieve missing codes
-  nas <- suppressMessages(get_na(x))
 
   # switch value and names attribute, since get_labels
   # returns the values as names, and the value labels
@@ -130,17 +111,12 @@ to_fac_helper <- function(x, add.non.labelled, drop.na, ref.lvl) {
   }
 
   # convert variable to factor
-  x <- as.factor(x)
+  x <- factor(x, exclude = c(NA_character_, "NaN"))
 
   # set back value labels
-  x <- suppressMessages(set_labels(x,
-                                   lab.switch,
-                                   force.labels = TRUE,
-                                   force.values = FALSE))
+  x <- suppressMessages(set_labels(x, lab.switch, force.labels = TRUE, force.values = FALSE))
   # set back variable labels
   x <- set_label(x, varlab)
-  # set back missing codes
-  x <- set_na(x, nas, as.attr = TRUE)
   # change reference level?
   if (!is.null(ref.lvl)) ref_lvl(x) <- ref.lvl
   return(x)

@@ -1,170 +1,142 @@
-#' @title Summary of labelled vectors
+#' @title Frequencies of labelled variables
 #' @name frq
-#' @description This function prints a summary, including frequency table,
-#'                of labelled vectors. Unlike \code{\link{summary}}, the
-#'                \code{frq} method also prints label and missing attributes.
+#'
+#' @description This function returns a frequency table of labelled vectors, as data frame.
 #'
 #' @param x A labelled vector.
-#' @param print.frq Optional logical, if \code{TRUE} (default), frequency
-#'          table will be printed to the console.
+#' @param sort.frq Logical, if \code{TRUE}, rows will be sorted according to
+#'          value frequencies.
+#' @return A data frame with values, value labels, frequencies, raw, valid and
+#'           cumulative percentages of \code{x}.
 #'
-#' @return A data frame with the summary information of \code{x}.
+#' @seealso \code{\link{flat_table}} for labelled (proportional) tables.
 #'
 #' @examples
-#' # create labelled factor, with missing flag
-#' x <- labelled(c("M", "M", "F", "X", "N/A"),
-#'               c(Male = "M", Female = "F",
-#'                 Refused = "X", "Not applicable" = "N/A"),
-#'               c(FALSE, FALSE, TRUE, TRUE))
+#' library(haven)
+#' # create labelled integer
+#' x <- labelled(c(1, 2, 1, 3, 4, 1),
+#'               c(Male = 1, Female = 2, Refused = 3, "N/A" = 4))
 #' frq(x)
 #'
-#' # create labelled numeric vector, with missing flag
-#' x <- labelled(c(1, 2, 1, 3, 4, 1, NA, 5),
-#'               c(Male = 1, Female = 2, Refused = 5),
-#'               c(FALSE, FALSE, TRUE))
+#' x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
+#'               c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+#'                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
 #' frq(x)
 #'
-#' @importFrom stats quantile median na.omit
+#' # in a pipe
+#' data(efc)
+#' library(dplyr)
+#' efc %>% select(e42dep, e15relat, c172code) %>% frq()
+#'
+#' @importFrom stats na.omit
+#' @importFrom dplyr full_join
 #' @export
-frq <- function(x, print.frq = TRUE) {
-  # check for labelled class
-  if (!is_labelled(x)) {
-    stop("`x` must be of class `labelled`.", call. = F)
-  }
-  # copy vector
-  object <- x
-  # add non-labelled value labels, if we have less
-  # labels than values
-  x <- fill_labels(x)
-  # get value labels
-  labels <- attr(x, "labels", exact = T)
-  # when we have character vectors, simply do table
-  if (is.character(object)) {
-    # do we have a labelled vector?
-    if (is.null(labels)) {
-      warning("could not print frequencies. `x` has no `labels` attribute.", call. = F)
-      return(NULL)
-    }
-    # get values
-    values <- unname(labels)
-    # prepare freq vector for values
-    frq <- rep(0, length(values))
-    # get freq of character vector
-    ft <- table(object)
-    # valid values, i.e. values with counts
-    vv <- match(names(ft), values)
-    # copy valid values
-    frq[vv] <- as.vector(ft)
-    # create data frame as return value
-    lab_df <- data.frame(value = values,
-                         label = names(labels),
-                         count = frq,
-                         is_na = attr(x, "is_na"))
-    # check if results should be printed
-    if (print.frq) {
-      print(table(x))
-      cat("\n")
-      print(lab_df, row.names = FALSE)
-    }
-    # return
-    invisible(lab_df)
-  } else {
-    # get value without missings
-    no_mis <- unclass(stats::na.omit(as.vector(to_na(x))))
+#' @export
+frq <- function(x, sort.frq = c("none", "asc", "desc")) {
+  UseMethod("frq")
+}
 
-    # do we have character vector? if yes, coerce to numeric
-    if (is.character(no_mis)) {
-      no_mis <- as.numeric(no_mis)
-    }
+#' @export
+frq.data.frame <- function(x, sort.frq = c("none", "asc", "desc")) {
+  sort.frq <- match.arg(sort.frq)
+  lapply(x, FUN = frq_helper, sort.frq = sort.frq)
+}
 
-    # create named vector with all necessray summary
-    # information, equal to base summary function
-    summary_line <- data.frame(round(min(no_mis), 3),
-                               round(stats::quantile(no_mis)[2], 3),
-                               round(stats::median(no_mis), 3),
-                               round(mean(no_mis), 3),
-                               round(stats::quantile(no_mis)[4], 3),
-                               round(max(no_mis), 3))
-    # set column names
-    colnames(summary_line) <- c("Min", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max")
+#' @export
+frq.list <- function(x, sort.frq = c("none", "asc", "desc")) {
+  sort.frq <- match.arg(sort.frq)
+  lapply(x, FUN = frq_helper, sort.frq = sort.frq)
+}
 
-    # prepare and print summary
-    if (print.frq) {
-      cat("\nSummary:\n")
-      # output
-      print(summary_line, row.names = FALSE)
-    }
-
-    # do we have any labels? continuous variables
-    # usually don't have label attributes after reading
-    # from SPSS
-    if (!is.null(labels)) {
-      if (print.frq) cat("\n")
-
-      # get all possible values as vector. We may have some labelled
-      # values that have no counts in the data. in such cases, we get
-      # less values from the table than excpected. Here we set up a
-      # vector with all values, and "match" the actual values
-      len <- length(labels) + 1
-      f.ind <- as.numeric(names(table(x, exclude = NULL)))
-      f.ind <- replace_na(f.ind, len)
-      # frequencies, including real missings
-      fdat <- data.frame(index = c(as.numeric(unname(labels)), len),
-                         frq = 0,
-                         raw = 0,
-                         valid = 0)
-      fdat$frq[match(f.ind, fdat$index)] <- as.vector(table(x, exclude = NULL))
-      # raw percentage, including real missings
-      fdat$raw[match(f.ind, fdat$index)] <- as.vector(prop.table(table(x, exclude = NULL)))
-      # valid percentage, excluding real and
-      # labelled missings
-      vp <- as.vector(prop.table(table(stats::na.omit(as.vector(to_na(x))))))
-      fdat$valid[match(f.ind[1:length(vp)], fdat$index)] <-
-        as.vector(prop.table(table(stats::na.omit(as.vector(to_na(x))))))
-      fdat$valid[length(fdat$valid)] <- NA
-      # create df
-      lab_df <- data.frame(value = c(unname(labels), NA),
-                           label = c(names(labels), "NA"),
-                           count = fdat$frq,
-                           raw.prc = round(100 * fdat$raw, 2),
-                           valid.prc = round(100 * fdat$valid, 2),
-                           cum.prc = round(100 * cumsum(fdat$valid), 2),
-                           is_na = c(attr(x, "is_na"), NA))
-      # print table
-      if (print.frq) print(lab_df, row.names = FALSE)
-      invisible(lab_df)
-    }
-  }
+#' @export
+frq.default <- function(x, sort.frq = c("none", "asc", "desc")) {
+  sort.frq <- match.arg(sort.frq)
+  frq_helper(x = x, sort.frq = sort.frq)
 }
 
 
-
-#' @title Get summary of labelled vectors
-#' @name get_frq
-#' @description This function returns a summary, including frequency table,
-#'                of labelled vectors, as data frame. Unlike \code{\link{summary}}, the
-#'                \code{frq} method also prints label and missing attributes.
-#'
-#' @param x A labelled vector.
-#' @param coerce Logical, if \code{TRUE}, vectors will be coerced to \code{labelled}
-#'          class if necessary.
-#'
-#' @return A data frame with the summary information of \code{x}.
-#'
-#' @examples
-#' # create labelled factor, with missing flag
-#' x <- labelled(c("M", "M", "F", "X", "N/A"),
-#'               c(Male = "M", Female = "F",
-#'                 Refused = "X", "Not applicable" = "N/A"),
-#'               c(FALSE, FALSE, TRUE, TRUE))
-#'
-#' get_frq(x)
-#'
-#' @importFrom stats quantile median na.omit
-#' @export
-get_frq <- function(x, coerce = TRUE) {
-  if (!is_labelled(x) && TRUE == coerce)
-    x <- as_labelled(x, add.class = T)
-  .dat <- frq(x, print.frq = FALSE)
-  .dat
+frq_helper <- function(x, sort.frq) {
+  #---------------------------------------------------
+  # variable with only mising?
+  #---------------------------------------------------
+  if (length(stats::na.omit(x)) == 0) {
+    mydat <- data.frame(val = NA,
+                        label = NA,
+                        frq = NA,
+                        raw.prc = NA,
+                        valid.prc = NA,
+                        cum.perc = NA)
+    return(structure(class = "sjmisc.frq", list(mydat = mydat)))
+  }
+  #---------------------------------------------------
+  # get value labels (if any)
+  #---------------------------------------------------
+  labels <- get_labels(x, attr.only = T, include.values = "n", include.non.labelled = T)
+  #---------------------------------------------------
+  # do we have a labelled vector?
+  #---------------------------------------------------
+  if (!is.null(labels)) {
+    # add rownames and values as columns
+    dat <- data.frame(n = names(labels), v = as.character(labels), stringsAsFactors = FALSE)
+    colnames(dat) <- c("val", "label")
+    # character vectors need to be converted with to_value
+    # to avoid NAs, but only if character is non-numeric
+    if (is.character(dat$val) && anyNA(suppressWarnings(as.numeric(dat$val))))
+      dat$val <- to_value(dat$val, keep.labels = F)
+    else
+      dat$val <- as.numeric(dat$val)
+    # create frequency table
+    dat2 <- data.frame(table(x, useNA = "always"))
+    colnames(dat2) <- c("val", "frq")
+    dat2$val <- to_value(dat2$val, keep.labels = F)
+    # join frq table and label columns
+    mydat <- suppressMessages(dplyr::full_join(dat, dat2))
+    # replace NA with 0, for proper percentages, i.e.
+    # missing values don't appear (zero counts)
+    suppressMessages(replace_na(mydat$frq) <- 0)
+  } else {
+    # if we have no labels, do simple frq table
+    mydat <- data.frame(table(x, useNA = "always"))
+    colnames(mydat) <- c("val", "frq")
+    # add values as label
+    mydat$label <- labels <- as.character(mydat$val)
+  }
+  #---------------------------------------------------
+  # need numeric
+  #---------------------------------------------------
+  if (is.factor(x) || is.character(x)) {
+    x <- to_value(x, keep.labels = F)
+  }
+  # valid values are one row less, because last row is NA row
+  valid.vals <- nrow(mydat) - 1
+  # --------------------------------------------------------
+  # sort categories ascending or descending
+  # --------------------------------------------------------
+  if (!is.null(sort.frq) && (sort.frq == "asc" || sort.frq == "desc")) {
+    ord <- order(mydat$frq[1:valid.vals], decreasing = (sort.frq == "desc"))
+    mydat <- mydat[c(ord, valid.vals + 1), ]
+    labels <- labels[ord]
+  }
+  # raw percentages
+  mydat$raw.prc <- mydat$frq / sum(mydat$frq)
+  # compute valud and cumulative percentages
+  mydat$valid.prc <- c(mydat$frq[1:valid.vals] / length(stats::na.omit(x)), NA)
+  mydat$cum.prc <- c(cumsum(mydat$valid.prc[1:valid.vals]), NA)
+  # proper rounding
+  mydat$raw.prc <- 100 * round(mydat$raw.prc, 4)
+  mydat$cum.prc <- 100 * round(mydat$cum.prc, 4)
+  mydat$valid.prc <- 100 * round(mydat$valid.prc, 4)
+  # -------------------------------------
+  # "rename" NA values
+  # -------------------------------------
+  if (!is.null(mydat$label)) mydat$label[is.na(mydat$label)] <- "NA"
+  suppressMessages(replace_na(mydat$val) <- max(to_value(mydat$val), na.rm = T) + 1)
+  # save original order
+  reihe <- to_value(mydat$val, keep.labels = F)
+  # sort for x-axis
+  mydat$val <- sort(reihe)
+  # -------------------------------------
+  # return results
+  # -------------------------------------
+  return(structure(class = "sjmisc.frq", list(mydat = mydat)))
 }

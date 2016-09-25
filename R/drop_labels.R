@@ -1,11 +1,12 @@
 #' @title Drop labels of zero-count values
 #' @name drop_labels
 #'
-#' @description This function drops all value labels for those values that have
+#' @description This function drops all value labels for unused values that have
 #'                no cases (frequencies) in a vector.
 #'
 #' @param x Variable (vector), \code{data.frame} or \code{list} of variables
 #'          with partially added value labels (see \code{\link[haven]{labelled}}).
+#' @inheritParams set_labels
 #'
 #' @return \code{x}, where value labels for non-existing values are removed.
 #'
@@ -24,41 +25,51 @@
 #' x <- rec(efc$c160age, rp$pattern)
 #' # add value labels to new vector
 #' set_labels(x) <- rp$labels
+#'
 #' # watch result. due to recode-pattern, we have age groups with
 #' # no observations (zero-counts)
-#' frq(as_labelled(x))
-#'
+#' frq(x)
 #' # now, let's drop zero's
-#' frq(as_labelled(drop_labels(x)))
+#' frq(drop_labels(x))
+#'
+#' # drop labels, also drop NA value labels, then also zap tagged NA
+#' library(haven)
+#' x <- labelled(c(1:3, tagged_na("z"), 4:1),
+#'               c("Agreement" = 1, "Disagreement" = 4, "Unused" = 5,
+#'                 "Not home" = tagged_na("z")))
+#' x
+#' drop_labels(x, drop.na = FALSE)
+#' drop_labels(x)
+#' zap_na_tags(drop_labels(x))
 #'
 #' @export
-drop_labels <- function(x) {
-  if (is.matrix(x) || is.data.frame(x) || is.list(x)) {
-    # get length of data frame or list, i.e.
-    # determine number of variables
-    if (is.data.frame(x) || is.matrix(x))
-      nvars <- ncol(x)
-    else
-      nvars <- length(x)
-    # na all
-    for (i in 1:nvars) x[[i]] <- drop_labels_helper(x[[i]])
-    return(x)
-  } else {
-    return(drop_labels_helper(x))
-  }
+drop_labels <- function(x, drop.na = TRUE) {
+  UseMethod("drop_labels")
 }
 
-drop_labels_helper <- function(x) {
-  # first, get frequency table
-  mydat <- get_frq(x, coerce = TRUE)
-  # get all valid values, that have counts
-  valid.values <- !is.na(mydat$value) & mydat$count > 0
-  # create labels
-  value.labels <- as.character(mydat$label[valid.values])
-  # get value names
-  values <- mydat$value[valid.values]
-  # name vector
-  names(value.labels) <- values
+#' @export
+drop_labels.data.frame <- function(x, drop.na = TRUE) {
+  tibble::as_tibble(lapply(x, FUN = drop_labels_helper, drop.na))
+}
+
+#' @export
+drop_labels.list <- function(x, drop.na = TRUE) {
+  lapply(x, FUN = drop_labels_helper, drop.na)
+}
+
+#' @export
+drop_labels.default <- function(x, drop.na = TRUE) {
+  drop_labels_helper(x, drop.na)
+}
+
+drop_labels_helper <- function(x, drop.na) {
+  # get labels
+  tidy.labels <- get_labels(x, attr.only = T, include.values = "n", include.non.labelled = F, drop.na = T)
+  # return x, if no attribute
+  if (is.null(tidy.labels)) return(x)
+  # remove labels with no values in data
+  tidy.labels <- tidy.labels[get_values(x) %in% names(table(x))]
   # set labels
-  set_labels(x, labels = value.labels)
+  set_labels(x, drop.na = drop.na) <- tidy.labels
+  return(x)
 }

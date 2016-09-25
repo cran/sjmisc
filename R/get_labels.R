@@ -27,11 +27,15 @@
 #'          (or \code{include.values = "p"}), values are included as prefix
 #'          to each label. See 'Examples'.
 #' @param attr.only Logical, if \code{TRUE}, labels are only searched for
-#'          in the the vector's \code{\link{attributes}}; else, if \code{x} has no
-#'          label attributes, factor levels or string values are returned. See
-#'          'Examples'.
+#'          in the the vector's \code{\link{attributes}}; else, if \code{attr.only = FALSE}
+#'          and \code{x} has no label attributes, factor levels or string values
+#'          are returned. See 'Examples'.
 #' @param include.non.labelled Logical, if \code{TRUE}, values without labels will
-#'          also be included in the returned labels.
+#'          also be included in the returned labels (see \code{\link{fill_labels}}).
+#' @param drop.na Logical, whether labels of tagged NA values (see \code{\link[haven]{tagged_na}})
+#'          should be included in the return value or not. By default, labelled
+#'          (tagged) missing values are not returned. See \code{\link{get_na}}
+#'          for more details on tagged NA values.
 #' @return Either a list with all value labels from all variables if \code{x}
 #'           is a \code{data.frame} or \code{list}; a string with the value
 #'           labels, if \code{x} is a variable;
@@ -42,19 +46,19 @@
 #'            or in \pkg{haven} package style (attributes are named \emph{labels} and
 #'            \emph{label}). By default, the \pkg{haven} package style is used.
 #'            \cr \cr
-#'            Working with labelled data is a key element of the \pkg{sjPlot} package,
+#'            Working with labelled data is a key feature of the \pkg{sjPlot} package,
 #'            which accesses these attributes to automatically read label attributes
-#'            for labelling axis categories and titles or table rows and columns.
+#'            for labelling axis categories and titles or table rows and columns
+#'            in graphical or tabular outputs.
 #'            \cr \cr
 #'            When working with labelled data, you can, e.g., use
 #'            \code{\link{get_label}} or \code{\link{get_labels}}
 #'            to get a vector of value and variable labels, which can then be
 #'            used with other functions like \code{\link{barplot}} etc.
-#'            See 'Examples'.
-#'            \cr \cr
-#'            Furthermore, value and variable labels are used when saving data, e.g. to SPSS
-#'            (see \code{\link{write_spss}}), which means that the written SPSS file
-#'            contains proper labels for each variable.
+#'            See 'Examples'. Furthermore, value and variable labels are used
+#'            when saving data, e.g. to SPSS (see \code{\link{write_spss}}),
+#'            which means that the written SPSS file contains proper labels
+#'            for each variable.
 #'            \cr \cr
 #'            You can set a default label style (i.e. the names of the label
 #'            attributes, see above) via \code{options(value_labels = "haven")}
@@ -132,35 +136,53 @@
 #' get_labels(x, include.non.labelled = TRUE)
 #'
 #'
+#' # get labels, including tagged NA values
+#' library(haven)
+#' x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
+#'               c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+#'                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
+#' # get current NA values
+#' x
+#' get_labels(x, include.values = "n", drop.na = FALSE)
+#'
 #' @export
-get_labels <- function(x,
-                       attr.only = FALSE,
-                       include.values = NULL,
-                       include.non.labelled = FALSE) {
-  if (is.data.frame(x) || is.matrix(x) || is.list(x)) {
-    a <- lapply(x, FUN = get_labels_helper,
-                attr.only,
-                include.values,
-                include.non.labelled)
-  } else {
-    a <- get_labels_helper(x,
-                           attr.only,
-                           include.values,
-                           include.non.labelled)
-  }
-  return(a)
+get_labels <- function(x, attr.only = FALSE, include.values = NULL,
+                       include.non.labelled = FALSE, drop.na = TRUE) {
+  UseMethod("get_labels")
 }
 
+#' @export
+get_labels.data.frame <- function(x, attr.only = FALSE, include.values = NULL,
+                                  include.non.labelled = FALSE, drop.na = TRUE) {
+  lapply(x, FUN = get_labels_helper, attr.only = attr.only, include.values = include.values,
+         include.non.labelled = include.non.labelled, drop.na = drop.na)
+}
+
+#' @export
+get_labels.list <- function(x, attr.only = FALSE, include.values = NULL,
+                                  include.non.labelled = FALSE, drop.na = TRUE) {
+  lapply(x, FUN = get_labels_helper, attr.only = attr.only, include.values = include.values,
+         include.non.labelled = include.non.labelled, drop.na = drop.na)
+}
+
+#' @export
+get_labels.default <- function(x, attr.only = FALSE, include.values = NULL,
+                                  include.non.labelled = FALSE, drop.na = TRUE) {
+  get_labels_helper(x, attr.only = attr.only, include.values = include.values,
+                    include.non.labelled = include.non.labelled, drop.na = drop.na)
+}
 
 # Retrieve value labels of a data frame or variable
 # See 'get_labels'
-get_labels_helper <- function(x, attr.only, include.values, include.non.labelled) {
+#' @importFrom haven is_tagged_na na_tag
+get_labels_helper <- function(x, attr.only, include.values, include.non.labelled, drop.na) {
   labels <- NULL
-  # haven or sjPlot?
+  # get label attribute, which may differ depending on the package
+  # used for reading the data
   attr.string <- getValLabelAttribute(x)
-  # nothing found? then check for factor levels
+  # if variable has no label attribute, use factor levels as labels
   if (is.null(attr.string)) {
-    # does user want to look everywhere?
+    # only use factor level if explicitly chosen by user
     if (!attr.only) {
       # get levels of vector
       lv <- levels(x)
@@ -176,16 +198,26 @@ get_labels_helper <- function(x, attr.only, include.values, include.non.labelled
   } else {
     # retrieve named labels
     lab <- attr(x, attr.string, exact = T)
+    # drop na?
+    if (drop.na) lab <- lab[!haven::is_tagged_na(lab)]
     # check if we have anything
-    if (!is.null(lab)) {
-      # retrieve values associated with labels
+    if (!is.null(lab) && length(lab) > 0) {
+      # retrieve values associated with labels. for character vectors
+      # or factors with character levels, these values are character values,
+      # else, they are numeric values
       if (is.character(x) || (is.factor(x) && !is_num_fac(x)))
         values <- unname(lab)
       else
         values <- as.numeric(unname(lab))
       # retrieve label values in correct order
       labels <- names(lab)
-      # do we want to include non-labelled values as well?
+      # do we have any tagged NAs? If so, get tagged NAs
+      # and annotate them properly
+      if (any(haven::is_tagged_na(values))) {
+        values[haven::is_tagged_na(values)] <- paste0("NA(", haven::na_tag(values[haven::is_tagged_na(values)]), ")")
+      }
+      # do we want to include non-labelled values as well? if yes,
+      # find all values in variable that have no label attributes
       if (include.non.labelled) {
         # get values of variable
         valid.vals <- sort(unique(stats::na.omit(as.vector(x))))

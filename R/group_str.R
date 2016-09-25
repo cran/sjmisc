@@ -37,24 +37,19 @@
 #' # count for each groups
 #' table(newstring)
 #'
-#' \dontrun{
-#' library(sjPlot)
 #' # print table to compare original and grouped string
-#' sjt.frq(data.frame(oldstring, newstring),
-#'         removeStringVectors = FALSE,
-#'         autoGroupStrings = FALSE)
+#' frq(oldstring)
+#' frq(newstring)
 #'
 #' # larger groups
 #' newstring <- group_str(oldstring, maxdist = 3)
-#' sjt.frq(data.frame(oldstring, newstring),
-#'         removeStringVectors = FALSE,
-#'         autoGroupStrings = FALSE)
+#' frq(oldstring)
+#' frq(newstring)
 #'
 #' # be more strict with matching pairs
 #' newstring <- group_str(oldstring, maxdist = 3, strict = TRUE)
-#' sjt.frq(data.frame(oldstring, newstring),
-#'         removeStringVectors = FALSE,
-#'         autoGroupStrings = FALSE)}
+#' frq(oldstring)
+#' frq(newstring)
 #'
 #' @importFrom utils txtProgressBar
 #' @importFrom stringdist stringdistmatrix
@@ -66,23 +61,16 @@ group_str <- function(strings,
                       trim.whitespace = TRUE,
                       remove.empty = TRUE,
                       showProgressBar = FALSE) {
-  # check if required package is available
-  if (!requireNamespace("stringdist", quietly = TRUE)) {
-    stop("Package `stringdist` needed for this function to work. Please install it.", call. = FALSE)
-  }
-
   # coerce to character, if necessary
   if (!is.character(strings)) strings <- as.character(strings)
 
   # trim white spaces
-  if (trim.whitespace) {
-    for (i in 1:length(strings)) strings[i] <- trim(strings[i])
-  }
+  if (trim.whitespace) strings <- unname(sapply(strings, trim))
 
   # remove empty values
   if (remove.empty) {
     removers <- c()
-    for (i in 1:length(strings)) {
+    for (i in seq_len(length(strings))) {
       if (is_empty(strings[i])) removers <- c(removers, i)
     }
     if (length(removers) > 0) strings <- strings[-removers]
@@ -168,23 +156,14 @@ group_str <- function(strings,
   strings.new <- c()
 
   # go through each list element
-  for (i in 1:length(pairs)) {
+  for (i in seq_len(length(pairs))) {
     r <- pairs[[i]]
-
     # find vector indices of "close" values in
     # original string
     indices <- unlist(lapply(r, function(x) which(strings == x)))
-    newvalue <- r[1]
-    count <- 2
-
-    # "merge" each close values into one
-    # single value that combines all close values
-    while (count <= length(r)) {
-      newvalue <- paste0(newvalue, ", ", r[count])
-      count <- count + 1
-    }
-    strings.new[indices] <- newvalue
+    strings.new[indices] <- paste0(pairs[[i]], collapse = ", ")
   }
+
   if (showProgressBar) close(pb)
 
   # return new vector, where all single "close"
