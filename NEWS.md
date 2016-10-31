@@ -1,3 +1,19 @@
+# sjmisc 2.0.1
+
+## General
+
+* Removed package `coin` from Imports.
+
+## New functions
+
+* `count_na()` to print a frequency table of tagged NA values.
+
+## Changes to functions
+
+* `set_na()` gets a `drop.levels` argument to keep or drop factor levels of values that have been replaced with NA.
+* `set_na()` gets a `as.tag` argument to set NA values as regular or tagged NA.
+
+
 # sjmisc 2.0.0
 
 ## General
