@@ -23,5 +23,20 @@ print.lbl_df <- function(x, ..., n = NULL, width = NULL) {
 
 #' @export
 print.sjmisc.frq <- function(x, ...) {
-  print.data.frame(x$mydat, ..., row.names = FALSE)
+  # get variable label
+  lab <- attr(x, "label", exact = T)
+  # print label
+  if (!is.null(lab)) cat(sprintf("# %s\n\n", lab))
+  # print frq-table
+  print.data.frame(x, ..., row.names = FALSE)
 }
+
+#' @export
+print.sjmisc.descr <- function(x, ...) {
+  cat("## Basic descriptive statistics\n\n")
+  # round values
+  x[, c(4:6, 8, 12:13)] <- round(x[, c(4:6, 8, 12:13)], 2)
+  # print frq-table
+  print.data.frame(x, ..., row.names = FALSE)
+}
+

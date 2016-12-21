@@ -4,13 +4,20 @@
 \alias{frq}
 \title{Frequencies of labelled variables}
 \usage{
-frq(x, sort.frq = c("none", "asc", "desc"))
+frq(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL)
 }
 \arguments{
-\item{x}{A labelled vector or a \code{data.frame} with labelled vectors.}
+\item{x}{A labelled vector or a \code{data.frame} with labelled vectors.
+May also be a grouped data frame (see 'Note' and 'Examples').}
 
-\item{sort.frq}{Logical, if \code{TRUE}, rows will be sorted according to
-value frequencies.}
+\item{sort.frq}{Determines whether categories should be sorted
+according to their frequencies or not. Default is \code{"none"}, so
+categories are not sorted by frequency. Use \code{"asc"} or
+\code{"desc"} for sorting categories ascending or descending order.}
+
+\item{weight.by}{Vector of weights that will be applied to weight all observations.
+Must be a vector of same length as the input vector. Default is
+\code{NULL}, so no weights are used.}
 }
 \value{
 A data frame with values, value labels, frequencies, raw, valid and
@@ -18,6 +25,11 @@ A data frame with values, value labels, frequencies, raw, valid and
 }
 \description{
 This function returns a frequency table of labelled vectors, as data frame.
+}
+\note{
+\code{x} may also be a grouped data frame (see \code{\link[dplyr]{group_by}})
+      with up to two grouping variables. Frequency tables are created for each
+      subgroup then.
 }
 \examples{
 library(haven)
@@ -35,6 +47,12 @@ frq(x)
 data(efc)
 library(dplyr)
 efc \%>\% select(e42dep, e15relat, c172code) \%>\% frq()
+
+# with grouped data frames, in a pipe
+efc \%>\%
+  group_by(e16sex, c172code) \%>\%
+  select(e16sex, c172code, e42dep) \%>\%
+  frq()
 
 }
 \seealso{

@@ -5,10 +5,10 @@
 \title{Retrieve value labels of labelled data}
 \usage{
 get_labels(x, attr.only = FALSE, include.values = NULL,
-  include.non.labelled = FALSE, drop.na = TRUE)
+  include.non.labelled = FALSE, drop.na = TRUE, drop.unused = FALSE)
 }
 \arguments{
-\item{x}{\code{data.frame} with variables that have value label attributes (e.g.
+\item{x}{A data frame with variables that have value label attributes (e.g.
 from an imported SPSS, SAS or STATA data set, via \code{\link{read_spss}},
 \code{\link{read_sas}} or \code{\link{read_stata}}); a variable
 (vector) with value label attributes; or a \code{list} of variables
@@ -34,6 +34,9 @@ also be included in the returned labels (see \code{\link{fill_labels}}).}
 should be included in the return value or not. By default, labelled
 (tagged) missing values are not returned. See \code{\link{get_na}}
 for more details on tagged NA values.}
+
+\item{drop.unused}{Logical, if \code{TRUE}, unused labels will be removed from
+the return value.}
 }
 \value{
 Either a list with all value labels from all variables if \code{x}
@@ -42,22 +45,15 @@ Either a list with all value labels from all variables if \code{x}
           or \code{NULL} if no value label attribute was found.
 }
 \description{
-This function retrieves the value labels of labelled data, which
-               was created with the \pkg{labelled} or \pkg{haven} package, or
-               imported from SPSS, SAS or STATA files (via \code{\link{read_spss}},
-               \code{\link{read_sas}} or \code{\link{read_stata}}) and
-               \itemize{
-                 \item if \code{x} is a data frame or list of variables, returns all variables' value labels as \code{\link{list}}
-                 \item or, if \code{x} is a vector, returns the value labels as string.
-                 }
+This function returns the value labels of labelled data.
 }
 \details{
-This package can add (and read) value and variable labels either in \pkg{foreign}
+This package can add (and read) value and variable labels either in \CRANpkg{foreign}
            package style (attributes are named \emph{value.labels} and \emph{variable.label})
-           or in \pkg{haven} package style (attributes are named \emph{labels} and
+           or in \CRANpkg{haven} package style (attributes are named \emph{labels} and
            \emph{label}). By default, the \pkg{haven} package style is used.
            \cr \cr
-           Working with labelled data is a key feature of the \pkg{sjPlot} package,
+           Working with labelled data is a key feature of the \CRANpkg{sjPlot} package,
            which accesses these attributes to automatically read label attributes
            for labelling axis categories and titles or table rows and columns
            in graphical or tabular outputs.
@@ -70,10 +66,6 @@ This package can add (and read) value and variable labels either in \pkg{foreign
            when saving data, e.g. to SPSS (see \code{\link{write_spss}}),
            which means that the written SPSS file contains proper labels
            for each variable.
-           \cr \cr
-           You can set a default label style (i.e. the names of the label
-           attributes, see above) via \code{options(value_labels = "haven")}
-           or \code{options(value_labels = "foreign")}.
 }
 \note{
 This function works with vectors that have value and variable
@@ -81,17 +73,17 @@ This function works with vectors that have value and variable
        objects). Adding label attributes is automatically done when importing data sets
        with the \code{\link{read_spss}}, \code{\link{read_sas}} or \code{\link{read_stata}}
        functions. Labels can also manually be added using the \code{\link{set_labels}}
-       and \code{\link{set_label}} functions. If vectors \strong{do not} have
-       label attributes, either factor-\code{\link{levels}} or the numeric values
+       and \code{\link{set_label}} functions. If vectors \emph{do not} have
+       label attributes, either factor-levels or the numeric values
        of the vector are returned as labels.
        \cr \cr
-       Most functions of the \pkg{sjPlot} package access value and variable label
-       attributes to automatically detect labels in order to set them as axis,
-       legend or title labels in plots (\code{sjp.}-functions) respectively as
-       column or row headers in table outputs (\code{sjt.}-functions). See
+       Most functions of the \CRANpkg{sjPlot} package make use of value and variable
+       labels to automatically label axes, legend or title labels in plots
+       (\code{sjp.}-functions) respectively column or row headers in table
+       outputs (\code{sjt.}-functions). See
        \href{http://www.strengejacke.de/sjPlot/datainit/}{this} and
        \href{http://www.strengejacke.de/sjPlot/labelleddata/}{this}
-       online manuals for more details.
+       online manual for more details.
 }
 \examples{
 # import SPSS data set
@@ -157,10 +149,20 @@ x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
 x
 get_labels(x, include.values = "n", drop.na = FALSE)
 
+
+# create vector with unused labels
+data(efc)
+set_labels(efc$e42dep) <- c("independent" = 1, "dependent" = 4, "not used" = 5)
+get_labels(efc$e42dep)
+get_labels(efc$e42dep, drop.unused = TRUE)
+get_labels(efc$e42dep, include.non.labelled = TRUE, drop.unused = TRUE)
+
 }
 \seealso{
-See package vignettes or \href{http://www.strengejacke.de/sjPlot/}{online documentation}
-           for more details; \code{\link{set_labels}} to manually set value labels, \code{\link{get_label}}
-           to get variable labels and \code{\link{get_values}} to retrieve value label associated values.
+See \href{http://www.strengejacke.de/sjPlot/}{online documentation}
+           for more details; \code{\link{set_labels}} to manually set value
+           labels, \code{\link{get_label}} to get variable labels and
+           \code{\link{get_values}} to retrieve the values associated
+           with value labels.
 }
 

@@ -5,13 +5,14 @@
 \alias{rec<-}
 \title{Recode variables}
 \usage{
-rec(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL)
+rec(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL,
+  suffix = "_r")
 
-rec(x, as.fac = FALSE, var.label = NULL, val.labels = NULL) <- value
+rec(x, as.fac = FALSE, var.label = NULL, val.labels = NULL,
+  suffix = "_r") <- value
 }
 \arguments{
-\item{x}{Numeric, charactor or factor variable that should be recoded;
-or a \code{data.frame} or \code{list} of variables.}
+\item{x}{A variable, data frame or list-object.}
 
 \item{recodes}{String with recode pairs of old and new values. See
 'Details' for examples. \code{\link{rec_pattern}} is a convenient
@@ -27,7 +28,19 @@ If empty, variable label attributes will be removed.}
 
 \item{val.labels}{Optional character vector, to set value label attributes
 of recoded variable (see \code{\link{set_labels}}).
-If \code{NULL} (default), no value labels will be set.}
+If \code{NULL} (default), no value labels will be set. Value labels
+can also be directly defined in the \code{recodes}-syntax, see
+'Details'.}
+
+\item{suffix}{String value, will be appended to variable (column) names of
+\code{x}, if \code{x} is a data frame. If \code{x} is not a data
+frame, this argument will be ignored. The default value to suffix
+column names in a data frame depends on the function call:
+\itemize{
+  \item recoded variables (\code{rec()}) will be suffixed with \code{"_r"}
+  \item dichotomized variables (\code{dicho()}) will be suffixed with \code{"_d"}
+  \item grouped variables (\code{split_var()}) will be suffixed with \code{"_g"}
+}}
 
 \item{value}{See \code{recodes}.}
 }
@@ -49,18 +62,19 @@ The \code{recodes} string has following syntax:
            \item{\code{"min"} and \code{"max"}}{minimum and maximum values are indicates by \emph{min} (or \emph{lo}) and \emph{max} (or \emph{hi}), e.g. \code{"min:4=1; 5:max=2"} (recodes all values from minimum values of \code{x} to 4 into 1, and from 5 to maximum values of \code{x} into 2)}
            \item{\code{"else"}}{all other values, which have not been specified yet, are indicated by \emph{else}, e.g. \code{"3=1; 1=2; else=3"} (recodes 3 into 1, 1 into 2 and all other values into 3)}
            \item{\code{"copy"}}{the \code{"else"}-token can be combined with \emph{copy}, indicating that all remaining, not yet recoded values should stay the same (are copied from the original value), e.g. \code{"3=1; 1=2; else=copy"} (recodes 3 into 1, 1 into 2 and all other values like 2, 4 or 5 etc. will not be recoded, but copied, see 'Examples')}
-           \item{\code{NA}'s}{\code{\link{NA}} values are allowed both as old and new value, e.g. \code{"NA=1; 3:5=NA"} (recodes all NA from old value into 1, and all old values from 3 to 5 into NA in the new variable)}
+           \item{\code{NA}'s}{\code{\link{NA}} values are allowed both as old and new value, e.g. \code{"NA=1; 3:5=NA"} (recodes all NA into 1, and all values from 3 to 5 into NA in the new variable)}
            \item{\code{"rev"}}{\code{"rev"} is a special token that reverses the value order (see 'Examples')}
+           \item{direct value labelling}{value labels for new values can be assigned inside the recode pattern by writing the value label in square brackets after defining the new value in a recode pair, e.g. \code{"15:30=1 [young aged]; 31:55=2 [middle aged]; 56:max=3 [old aged]"}. See 'Examples'.}
           }
 }
 \note{
 Please note following behaviours of the function:
       \itemize{
         \item the \code{"else"}-token should always be the last argument in the \code{recodes}-string.
-        \item Non-matching values will be set to \code{\link{NA}}, unless captured by the \code{"else"}-token.
-        \item Tagged NA values (see \code{\link[haven]{tagged_na}}) and their value labels will be preserved when copying NA values to the recoded vector with  \code{"else=copy"}.
-        \item Variable label attributes (see, for instance, \code{\link{get_label}}) are preserved (unless changes via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
-        \item If \code{x} is a \code{data.frame} or \code{list} of variables, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
+        \item Non-matching values will be set to \code{NA}, unless captured by the \code{"else"}-token.
+        \item Tagged NA values (see \code{\link[haven]{tagged_na}}) and their value labels will be preserved when copying NA values to the recoded vector with \code{"else=copy"}.
+        \item Variable label attributes (see, for instance, \code{\link{get_label}}) are preserved (unless changed via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
+        \item If \code{x} is a data frame or list-object, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
       }
 }
 \examples{
@@ -68,10 +82,10 @@ data(efc)
 table(efc$e42dep, useNA = "always")
 
 # replace NA with 5
-table(rec(efc$e42dep, "1=1;2=2;3=3;4=4;NA=5"), useNA = "always")
+table(rec(efc$e42dep, recodes = "1=1;2=2;3=3;4=4;NA=5"), useNA = "always")
 
 # recode 1 to 2 into 1 and 3 to 4 into 2
-table(rec(efc$e42dep, "1,2=1; 3,4=2"), useNA = "always")
+table(rec(efc$e42dep, recodes = "1,2=1; 3,4=2"), useNA = "always")
 
 # or:
 # rec(efc$e42dep) <- "1,2=1; 3,4=2"
@@ -86,21 +100,26 @@ efc \%>\%
   str()
 
 # recode 1 to 3 into 4 into 2
-table(rec(efc$e42dep, "min:3=1; 4=2"), useNA = "always")
+table(rec(efc$e42dep, recodes = "min:3=1; 4=2"), useNA = "always")
 
 # recode 2 to 1 and all others into 2
-table(rec(efc$e42dep, "2=1; else=2"), useNA = "always")
+table(rec(efc$e42dep, recodes = "2=1; else=2"), useNA = "always")
 
 # reverse value order
-table(rec(efc$e42dep, "rev"), useNA = "always")
+table(rec(efc$e42dep, recodes = "rev"), useNA = "always")
 
 # recode only selected values, copy remaining
 table(efc$e15relat)
-table(rec(efc$e15relat, "1,2,4=1; else=copy"))
+table(rec(efc$e15relat, recodes = "1,2,4=1; else=copy"))
 
-# recode variables with same categorie in a data frame
+# recode variables with same category in a data frame
 head(efc[, 6:9])
-head(rec(efc[, 6:9], "1=10;2=20;3=30;4=40"))
+head(rec(efc[, 6:9], recodes = "1=10;2=20;3=30;4=40"))
+
+# recode variable and set value labels via recode-syntax
+dummy <- rec(efc$c160age,
+             recodes = "15:30=1 [young]; 31:55=2 [middle]; 56:max=3 [old]")
+frq(dummy)
 
 # recode list of variables. create dummy-list of
 # variables with same value-range
@@ -108,11 +127,11 @@ dummy <- list(efc$c82cop1, efc$c83cop2, efc$c84cop3)
 # show original distribution
 lapply(dummy, table, useNA = "always")
 # show recodes
-lapply(rec(dummy, "1,2=1; NA=9; else=copy"), table, useNA = "always")
+lapply(rec(dummy, recodes = "1,2=1; NA=9; else=copy"), table, useNA = "always")
 
 # recode character vector
 dummy <- c("M", "F", "F", "X")
-rec(dummy, "M=Male; F=Female; X=Refused")
+rec(dummy, recodes = "M=Male; F=Female; X=Refused")
 
 # recode non-numeric factors
 data(iris)
@@ -126,13 +145,13 @@ x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
 # get current value labels
 x
 # recode 2 into 5; Values of tagged NAs are preserved
-rec(x, "2=5;else=copy")
-na_tag(rec(x, "2=5;else=copy"))
+rec(x, recodes = "2=5;else=copy")
+na_tag(rec(x, recodes = "2=5;else=copy"))
 
 }
 \seealso{
 \code{\link{set_na}} for setting \code{NA} values, \code{\link{replace_na}}
-           to replace \code{\link{NA}}'s with specific value, \code{\link{recode_to}}
+           to replace \code{NA}'s with specific value, \code{\link{recode_to}}
            for re-shifting value ranges and \code{\link{ref_lvl}} to change the
            reference level of (numeric) factors.
 }

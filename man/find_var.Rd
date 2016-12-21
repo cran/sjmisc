@@ -5,7 +5,8 @@
 \title{Find variable by name or label}
 \usage{
 find_var(data, pattern, ignore.case = TRUE, search = c("name_label",
-  "name_value", "label_value", "name", "label", "value", "all"))
+  "name_value", "label_value", "name", "label", "value", "all"),
+  as.df = FALSE, as.varlab = FALSE)
 }
 \arguments{
 \item{data}{A data frame.}
@@ -37,10 +38,19 @@ Use one of following options:
   \item{\code{"all"}}{Searches for \code{pattern} in
         variable names, variable and value labels.}
 }}
+
+\item{as.df}{Logical, if \code{TRUE}, a data frame with matching variables
+is returned (instead of their column indices).}
+
+\item{as.varlab}{Logical, if \code{TRUE}, not only column indices, but also
+variables labels of matching variables are returned (as
+data frame).}
 }
 \value{
-A named vector with column indices of found variables. Variable names
-          are used as names-attribute.
+A named vector with column indices of found variables (variable names
+          are used as names-attribute); if \code{as.df = TRUE}, a tibble
+          with found variables; or, if \code{as.varlab = TRUE}, a tibble
+          with three columns: column number, variable name and variable label.
 }
 \description{
 This functions finds variables in a data frame, which variable
@@ -62,19 +72,26 @@ data(efc)
 # find variables with "cop" in variable name
 find_var(efc, "cop")
 
+# return tibble with matching variables
+find_var(efc, "cop", as.df = TRUE)
+
+# or return "summary"-tibble with matching variables
+# and their variable labels
+find_var(efc, "cop", as.varlab = TRUE)
+
 # find variables with "dependency" in names and variable labels
 find_var(efc, "dependency")
 get_label(efc$e42dep)
 
 # find variables with "level" in names and value labels
-res <- find_var(efc, "level", search = "name_value")
+res <- find_var(efc, "level", search = "name_value", as.df = TRUE)
 res
-get_labels(efc[, res], attr.only = FALSE)
+get_labels(res, attr.only = FALSE)
 
 # use sjPlot::view_df() to view results
 \dontrun{
 library(sjPlot)
-view_df(efc[, res])}
+view_df(res)}
 
 }
 

@@ -2,13 +2,11 @@
 #' @name set_labels
 #' @usage set_labels(x, labels, force.labels = FALSE, force.values = TRUE, drop.na = TRUE)
 #'
-#' @description This function adds character \code{labels} as attribute
-#'                (named \code{"labels"} or \code{"value.labels"}) to a variable
-#'                or vector \code{x}, resp. to a set of variables in a
-#'                \code{data.frame} or a \code{list}-object. These value labels will be accessed
-#'                by functions of the \pkg{sjPlot} package, in order to automatically set values
-#'                or legend labels, however, \pkg{sjmisc} provides functions to
-#'                quickly access these attributes for other purposes.
+#' @description This function adds labels as attribute (named \code{"labels"})
+#'                to a variable or vector \code{x}, resp. to a set of variables in a
+#'                data frame or a list-object. A use-case is, for instance, the
+#'                \CRANpkg{sjPlot}-package, which supports labelled data and automatically
+#'                assigns labels to axes or legends in plots or to be used in tables.
 #'
 #' @seealso See package vignettes or \href{http://www.strengejacke.de/sjPlot/}{online documentation}
 #'            for more details; \code{\link{set_label}} to manually set variable labels or
@@ -59,6 +57,11 @@
 #' frq(dummy)
 #'
 #' dummy <- set_labels(dummy, c("very low", "low", "mid", "hi"))
+#' frq(dummy)
+#'
+#' # assign labels with named vector
+#' dummy <- sample(1:4, 40, replace = TRUE)
+#' set_labels(dummy) <- c("very low" = 1, "very high" = 4)
 #' frq(dummy)
 #'
 #' # force using all labels, even if not all labels
@@ -151,7 +154,7 @@ set_labels <- function(x,
 
 set_labels_helper <- function(x, labels, force.labels, force.values, drop.na) {
   # any valid labels? if not, return vector
-  if (is.null(labels)) return(x)
+  if (is.null(labels) || length(labels) == 0) return(x)
 
   # convert single vector
   if (!is.list(x) && (is.vector(x) || is.atomic(x))) {
@@ -275,11 +278,8 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values, d
       lablen <- length(labels)
       values <- sort(unique(stats::na.omit(as.vector(x))))
 
-      # do we have an ordered factor?
-      if (is.ordered(x)) values <- values[order(levels(x))]
-
       # set var name string
-      if (is_empty(var.name)) {
+      if (sjmisc::is_empty(var.name)) {
         name.string <- "x"
       } else {
         name.string <- var.name
@@ -304,6 +304,8 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values, d
           names(labels) <- dummy.lab.labels
         }
 
+        # sort labels
+        labels <- labels[order(labels)]
         # set attributes
         if (anyNA(suppressWarnings(as.numeric(labels)))) {
           # here we have also non-numeric labels, so we set
@@ -327,6 +329,10 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values, d
           attr(x, attr.string) <- as.numeric(values)
         else
           attr(x, attr.string) <- as.character(values)
+
+        # do we have an ordered factor?
+        if (is.ordered(x)) labels <- labels[order(levels(x))]
+
         names(attr(x, attr.string)) <- labels
         # check for valid length of labels
         # here, we have a smaller value range (i.e. less values)
@@ -335,14 +341,14 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values, d
         # do we want to force to set labels, even if we have more labels
         # than values in variable?
         if (force.labels) {
-          attr(x, attr.string) <- as.numeric(c(1:lablen))
+          attr(x, attr.string) <- as.numeric(seq_len(lablen))
           names(attr(x, attr.string)) <- labels
         } else {
           # we have more labels than values, so just take as many
           # labes as values are present
           message(sprintf("More labels than values of \"%s\". Using first %i labels.", name.string, valrange))
-          attr(x, attr.string) <- as.numeric(c(minval:maxval))
-          names(attr(x, attr.string)) <- labels[1:valrange]
+          attr(x, attr.string) <- as.numeric(minval:maxval)
+          names(attr(x, attr.string)) <- labels[seq_len(valrange)]
         }
         # value range is larger than amount of labels. we may
         # have not continuous value range, e.g. "-2" as filter and
@@ -364,17 +370,17 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values, d
           }
 
           # set attributes
-          attr(x, attr.string) <- as.numeric(c(1:valrange))
+          attr(x, attr.string) <- as.numeric(seq_len(valrange))
           names(attr(x, attr.string)) <- labels
         } else {
           # tell user about modification
           message(sprintf("\"%s\" has more values than \"labels\", hence not all values are labelled.", name.string))
           # drop values with no associated labels
-          attr(x, attr.string) <- as.numeric(c(1:length(labels)))
+          attr(x, attr.string) <- as.numeric(seq_len(length(labels)))
           names(attr(x, attr.string)) <- labels
         }
       } else {
-        attr(x, attr.string) <- as.numeric(c(minval:maxval))
+        attr(x, attr.string) <- as.numeric(minval:maxval)
         names(attr(x, attr.string)) <- labels
       }
     }

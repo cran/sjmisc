@@ -7,7 +7,7 @@
 get_label(x, ..., def.value = NULL)
 }
 \arguments{
-\item{x}{\code{data.frame} with variables that have label attributes (e.g.
+\item{x}{A data frame with variables that have label attributes (e.g.
 from an imported SPSS, SAS or STATA data set, via \code{\link{read_spss}},
 \code{\link{read_sas}} or \code{\link{read_stata}}); a variable
 (vector) with variable label attribute; or a \code{list} of variables
@@ -28,14 +28,7 @@ A named character vector with all variable labels from the data frame or list;
           of \code{def.value} will be returned (which is by default \code{NULL}).
 }
 \description{
-This function retrieves the value labels of labelled data, which
-               was created with the \pkg{labelled} or \pkg{haven} package, or
-               imported from SPSS, SAS or STATA files (via \code{\link{read_spss}},
-               \code{\link{read_sas}} or \code{\link{read_stata}}) and
-               \itemize{
-                 \item if \code{x} is a data frame or a list of variables, returns the all variable labels as named character vector of length \code{ncol(x)}.
-                 \item or, if \code{x} is a vector, returns the variable label as string.
-                 }
+This function returns the variable labels of labelled data.
 }
 \details{
 See 'Details' in \code{\link{get_labels}}.
@@ -43,9 +36,7 @@ See 'Details' in \code{\link{get_labels}}.
 \note{
 \code{\link{var_labels}} is an alternative way to set variable labels,
       which follows the philosophy of tidyvers API design (data as first argument,
-      dots as value pairs indicating variables).
-      \cr \cr
-      Furthermore, see 'Note' in \code{\link{get_labels}}.
+      dots as value pairs indicating variables)
 }
 \examples{
 # import SPSS data set

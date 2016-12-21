@@ -1,3 +1,38 @@
+# sjmisc 2.2.0
+
+## New functions
+
+* `zap_inf()` to "clean" vectors from `NaN` and infinite values.
+* `descr()` to provide basic descriptive statistics (similar to `describe()` in the psych-package), but including variable labels and usable in pipe-workflows. Also works with grouped data frames.
+
+## Changes to functions
+
+* `rec()`, `split_var()` and `dicho()` get an argument `suffix`, to append a suffix to variable (column) names, if applied on a data frame.
+* Value labels in `rec()` can now directly be assigned inside the `recodes`-syntax (see 'Details' in `?rec`).
+* `find_var()` gets a `as.df`-argument, to return a data frame with matching variables, instead of their column indices only.
+* `find_var()` gets a `as.varlab`-argument, to return a "summary" data frame with column number, variable name and variable label.
+* `flat_table()` now also accepts grouped data frames.
+* `flat_table()` gets a `show.values`-argument, to add values to associated labels in output.
+* `frq()` now also accepts grouped data frames.
+* `frq()` gets a `weight.by`-argument to weight frequencies.
+* `set_na()` can now also find values by their value labels and replace them with NA.
+* `set_na()` now removes unused value labels from values that have been replaced with NA.
+* The `as.tag`-argument in `set_na()` now defaults to `FALSE`.
+* `get_labels()` now always returns labels in sorted order of the associated values.
+* `get_labels()` gets a `drop.unused`-argument, to automatically drop labels from values that don't occur in the vector.
+* For a named vector as `labels`-argument, `set_labels()` now always sorts labels in sorted order of the associated values.
+* `is_empty()` gets a `first.only`-argument, to evaluate either first or all elements of a character vector.
+
+## Bug fixes
+
+* `set_na()` did not work on vectors of class `Date` when argument `as.tag = TRUE`.
+* `flat_table()` did not show values that had no value labels. Now all categories are shown in the frequency table.
+* `rec()` did not properly copy labels of tagged NA values when not all recoded values appeared in the vector.
+* `frq()` did not show correct values, when value labels of a vector were not sorted according their values.
+* `set_labels()` did not set labels properly for ordered factors.
+* `remove_labels()` returned NA-values for value labels (instead of no value labels) when the last value label of a vector was removed.
+
+
 # sjmisc 2.1.0
 
 ## New functions
@@ -13,7 +48,7 @@
 ## Bug fixes
 
 * Fixed bug with copying attributes from tibbles for `merge_df()`.
-
+* Fixed wrong argument-description in docs of `frq()`.
 
 # sjmisc 2.0.1
 

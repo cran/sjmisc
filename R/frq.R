@@ -4,10 +4,21 @@
 #' @description This function returns a frequency table of labelled vectors, as data frame.
 #'
 #' @param x A labelled vector or a \code{data.frame} with labelled vectors.
-#' @param sort.frq Logical, if \code{TRUE}, rows will be sorted according to
-#'          value frequencies.
+#'          May also be a grouped data frame (see 'Note' and 'Examples').
+#' @param sort.frq Determines whether categories should be sorted
+#'          according to their frequencies or not. Default is \code{"none"}, so
+#'          categories are not sorted by frequency. Use \code{"asc"} or
+#'          \code{"desc"} for sorting categories ascending or descending order.
+#' @param weight.by Vector of weights that will be applied to weight all observations.
+#'          Must be a vector of same length as the input vector. Default is
+#'          \code{NULL}, so no weights are used.
+#'
 #' @return A data frame with values, value labels, frequencies, raw, valid and
 #'           cumulative percentages of \code{x}.
+#'
+#' @note \code{x} may also be a grouped data frame (see \code{\link[dplyr]{group_by}})
+#'       with up to two grouping variables. Frequency tables are created for each
+#'       subgroup then.
 #'
 #' @seealso \code{\link{flat_table}} for labelled (proportional) tables.
 #'
@@ -28,34 +39,59 @@
 #' library(dplyr)
 #' efc %>% select(e42dep, e15relat, c172code) %>% frq()
 #'
+#' # with grouped data frames, in a pipe
+#' efc %>%
+#'   group_by(e16sex, c172code) %>%
+#'   select(e16sex, c172code, e42dep) %>%
+#'   frq()
+#'
 #' @importFrom stats na.omit
 #' @importFrom dplyr full_join
 #' @export
 #' @export
-frq <- function(x, sort.frq = c("none", "asc", "desc")) {
+frq <- function(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
   UseMethod("frq")
 }
 
 #' @export
-frq.data.frame <- function(x, sort.frq = c("none", "asc", "desc")) {
+frq.data.frame <- function(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
   sort.frq <- match.arg(sort.frq)
-  lapply(x, FUN = frq_helper, sort.frq = sort.frq)
+
+  # do we have a grouped data frame?
+  if (inherits(x, "grouped_df")) {
+    # get grouped data
+    grps <- get_grouped_data(x)
+    # now plot everything
+    for (i in seq_len(nrow(grps))) {
+      # copy back labels to grouped data frame
+      tmp <- copy_labels(grps$data[[i]], x)
+      # print title for grouping
+      cat(sprintf("\nGrouped by:\n%s\n", get_grouped_title(x, grps, i, sep = "\n")))
+      # print frequencies
+      print(frq_helper(x = tmp[[1]], sort.frq = sort.frq, weight.by = weight.by))
+      cat("\n")
+    }
+  } else {
+    lapply(x, FUN = frq_helper, sort.frq = sort.frq, weight.by = weight.by)
+  }
 }
 
 #' @export
-frq.list <- function(x, sort.frq = c("none", "asc", "desc")) {
+frq.list <- function(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
   sort.frq <- match.arg(sort.frq)
-  lapply(x, FUN = frq_helper, sort.frq = sort.frq)
+  lapply(x, FUN = frq_helper, sort.frq = sort.frq, weight.by = weight.by)
 }
 
 #' @export
-frq.default <- function(x, sort.frq = c("none", "asc", "desc")) {
+frq.default <- function(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
   sort.frq <- match.arg(sort.frq)
-  frq_helper(x = x, sort.frq = sort.frq)
+  frq_helper(x = x, sort.frq = sort.frq, weight.by = weight.by)
 }
 
 
-frq_helper <- function(x, sort.frq) {
+frq_helper <- function(x, sort.frq, weight.by) {
+  # convert NaN and Inf to missing
+  x <- zap_inf(x)
   #---------------------------------------------------
   # variable with only mising?
   #---------------------------------------------------
@@ -73,6 +109,10 @@ frq_helper <- function(x, sort.frq) {
   #---------------------------------------------------
   labels <- get_labels(x, attr.only = T, include.values = "n", include.non.labelled = T)
   #---------------------------------------------------
+  # get variable label (if any)
+  #---------------------------------------------------
+  varlab <- get_label(x)
+  #---------------------------------------------------
   # do we have a labelled vector?
   #---------------------------------------------------
   if (!is.null(labels)) {
@@ -85,8 +125,18 @@ frq_helper <- function(x, sort.frq) {
       dat$val <- to_value(dat$val, keep.labels = F)
     else
       dat$val <- as.numeric(dat$val)
-    # create frequency table
-    dat2 <- data.frame(table(x, useNA = "always"))
+    # weight data?
+    if (!is.null(weight.by)) {
+      dat2 <- data.frame(
+        round(stats::xtabs(weights ~ x,
+                           data = data.frame(weights = weight.by, x = x),
+                           na.action = stats::na.pass,
+                           exclude = NULL), 0)
+        )
+    } else {
+      # create frequency table
+      dat2 <- data.frame(table(x, useNA = "always"))
+    }
     colnames(dat2) <- c("val", "frq")
     dat2$val <- to_value(dat2$val, keep.labels = F)
     # join frq table and label columns
@@ -95,8 +145,18 @@ frq_helper <- function(x, sort.frq) {
     # missing values don't appear (zero counts)
     suppressMessages(replace_na(mydat$frq) <- 0)
   } else {
-    # if we have no labels, do simple frq table
-    mydat <- data.frame(table(x, useNA = "always"))
+    # weight data?
+    if (!is.null(weight.by)) {
+      mydat <- data.frame(
+        round(stats::xtabs(weights ~ x,
+                           data = data.frame(weights = weight.by, x = x),
+                           na.action = stats::na.pass,
+                           exclude = NULL), 0)
+      )
+    } else {
+      # if we have no labels, do simple frq table
+      mydat <- data.frame(table(x, useNA = "always"))
+    }
     colnames(mydat) <- c("val", "frq")
     # add values as label
     mydat$label <- labels <- as.character(mydat$val)
@@ -113,15 +173,15 @@ frq_helper <- function(x, sort.frq) {
   # sort categories ascending or descending
   # --------------------------------------------------------
   if (!is.null(sort.frq) && (sort.frq == "asc" || sort.frq == "desc")) {
-    ord <- order(mydat$frq[1:valid.vals], decreasing = (sort.frq == "desc"))
+    ord <- order(mydat$frq[seq_len(valid.vals)], decreasing = (sort.frq == "desc"))
     mydat <- mydat[c(ord, valid.vals + 1), ]
     labels <- labels[ord]
   }
   # raw percentages
   mydat$raw.prc <- mydat$frq / sum(mydat$frq)
   # compute valud and cumulative percentages
-  mydat$valid.prc <- c(mydat$frq[1:valid.vals] / length(stats::na.omit(x)), NA)
-  mydat$cum.prc <- c(cumsum(mydat$valid.prc[1:valid.vals]), NA)
+  mydat$valid.prc <- c(mydat$frq[seq_len(valid.vals)] / length(stats::na.omit(x)), NA)
+  mydat$cum.prc <- c(cumsum(mydat$valid.prc[seq_len(valid.vals)]), NA)
   # proper rounding
   mydat$raw.prc <- 100 * round(mydat$raw.prc, 4)
   mydat$cum.prc <- 100 * round(mydat$cum.prc, 4)
@@ -132,11 +192,60 @@ frq_helper <- function(x, sort.frq) {
   if (!is.null(mydat$label)) mydat$label[is.na(mydat$label)] <- "NA"
   suppressMessages(replace_na(mydat$val) <- max(to_value(mydat$val), na.rm = T) + 1)
   # save original order
-  reihe <- to_value(mydat$val, keep.labels = F)
+  reihe <- to_value(mydat$val, start.at = 1, keep.labels = F)
   # sort for x-axis
-  mydat$val <- sort(reihe)
+  mydat <- mydat[order(reihe), ]
+  # add variable label as attribute, for print-method
+  attr(mydat, "label") <- varlab
   # -------------------------------------
   # return results
   # -------------------------------------
-  return(structure(class = "sjmisc.frq", list(mydat = mydat)))
+  class(mydat) <- c("sjmisc.frq", "data.frame")
+  mydat
+}
+
+
+get_grouped_title <- function(x, grps, i, sep = "\n") {
+  # prepare title for group
+  var.name <- colnames(grps)[1]
+  t1 <- get_label(x[[var.name]], def.value = var.name)
+  t2 <- get_labels(x[[var.name]])[grps[[var.name]][i]]
+  title <- sprintf("%s: %s", t1, t2)
+
+  # do we have another groupng variable?
+  if (length(attr(x, "vars", exact = T)) > 1) {
+    # prepare title for group
+    var.name <- colnames(grps)[2]
+    t1 <- get_label(x[[var.name]], def.value = var.name)
+    t2 <- get_labels(x[[var.name]])[grps[[var.name]][i]]
+    title <- sprintf("%s%s%s: %s", title, sep, t1, t2)
+  }
+
+  # return title
+  title
+}
+
+
+#' @importFrom tidyr nest
+#' @importFrom dplyr select_ filter
+#' @importFrom stats complete.cases
+get_grouped_data <- function(x) {
+  # nest data frame
+  grps <- tidyr::nest(x)
+
+  # remove NA category
+  cc <- grps %>%
+    dplyr::select_("-data") %>%
+    stats::complete.cases()
+  # select only complete cases
+  grps <- grps %>% dplyr::filter(cc)
+
+  # arrange data
+  if (length(attr(x, "vars", exact = T)) == 1)
+    reihe <- order(grps[[1]])
+  else
+    reihe <- order(grps[[1]], grps[[2]])
+  grps <- grps[reihe, ]
+
+  grps
 }

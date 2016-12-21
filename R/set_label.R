@@ -2,10 +2,10 @@
 #' @name set_label
 #'
 #' @description This function adds variable labels as attribute
-#'                (named \code{"label"} or \code{"variable.label"}) to a variable
+#'                (named \code{"label"}) to a variable
 #'                or vector \code{x}, resp. to a set of variables in a
-#'                \code{data.frame} or a \code{list}-object. Most functions of the
-#'                \pkg{sjPlot} package can automatically retrieve the variable
+#'                data frame or a list-object. Most functions of the
+#'                \CRANpkg{sjPlot} package can automatically read the variable
 #'                labels to use it as axis labels or plot title (see 'Details').
 #'
 #' @seealso The sjPlot manual on \href{http://www.strengejacke.de/sjPlot/datainit/}{data initialization} or
@@ -106,7 +106,7 @@ set_label <- function(x, lab, attr.string = NULL) {
 
         # iterate all columns / list elements
         for (i in seq_len(nvars)) {
-          if (is_empty(lab[i])) {
+          if (sjmisc::is_empty(lab[i])) {
             # empty label value means, remove
             # the label attribute
             attr(x[[i]], attr.string) <- NULL
@@ -119,7 +119,7 @@ set_label <- function(x, lab, attr.string = NULL) {
         }
       }
     } else {
-      if (is_empty(lab))
+      if (sjmisc::is_empty(lab))
         # empty label, so remove label attribute
         attr(x, attr.string) <- NULL
       else
@@ -127,7 +127,7 @@ set_label <- function(x, lab, attr.string = NULL) {
         attr(x, attr.string) <- lab
     }
   }
-  return(x)
+  x
 }
 
 

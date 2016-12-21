@@ -10,26 +10,29 @@
 #'            \code{\link{get_na}} to get values of missing values in
 #'            labelled vectors.
 #'
-#' @param x Variable (vector), \code{data.frame} or \code{list} of variables where new
+#' @param x Variable (vector), data frame or list of variables where new
 #'          missing values should be defined. If \code{x} is a \code{data.frame}, each
 #'          column is assumed to be a new variable, where missings should be defined.
-#' @param value Numeric vector with values that should be replaced with a
-#'          \code{\link[haven]{tagged_na}}.
-#'          Thus, for each variable in \code{x}, \code{value} are replaced by
-#'          tagged \code{NA} values.
+#' @param value Numeric vector with values that should be replaced with NA values,
+#'        or a character vector if values of factors or character vectors should be
+#'        replaced. For labelled vectors, may also be the name of a value label. In
+#'        this case, the associated values for the value labels in each vector
+#'        will be replaced with NA (see 'Examples').
 #' @param drop.levels Logical, if \code{TRUE}, factor levels of values that have
 #'          been replaced with \code{NA} are dropped. See 'Examples'.
 #' @param as.tag Logical, if \code{TRUE}, values in \code{x} will be replaced
-#'          by \code{\link[haven]{tagged_na}}, else by usual \code{NA} values.
+#'          by \code{tagged_na}, else by usual \code{NA} values. Use a named
+#'          vector to assign the value label to the tagged NA value (see 'Examples').
 #'
-#' @return \code{x}, where each value of \code{value} is replaced by an a tagged
-#'           \code{NA}.
+#' @return \code{x}, with all elements of \code{value} being replaced by \code{NA}.
 #'
-#' @note Value and variable label attributes (see, for instance, \code{\link{get_labels}}
-#'         or \code{\link{set_labels}}) are preserved.
+#' @note Labels from values that are replaced with NA and no longer used will be
+#'         removed from \code{x}, however, other value and variable label
+#'         attributes (see, for instance, \code{\link{get_labels}} or
+#'         \code{\link{set_labels}}) are preserved.
 #'
 #' @details \code{set_na} converts all values defined in \code{value} with
-#'            a related tagged \code{NA} (see \code{\link[haven]{tagged_na}}).
+#'            a related \code{NA} or tagged NA values (see \code{\link[haven]{tagged_na}}).
 #'            Tagged \code{NA}s work exactly like regular R missing values
 #'            except that they store one additional byte of information: a tag,
 #'            which is usually a letter ("a" to "z") or character number ("0" to "9").
@@ -47,10 +50,10 @@
 #' table(dummy, useNA = "always")
 #'
 #' # add named vector as further missing value
-#' set_na(dummy, c("Refused" = 5))
+#' set_na(dummy, c("Refused" = 5), as.tag = TRUE)
 #' # see different missing types
 #' library(haven)
-#' print_tagged_na(set_na(dummy, c("Refused" = 5)))
+#' print_tagged_na(set_na(dummy, c("Refused" = 5), as.tag = TRUE))
 #'
 #'
 #' # create sample data frame
@@ -60,8 +63,8 @@
 #' # set value 2 and 4 as missings
 #' library(dplyr)
 #' dummy %>% set_na(c(2, 4)) %>% head()
-#' dummy %>% set_na(c(2, 4)) %>% get_na()
-#' dummy %>% set_na(c(2, 4)) %>% get_values()
+#' dummy %>% set_na(c(2, 4), as.tag = TRUE) %>% get_na()
+#' dummy %>% set_na(c(2, 4), as.tag = TRUE) %>% get_values()
 #'
 #' # create list of variables
 #' data(efc)
@@ -74,26 +77,45 @@
 #' # drop unused factor levels when being set to NA
 #' x <- factor(c("a", "b", "c"))
 #' x
-#' set_na(x, "b")
-#' set_na(x, "b", drop.levels = FALSE)
+#' set_na(x, "b", as.tag = TRUE)
+#' set_na(x, "b", drop.levels = FALSE, as.tag = TRUE)
+#'
+#' # set_na() can also remove a missing by defining the value label
+#' # of the value that should be replaced with NA. This is in particular
+#' # helpful if a certain category should be set as NA, however, this category
+#' # is assigned with different values accross variables
+#' x1 <- sample(1:4, 20, replace = TRUE)
+#' x2 <- sample(1:7, 20, replace = TRUE)
+#' set_labels(x1) <- c("Refused" = 3, "No answer" = 4)
+#' set_labels(x2) <- c("Refused" = 6, "No answer" = 7)
+#'
+#' tmp <- data.frame(x1, x2)
+#' get_labels(tmp)
+#' get_labels(set_na(tmp, "No answer"))
+#' get_labels(set_na(tmp, c("Refused", "No answer")))
+#'
+#' # show values
+#' tmp
+#' set_na(tmp, c("Refused", "No answer"))
+#'
 #'
 #' @export
-set_na <- function(x, value, drop.levels = TRUE, as.tag = TRUE) {
+set_na <- function(x, value, drop.levels = TRUE, as.tag = FALSE) {
   UseMethod("set_na")
 }
 
 #' @export
-set_na.data.frame <- function(x, value, drop.levels = TRUE, as.tag = TRUE) {
+set_na.data.frame <- function(x, value, drop.levels = TRUE, as.tag = FALSE) {
   tibble::as_tibble(lapply(x, FUN = set_na_helper, value, drop.levels, as.tag))
 }
 
 #' @export
-set_na.list <- function(x, value, drop.levels = TRUE, as.tag = TRUE) {
+set_na.list <- function(x, value, drop.levels = TRUE, as.tag = FALSE) {
   lapply(x, FUN = set_na_helper, value, drop.levels, as.tag)
 }
 
 #' @export
-set_na.default <- function(x, value, drop.levels = TRUE, as.tag = TRUE) {
+set_na.default <- function(x, value, drop.levels = TRUE, as.tag = FALSE) {
   set_na_helper(x, value, drop.levels, as.tag)
 }
 
@@ -109,6 +131,30 @@ set_na_helper <- function(x, value, drop.levels, as.tag) {
   na.names <- names(value)
   # get values for value labels
   lab.values <- get_values(x, drop.na = F)
+
+  # no tagged NA's for date values
+  if (inherits(x, "Date")) as.tag <- F
+
+  # if value is a character vector, user may have defined a value label.
+  # find value of associated label then
+  if (is.character(value)) {
+    # get value labels
+    val.lab <- get_labels(x, attr.only = TRUE, include.values = "n",
+                          include.non.labelled = FALSE, drop.na = TRUE)
+    # get value labels that match the values which should be set to NA
+    val.match <- val.lab[val.lab %in% value]
+    # now get values for this vector
+    if (!sjmisc::is_empty(val.match) && !sjmisc::is_empty(names(val.match))) {
+      # should be numeric, else we might have a factor
+      na.values <- suppressWarnings(as.numeric(names(val.match)))
+      # if we have no NA, coercing to numeric worked. Now get these
+      # NA values and remove value labels from vector
+      if (!anyNA(na.values)) {
+        x <- suppressWarnings(remove_labels(x, value))
+        value <- na.values
+      }
+    }
+  }
 
   # haven::na_tag works only for double
   if (is.double(x) && as.tag) {
@@ -128,7 +174,7 @@ set_na_helper <- function(x, value, drop.levels, as.tag) {
       # is na-value in labelled values?
       lv <- which(lab.values == value[i])
       # if yes, replace label
-      if (!is_empty(lv)) {
+      if (!sjmisc::is_empty(lv)) {
         # for tagged NA, use tag as new attribute
         # change value
         attr(x, attr.string)[lv] <- haven::tagged_na(as.character(value[i]))
@@ -153,6 +199,10 @@ set_na_helper <- function(x, value, drop.levels, as.tag) {
     }
   }
 
+  # remove unused value labels
+  removers <- which(get_values(x) %in% value)
+  if (!is.null(removers) && !sjmisc::is_empty(removers, first.only = T)) x <- remove_labels(x, removers)
+
   # if we have a factor, check if we have unused levels now due to NA
   # assignment. If yes, drop levels
   if (is.factor(x) && drop.levels && length(levels(x)) != length(levels(droplevels(x)))) {
@@ -171,12 +221,12 @@ set_na_helper <- function(x, value, drop.levels, as.tag) {
 
 #' @rdname set_na
 #' @export
-`set_na<-` <- function(x, value) {
+`set_na<-` <- function(x, drop.levels = TRUE, as.tag = FALSE, value) {
   UseMethod("set_na<-")
 }
 
 #' @export
-`set_na<-.default` <- function(x, value) {
-  x <- set_na(x, value)
+`set_na<-.default` <- function(x, drop.levels = TRUE, as.tag = FALSE, value) {
+  x <- set_na(x, value, drop.levels, as.tag)
   x
 }

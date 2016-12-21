@@ -1,12 +1,15 @@
-#' @title Check whether string or vector is empty
+#' @title Check whether string, list or vector is empty
 #' @name is_empty
 #' @description This function checks whether a string or character vector (of
-#'                length 1) or any vector (numeric, atomic) is empty or not.
+#'                length 1), a list or any vector (numeric, atomic) is empty or not.
 #'
 #'
-#' @param x String, character vector of length 1, or vector.
+#' @param x String, character vector of length 1, list or vector.
+#' @param first.only Logical, if \code{FALSE} and \code{x} is a character
+#'        vector, each element of \code{x} will be checked if empty. If
+#'        \code{TRUE}, only the first element of \code{x} will be checked.
 #' @return Logical, \code{TRUE} if \code{x} is a character vector or string and
-#'           is empty, \code{TRUE} if \code{x} is any vector and of length 0,
+#'           is empty, \code{TRUE} if \code{x} is a vector or list and of length 0,
 #'           \code{FALSE} otherwise.
 #'
 #' @note \code{NULL}- or \code{NA}-values are also considered as "empty" (see
@@ -37,18 +40,33 @@
 #' x <- x[-1]
 #' is_empty(x)
 #'
+#' # check multiple elements of character vectors
+#' is_empty(c("", "a"))
+#' is_empty(c("", "a"), first.only = FALSE)
+#'
 #' @export
-is_empty <- function(x) {
+is_empty <- function(x, first.only = TRUE) {
   # do we have a valid vector?
   if (!is.null(x)) {
     # if it's a character, check if we have only one element in that vector
     if (is.character(x)) {
-      if (length(x) > 1) warning("`x` must be of length 1. Evaluating first element only.", call. = TRUE)
-      # zero chars, so empty?
-      zero_len <- nchar(x) == 0
-      # if 'x' was empty, we have no chars, so zero_len will be integer(0).
-      # check this here, because zero_len needs to be logical
-      if (length(zero_len) == 0) zero_len <- TRUE
+      # characters may also be of length 0
+      if (length(x) == 0) return(TRUE)
+      # else, check all elements of x
+      zero_len <- sapply(x, function(y) {
+        # zero chars, so empty?
+        l <- nchar(y) == 0
+        # if 'x' was empty, we have no chars, so zero_len will be integer(0).
+        # check this here, because zero_len needs to be logical
+        if (length(l) == 0) l <- TRUE
+        l
+      })
+      # return result for multiple elements of character vector
+      if (first.only) {
+        return(unname(zero_len)[1])
+      } else {
+        return(unname(zero_len))
+      }
       # we have a non-character vector here. check for length
     } else {
       zero_len <- length(x) == 0

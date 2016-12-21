@@ -27,10 +27,10 @@
 #' # sample data, inspect age of carers
 #' data(efc)
 #' table(efc$c160age, exclude = NULL)
-#' table(rec(efc$c160age, rp$pattern), exclude = NULL)
+#' table(rec(efc$c160age, recodes = rp$pattern), exclude = NULL)
 #'
 #' # recode carers age into groups of width 5
-#' x <- rec(efc$c160age, rp$pattern)
+#' x <- rec(efc$c160age, recodes = rp$pattern)
 #' # add value labels to new vector
 #' set_labels(x) <- rp$labels
 #' # watch result
@@ -52,10 +52,10 @@ rec_pattern <- function(from, to, width = 5, other = NULL){
     rec.labels <- c(rec.labels, sprintf("%i-%i", values[x], values[x + 1] - 1))
   }
   # do we have an "else"-token?
-  if (!is.null(other) && !is_empty(other))
+  if (!is.null(other) && !sjmisc::is_empty(other))
     rec.pat <- paste0(rec.pat, "else=", other, sep = "")
   # name labels
-  names(rec.labels) <- c(1:(length(values) - 1))
+  names(rec.labels) <- seq_len(length(values) - 1)
   # return results
   list(pattern = rec.pat, labels = rec.labels)
 }

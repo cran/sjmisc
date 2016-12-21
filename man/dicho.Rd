@@ -5,11 +5,10 @@
 \title{Dichotomize variables}
 \usage{
 dicho(x, dich.by = "median", as.num = FALSE, var.label = NULL,
-  val.labels = NULL)
+  val.labels = NULL, suffix = "_d")
 }
 \arguments{
-\item{x}{Variable (vector), \code{data.frame} or \code{list} of variables
-that should be dichotomized}
+\item{x}{A variable, data frame or list-object.}
 
 \item{dich.by}{Indicates the split criterion where a variable is dichotomized.
 Must be one of the following values (may be abbreviated):
@@ -29,6 +28,16 @@ If empty, variable label attributes will be removed.}
 \item{val.labels}{Optional character vector (of length two), to set value label
 attributes of dichotomized variable (see \code{\link{set_labels}}).
 If \code{NULL} (default), no value labels will be set.}
+
+\item{suffix}{String value, will be appended to variable (column) names of
+\code{x}, if \code{x} is a data frame. If \code{x} is not a data
+frame, this argument will be ignored. The default value to suffix
+column names in a data frame depends on the function call:
+\itemize{
+  \item recoded variables (\code{rec()}) will be suffixed with \code{"_r"}
+  \item dichotomized variables (\code{dicho()}) will be suffixed with \code{"_d"}
+  \item grouped variables (\code{split_var()}) will be suffixed with \code{"_g"}
+}}
 }
 \value{
 A dichotomized factor (or numeric, if \code{as.num = TRUE}) variable (0/1-coded),
@@ -41,8 +50,8 @@ Dichotomizes variables into dummy variables (0/1). Dichotomization is
                variables can be dichotomized.
 }
 \note{
-Variable label attributes (see, for instance, \code{\link{set_label}}) are preserved
-        (unless changes via \code{var.label}-argument).
+Variable label attributes are preserved (unless changes via
+      \code{var.label}-argument).
 }
 \examples{
 data(efc)

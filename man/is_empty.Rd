@@ -2,21 +2,25 @@
 % Please edit documentation in R/is_empty.R
 \name{is_empty}
 \alias{is_empty}
-\title{Check whether string or vector is empty}
+\title{Check whether string, list or vector is empty}
 \usage{
-is_empty(x)
+is_empty(x, first.only = TRUE)
 }
 \arguments{
-\item{x}{String, character vector of length 1, or vector.}
+\item{x}{String, character vector of length 1, list or vector.}
+
+\item{first.only}{Logical, if \code{FALSE} and \code{x} is a character
+vector, each element of \code{x} will be checked if empty. If
+\code{TRUE}, only the first element of \code{x} will be checked.}
 }
 \value{
 Logical, \code{TRUE} if \code{x} is a character vector or string and
-          is empty, \code{TRUE} if \code{x} is any vector and of length 0,
+          is empty, \code{TRUE} if \code{x} is a vector or list and of length 0,
           \code{FALSE} otherwise.
 }
 \description{
 This function checks whether a string or character vector (of
-               length 1) or any vector (numeric, atomic) is empty or not.
+               length 1), a list or any vector (numeric, atomic) is empty or not.
 }
 \note{
 \code{NULL}- or \code{NA}-values are also considered as "empty" (see
@@ -46,6 +50,10 @@ x <- 1
 is_empty(x)
 x <- x[-1]
 is_empty(x)
+
+# check multiple elements of character vectors
+is_empty(c("", "a"))
+is_empty(c("", "a"), first.only = FALSE)
 
 }
 

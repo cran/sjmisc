@@ -1,21 +1,14 @@
 #' @title Retrieve variable label(s) of labelled data
 #' @name get_label
 #'
-#' @description This function retrieves the value labels of labelled data, which
-#'                was created with the \pkg{labelled} or \pkg{haven} package, or
-#'                imported from SPSS, SAS or STATA files (via \code{\link{read_spss}},
-#'                \code{\link{read_sas}} or \code{\link{read_stata}}) and
-#'                \itemize{
-#'                  \item if \code{x} is a data frame or a list of variables, returns the all variable labels as named character vector of length \code{ncol(x)}.
-#'                  \item or, if \code{x} is a vector, returns the variable label as string.
-#'                  }
+#' @description This function returns the variable labels of labelled data.
 #'
 #' @seealso See package vignettes or \href{http://www.strengejacke.de/sjPlot/}{online documentation}
 #'            for more details; \code{\link{set_label}} to manually set variable labels or \code{\link{get_labels}}
 #'            to get value labels; \code{\link{var_labels}} to set multiple variable
 #'            labels at once.
 
-#' @param x \code{data.frame} with variables that have label attributes (e.g.
+#' @param x A data frame with variables that have label attributes (e.g.
 #'          from an imported SPSS, SAS or STATA data set, via \code{\link{read_spss}},
 #'          \code{\link{read_sas}} or \code{\link{read_stata}}); a variable
 #'          (vector) with variable label attribute; or a \code{list} of variables
@@ -36,9 +29,7 @@
 #'
 #' @note \code{\link{var_labels}} is an alternative way to set variable labels,
 #'       which follows the philosophy of tidyvers API design (data as first argument,
-#'       dots as value pairs indicating variables).
-#'       \cr \cr
-#'       Furthermore, see 'Note' in \code{\link{get_labels}}.
+#'       dots as value pairs indicating variables)
 #'
 #' @examples
 #' # import SPSS data set

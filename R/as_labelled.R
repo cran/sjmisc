@@ -14,11 +14,9 @@
 #'          attribute. If \code{FALSE} (default), all former \code{class}-attributes
 #'          will be removed and the class-attribute of \code{x} will only
 #'          be \code{labelled}.
-#' @return \code{x}, as \code{\link[haven]{labelled}}-class object, including
-#'           missing-flags (\code{is_na}-attribute).
+#' @return \code{x}, as \code{labelled}-class object.
 #'
 #' @examples
-#'
 #' data(efc)
 #' str(efc$e42dep)
 #'
@@ -83,7 +81,7 @@ as_labelled_helper <- function(x, add.labels, add.class) {
   if (add.labels) x <- fill_labels(x)
   # reset missings
   xna <- get_na(x)
-  if (suppressWarnings(!is_empty(xna))) x <- set_na(x, xna)
+  if (!sjmisc::is_empty(xna)) x <- set_na(x, xna)
   # get former class attributes
   xc <- class(x)
   if (add.class)

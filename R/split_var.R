@@ -5,13 +5,9 @@
 #'                variable is cut into a smaller number of groups at
 #'                specific cut points.
 #'
-#' @seealso \itemize{
-#'            \item \code{\link{group_var}}
-#'            \item \code{\link{rec}}
-#'          }
+#' @seealso \code{\link{group_var}} to group variables into equal ranged groups,
+#'          or \code{\link{rec}} to recode variables.
 #'
-#' @param x Numeric vector, data frame or list of numeric vectors,
-#'            which should split into groups.
 #' @param groupcount The new number of groups that \code{x} should be split into.
 #' @param inclusive Logical; if \code{TRUE}, cut point value are included in
 #'          the preceeding group. This may be necessary if cutting a vector into
@@ -29,7 +25,7 @@
 #'            specified \code{\link[stats]{quantile}s}.
 #'            \cr \cr
 #'            By contrast, \code{\link{group_var}} recodes a variable into
-#'            groups, where all values within a group have the same range
+#'            groups, where groups have the same value range
 #'            (e.g., from 1-5, 6-10, 11-15 etc.).
 #'
 #' @note In case a vector has only few different unique values, splitting into
@@ -59,22 +55,25 @@
 #'
 #' @importFrom stats quantile
 #' @export
-split_var <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE) {
+split_var <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE, suffix = "_g") {
   UseMethod("split_var")
 }
 
 #' @export
-split_var.data.frame <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE) {
-  tibble::as_tibble(lapply(x, FUN = split_var_helper, groupcount, as.num, val.labels, var.label, inclusive))
+split_var.data.frame <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE, suffix = "_g") {
+  tmp <- tibble::as_tibble(lapply(x, FUN = split_var_helper, groupcount, as.num, val.labels, var.label, inclusive))
+  # change variable names, add suffix "_r"
+  if (!is.null(suffix) && !is_empty(suffix)) colnames(tmp) <- sprintf("%s%s", colnames(tmp), suffix)
+  tmp
 }
 
 #' @export
-split_var.list <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE) {
+split_var.list <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE, suffix = "_g") {
   lapply(x, FUN = split_var_helper, groupcount, as.num, val.labels, var.label, inclusive)
 }
 
 #' @export
-split_var.default <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE) {
+split_var.default <- function(x, groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE, suffix = "_g") {
   split_var_helper(x, groupcount, as.num, val.labels, var.label, inclusive)
 }
 

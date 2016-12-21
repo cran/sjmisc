@@ -5,11 +5,10 @@
 \title{Split numeric variables into smaller groups}
 \usage{
 split_var(x, groupcount, as.num = FALSE, val.labels = NULL,
-  var.label = NULL, inclusive = FALSE)
+  var.label = NULL, inclusive = FALSE, suffix = "_g")
 }
 \arguments{
-\item{x}{Numeric vector, data frame or list of numeric vectors,
-which should split into groups.}
+\item{x}{A variable, data frame or list-object.}
 
 \item{groupcount}{The new number of groups that \code{x} should be split into.}
 
@@ -18,7 +17,9 @@ be returned as numeric vector. If \code{FALSE}, a factor is returned.}
 
 \item{val.labels}{Optional character vector, to set value label attributes
 of recoded variable (see \code{\link{set_labels}}).
-If \code{NULL} (default), no value labels will be set.}
+If \code{NULL} (default), no value labels will be set. Value labels
+can also be directly defined in the \code{recodes}-syntax, see
+'Details'.}
 
 \item{var.label}{Optional string, to set variable label attribute for the
 returned variable (see \code{\link{set_label}}). If \code{NULL}
@@ -29,6 +30,16 @@ If empty, variable label attributes will be removed.}
 the preceeding group. This may be necessary if cutting a vector into
 groups does not define proper ("equal sized") group sizes.
 See 'Note' and 'Examples'.}
+
+\item{suffix}{String value, will be appended to variable (column) names of
+\code{x}, if \code{x} is a data frame. If \code{x} is not a data
+frame, this argument will be ignored. The default value to suffix
+column names in a data frame depends on the function call:
+\itemize{
+  \item recoded variables (\code{rec()}) will be suffixed with \code{"_r"}
+  \item dichotomized variables (\code{dicho()}) will be suffixed with \code{"_d"}
+  \item grouped variables (\code{split_var()}) will be suffixed with \code{"_g"}
+}}
 }
 \value{
 A grouped variable with equal sized groups.
@@ -45,7 +56,7 @@ Recode numeric variables into equal sized groups, i.e. a
            specified \code{\link[stats]{quantile}s}.
            \cr \cr
            By contrast, \code{\link{group_var}} recodes a variable into
-           groups, where all values within a group have the same range
+           groups, where groups have the same value range
            (e.g., from 1-5, 6-10, 11-15 etc.).
 }
 \note{
@@ -76,9 +87,7 @@ table(split_var(efc$e42dep, 2, inclusive = TRUE))
 
 }
 \seealso{
-\itemize{
-           \item \code{\link{group_var}}
-           \item \code{\link{rec}}
-         }
+\code{\link{group_var}} to group variables into equal ranged groups,
+         or \code{\link{rec}} to recode variables.
 }
 

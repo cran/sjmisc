@@ -5,12 +5,11 @@
 #'                category values.
 #'
 #' @seealso \code{\link{set_na}} for setting \code{NA} values, \code{\link{replace_na}}
-#'            to replace \code{\link{NA}}'s with specific value, \code{\link{recode_to}}
+#'            to replace \code{NA}'s with specific value, \code{\link{recode_to}}
 #'            for re-shifting value ranges and \code{\link{ref_lvl}} to change the
 #'            reference level of (numeric) factors.
 #'
-#' @param x Numeric, charactor or factor variable that should be recoded;
-#'          or a \code{data.frame} or \code{list} of variables.
+#' @param x A variable, data frame or list-object.
 #' @param recodes String with recode pairs of old and new values. See
 #'          'Details' for examples. \code{\link{rec_pattern}} is a convenient
 #'          function to create recode strings for grouping variables.
@@ -23,7 +22,19 @@
 #'          If empty, variable label attributes will be removed.
 #' @param val.labels Optional character vector, to set value label attributes
 #'          of recoded variable (see \code{\link{set_labels}}).
-#'          If \code{NULL} (default), no value labels will be set.
+#'          If \code{NULL} (default), no value labels will be set. Value labels
+#'          can also be directly defined in the \code{recodes}-syntax, see
+#'          'Details'.
+#' @param suffix String value, will be appended to variable (column) names of
+#'           \code{x}, if \code{x} is a data frame. If \code{x} is not a data
+#'           frame, this argument will be ignored. The default value to suffix
+#'           column names in a data frame depends on the function call:
+#'           \itemize{
+#'             \item recoded variables (\code{rec()}) will be suffixed with \code{"_r"}
+#'             \item dichotomized variables (\code{dicho()}) will be suffixed with \code{"_d"}
+#'             \item grouped variables (\code{split_var()}) will be suffixed with \code{"_g"}
+#'           }
+#'
 #' @return A numeric variable (or a factor, if \code{as.fac = TRUE} or if \code{x}
 #'           was a character vector) with recoded category values, or a data
 #'           frame or \code{list}-object with recoded categories for all variables.
@@ -36,17 +47,18 @@
 #'            \item{\code{"min"} and \code{"max"}}{minimum and maximum values are indicates by \emph{min} (or \emph{lo}) and \emph{max} (or \emph{hi}), e.g. \code{"min:4=1; 5:max=2"} (recodes all values from minimum values of \code{x} to 4 into 1, and from 5 to maximum values of \code{x} into 2)}
 #'            \item{\code{"else"}}{all other values, which have not been specified yet, are indicated by \emph{else}, e.g. \code{"3=1; 1=2; else=3"} (recodes 3 into 1, 1 into 2 and all other values into 3)}
 #'            \item{\code{"copy"}}{the \code{"else"}-token can be combined with \emph{copy}, indicating that all remaining, not yet recoded values should stay the same (are copied from the original value), e.g. \code{"3=1; 1=2; else=copy"} (recodes 3 into 1, 1 into 2 and all other values like 2, 4 or 5 etc. will not be recoded, but copied, see 'Examples')}
-#'            \item{\code{NA}'s}{\code{\link{NA}} values are allowed both as old and new value, e.g. \code{"NA=1; 3:5=NA"} (recodes all NA from old value into 1, and all old values from 3 to 5 into NA in the new variable)}
+#'            \item{\code{NA}'s}{\code{\link{NA}} values are allowed both as old and new value, e.g. \code{"NA=1; 3:5=NA"} (recodes all NA into 1, and all values from 3 to 5 into NA in the new variable)}
 #'            \item{\code{"rev"}}{\code{"rev"} is a special token that reverses the value order (see 'Examples')}
+#'            \item{direct value labelling}{value labels for new values can be assigned inside the recode pattern by writing the value label in square brackets after defining the new value in a recode pair, e.g. \code{"15:30=1 [young aged]; 31:55=2 [middle aged]; 56:max=3 [old aged]"}. See 'Examples'.}
 #'           }
 #'
 #' @note Please note following behaviours of the function:
 #'       \itemize{
 #'         \item the \code{"else"}-token should always be the last argument in the \code{recodes}-string.
-#'         \item Non-matching values will be set to \code{\link{NA}}, unless captured by the \code{"else"}-token.
-#'         \item Tagged NA values (see \code{\link[haven]{tagged_na}}) and their value labels will be preserved when copying NA values to the recoded vector with  \code{"else=copy"}.
-#'         \item Variable label attributes (see, for instance, \code{\link{get_label}}) are preserved (unless changes via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
-#'         \item If \code{x} is a \code{data.frame} or \code{list} of variables, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
+#'         \item Non-matching values will be set to \code{NA}, unless captured by the \code{"else"}-token.
+#'         \item Tagged NA values (see \code{\link[haven]{tagged_na}}) and their value labels will be preserved when copying NA values to the recoded vector with \code{"else=copy"}.
+#'         \item Variable label attributes (see, for instance, \code{\link{get_label}}) are preserved (unless changed via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
+#'         \item If \code{x} is a data frame or list-object, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
 #'       }
 #'
 #' @examples
@@ -54,10 +66,10 @@
 #' table(efc$e42dep, useNA = "always")
 #'
 #' # replace NA with 5
-#' table(rec(efc$e42dep, "1=1;2=2;3=3;4=4;NA=5"), useNA = "always")
+#' table(rec(efc$e42dep, recodes = "1=1;2=2;3=3;4=4;NA=5"), useNA = "always")
 #'
 #' # recode 1 to 2 into 1 and 3 to 4 into 2
-#' table(rec(efc$e42dep, "1,2=1; 3,4=2"), useNA = "always")
+#' table(rec(efc$e42dep, recodes = "1,2=1; 3,4=2"), useNA = "always")
 #'
 #' # or:
 #' # rec(efc$e42dep) <- "1,2=1; 3,4=2"
@@ -72,21 +84,26 @@
 #'   str()
 #'
 #' # recode 1 to 3 into 4 into 2
-#' table(rec(efc$e42dep, "min:3=1; 4=2"), useNA = "always")
+#' table(rec(efc$e42dep, recodes = "min:3=1; 4=2"), useNA = "always")
 #'
 #' # recode 2 to 1 and all others into 2
-#' table(rec(efc$e42dep, "2=1; else=2"), useNA = "always")
+#' table(rec(efc$e42dep, recodes = "2=1; else=2"), useNA = "always")
 #'
 #' # reverse value order
-#' table(rec(efc$e42dep, "rev"), useNA = "always")
+#' table(rec(efc$e42dep, recodes = "rev"), useNA = "always")
 #'
 #' # recode only selected values, copy remaining
 #' table(efc$e15relat)
-#' table(rec(efc$e15relat, "1,2,4=1; else=copy"))
+#' table(rec(efc$e15relat, recodes = "1,2,4=1; else=copy"))
 #'
-#' # recode variables with same categorie in a data frame
+#' # recode variables with same category in a data frame
 #' head(efc[, 6:9])
-#' head(rec(efc[, 6:9], "1=10;2=20;3=30;4=40"))
+#' head(rec(efc[, 6:9], recodes = "1=10;2=20;3=30;4=40"))
+#'
+#' # recode variable and set value labels via recode-syntax
+#' dummy <- rec(efc$c160age,
+#'              recodes = "15:30=1 [young]; 31:55=2 [middle]; 56:max=3 [old]")
+#' frq(dummy)
 #'
 #' # recode list of variables. create dummy-list of
 #' # variables with same value-range
@@ -94,11 +111,11 @@
 #' # show original distribution
 #' lapply(dummy, table, useNA = "always")
 #' # show recodes
-#' lapply(rec(dummy, "1,2=1; NA=9; else=copy"), table, useNA = "always")
+#' lapply(rec(dummy, recodes = "1,2=1; NA=9; else=copy"), table, useNA = "always")
 #'
 #' # recode character vector
 #' dummy <- c("M", "F", "F", "X")
-#' rec(dummy, "M=Male; F=Female; X=Refused")
+#' rec(dummy, recodes = "M=Male; F=Female; X=Refused")
 #'
 #' # recode non-numeric factors
 #' data(iris)
@@ -112,38 +129,41 @@
 #' # get current value labels
 #' x
 #' # recode 2 into 5; Values of tagged NAs are preserved
-#' rec(x, "2=5;else=copy")
-#' na_tag(rec(x, "2=5;else=copy"))
+#' rec(x, recodes = "2=5;else=copy")
+#' na_tag(rec(x, recodes = "2=5;else=copy"))
 #'
 #' @export
-rec <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL) {
+rec <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r") {
   UseMethod("rec")
 }
 
 #' @export
-rec.data.frame <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL) {
-  tibble::as_tibble(lapply(x, FUN = rec_helper, recodes, as.fac, var.label, val.labels))
+rec.data.frame <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r") {
+  tmp <- tibble::as_tibble(lapply(x, FUN = rec_helper, recodes, as.fac, var.label, val.labels))
+  # change variable names, add suffix "_r"
+  if (!is.null(suffix) && !sjmisc::is_empty(suffix)) colnames(tmp) <- sprintf("%s%s", colnames(tmp), suffix)
+  tmp
 }
 
 #' @export
-rec.list <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL) {
+rec.list <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r") {
   lapply(x, FUN = rec_helper, recodes, as.fac, var.label, val.labels)
 }
 
 #' @export
-rec.default <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL) {
+rec.default <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r") {
   rec_helper(x, recodes, as.fac, var.label, val.labels)
 }
 
 #' @rdname rec
 #' @export
-`rec<-` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, value) {
+`rec<-` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r", value) {
   UseMethod("rec<-")
 }
 
 #' @export
-`rec<-.default` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, value) {
-  rec(x = x, recodes = value, as.fac = as.fac, var.label = var.label, val.labels = val.labels)
+`rec<-.default` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r", value) {
+  rec(x = x, recodes = value, as.fac = as.fac, var.label = var.label, val.labels = val.labels, suffix = suffix)
 }
 
 #' @importFrom stats na.omit
@@ -157,6 +177,10 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   val_lab <- val.labels
   # remember if NA's have been recoded...
   na_recoded <- FALSE
+
+  # drop labels when reversing
+  if (recodes == "rev") x <- drop_labels(x, drop.na = TRUE)
+
   # get current NA values
   current.na <- get_na(x)
 
@@ -198,6 +222,37 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
                                 include.non.labelled = TRUE, drop.na = TRUE))
     }
   }
+
+  # we allow direct labelling, so extract possible direct labels here
+  # this piece of code is definitely not the best solution, I bet...
+  # but it seems to work, and I discovered the regex-pattern by myself :-)
+  # this function extracts direct value labels from the recodes-pattern and
+  # creates a named vector with value labels, e.g.:
+  # "18:23=1 [18to23]; 24:65=2 [24to65]; 66:max=3 [> 65]"
+  # will return a named vector with value 1 to 3, where the text inside [ and ]
+  # is used as name for each value
+  dir.label <- unlist(lapply(strsplit(
+    unlist(regmatches(
+      recodes,
+      gregexpr(
+        pattern = "=([^\\]]*)\\]",
+        text = recodes,
+        perl = T
+      )
+    )),
+    split = "\\[", perl = T
+  ),
+  function(x) {
+    tmp <- as.numeric(trim(substr(x[1], 2, nchar(x[1]))))
+    names(tmp) <- trim(substr(x[2], 1, nchar(x[2]) - 1))
+    tmp
+  }))
+
+  # if we found any labels, replace the value label argument
+  if (!is.null(dir.label) && !sjmisc::is_empty(dir.label)) val_lab <- dir.label
+
+  # remove possible direct labels from recode pattern
+  recodes <- gsub(pattern = "\\[([^\\[]*)\\]", replacement = "", x = recodes, perl = T)
 
   # prepare and clean recode string
   # retrieve each single recode command
@@ -330,17 +385,6 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   if (any(is.infinite(new_var))) new_var[which(new_var == -Inf)] <- NA
   # add back NA labels
   if (!is.null(current.na) && length(current.na) > 0) {
-    # first, we need a named vector for value labels, so labels from
-    # "val_lab" need to become the name attribute, and the values
-    # from "new_var" need to become the values of "val_lab"
-    if (!is.null(val_lab)) {
-      # save value labels
-      vln <- val_lab
-      # set values
-      val_lab <- stats::na.omit(sort(unique(new_var)))
-      # name values
-      names(val_lab) <- vln
-    }
     # add named missings
     val_lab <- c(val_lab, current.na)
   }

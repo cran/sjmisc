@@ -4,13 +4,14 @@
 \alias{flat_table}
 \title{Flat (proportional) tables}
 \usage{
-flat_table(.data, ..., margin = c("counts", "cell", "row", "col"),
-  digits = 2)
+flat_table(data, ..., margin = c("counts", "cell", "row", "col"),
+  digits = 2, show.values = FALSE)
 }
 \arguments{
-\item{.data}{A data frame.}
+\item{data}{A data frame. May also be a grouped data frame (see 'Note' and
+'Examples').}
 
-\item{...}{One or more variables of \code{.data} that should be printed as table.}
+\item{...}{One or more variables of \code{data} that should be printed as table.}
 
 \item{margin}{Specify the table margin that should be computed for proportional
 tables. By default, counts are printed. Use \code{margin = "cell"},
@@ -19,6 +20,9 @@ column or row percentages of the table margins.}
 
 \item{digits}{Numeric; for proportional tables, \code{digits} indicates the
 number of decimal places.}
+
+\item{show.values}{Logical, if \code{TRUE}, value labels are prefixed by the
+associated value.}
 }
 \value{
 An object of class \code{\link[stats]{ftable}}.
@@ -26,6 +30,10 @@ An object of class \code{\link[stats]{ftable}}.
 \description{
 This function creates a labelled flat table or flat
              proportional (marginal) table.
+}
+\note{
+\code{data} may also be a grouped data frame (see \code{\link[dplyr]{group_by}})
+      with up to two grouping variables. Cross tables are created for each subgroup then.
 }
 \examples{
 data(efc)
@@ -35,6 +43,26 @@ flat_table(efc, e42dep, c172code, e16sex)
 
 # flat table with proportions
 flat_table(efc, e42dep, c172code, e16sex, margin = "row")
+
+# flat table from grouped data frame. You need to select
+# the grouping variables and at least two more variables for
+# cross tabulation.
+library(dplyr)
+efc \%>\%
+  group_by(e16sex) \%>\%
+  select(e16sex, c172code, e42dep) \%>\%
+  flat_table()
+
+efc \%>\%
+  group_by(e16sex, e42dep) \%>\%
+  select(e16sex, e42dep, c172code, n4pstu) \%>\%
+  flat_table()
+
+# now it gets weird...
+efc \%>\%
+  group_by(e16sex, e42dep) \%>\%
+  select(e16sex, e42dep, c172code, n4pstu, c161sex) \%>\%
+  flat_table()
 
 }
 \seealso{

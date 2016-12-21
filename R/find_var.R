@@ -31,9 +31,16 @@
 #'            \item{\code{"all"}}{Searches for \code{pattern} in
 #'                  variable names, variable and value labels.}
 #'          }
+#' @param as.df Logical, if \code{TRUE}, a data frame with matching variables
+#'                is returned (instead of their column indices).
+#' @param as.varlab Logical, if \code{TRUE}, not only column indices, but also
+#'                variables labels of matching variables are returned (as
+#'                data frame).
 #'
-#' @return A named vector with column indices of found variables. Variable names
-#'           are used as names-attribute.
+#' @return A named vector with column indices of found variables (variable names
+#'           are used as names-attribute); if \code{as.df = TRUE}, a tibble
+#'           with found variables; or, if \code{as.varlab = TRUE}, a tibble
+#'           with three columns: column number, variable name and variable label.
 #'
 #' @details This function searches for \code{pattern} in \code{data}'s column names
 #'            and - for labelled data - in all variable and value labels of \code{data}'s
@@ -49,23 +56,36 @@
 #' # find variables with "cop" in variable name
 #' find_var(efc, "cop")
 #'
+#' # return tibble with matching variables
+#' find_var(efc, "cop", as.df = TRUE)
+#'
+#' # or return "summary"-tibble with matching variables
+#' # and their variable labels
+#' find_var(efc, "cop", as.varlab = TRUE)
+#'
 #' # find variables with "dependency" in names and variable labels
 #' find_var(efc, "dependency")
 #' get_label(efc$e42dep)
 #'
 #' # find variables with "level" in names and value labels
-#' res <- find_var(efc, "level", search = "name_value")
+#' res <- find_var(efc, "level", search = "name_value", as.df = TRUE)
 #' res
-#' get_labels(efc[, res], attr.only = FALSE)
+#' get_labels(res, attr.only = FALSE)
 #'
 #' # use sjPlot::view_df() to view results
 #' \dontrun{
 #' library(sjPlot)
-#' view_df(efc[, res])}
+#' view_df(res)}
 #'
 #' @importFrom stringr regex coll
+#' @importFrom tibble as_tibble
 #' @export
-find_var <- function(data, pattern, ignore.case = TRUE, search = c("name_label", "name_value", "label_value", "name", "label", "value", "all")) {
+find_var <- function(data,
+                     pattern,
+                     ignore.case = TRUE,
+                     search = c("name_label", "name_value", "label_value", "name", "label", "value", "all"),
+                     as.df = FALSE,
+                     as.varlab = FALSE) {
   # check valid args
   if (!is.data.frame(data)) {
     stop("`data` must be a data frame.", call. = F)
@@ -79,7 +99,7 @@ find_var <- function(data, pattern, ignore.case = TRUE, search = c("name_label",
   # search for pattern in variable names
   if (search %in% c("name", "name_label", "name_value", "all")) {
     # check variable names
-    if (any(class(pattern) == "regex"))
+    if (inherits(pattern, "regex"))
       pos1 <- which(stringr::str_detect(colnames(data), pattern))
     else
       pos1 <- which(stringr::str_detect(colnames(data), stringr::coll(pattern, ignore_case = ignore.case)))
@@ -92,7 +112,7 @@ find_var <- function(data, pattern, ignore.case = TRUE, search = c("name_label",
     labels <- get_label(data)
 
     # check labels
-    if (any(class(pattern) == "regex"))
+    if (inherits(pattern, "regex"))
       pos2 <- which(stringr::str_detect(labels, pattern))
     else
       pos2 <- which(stringr::str_detect(labels, stringr::coll(pattern, ignore_case = ignore.case)))
@@ -103,7 +123,7 @@ find_var <- function(data, pattern, ignore.case = TRUE, search = c("name_label",
     labels <- get_labels(data, attr.only = F)
 
     # check value labels with regex
-    if (any(class(pattern) == "regex")) {
+    if (inherits(pattern, "regex")) {
       pos3 <- which(unlist(lapply(labels, function(x) {
         any(stringr::str_detect(x, pattern))
       })))
@@ -116,8 +136,22 @@ find_var <- function(data, pattern, ignore.case = TRUE, search = c("name_label",
 
   # get unqiue variable indices
   pos <- unique(c(pos1, pos2, pos3))
-  # also use column names
-  names(pos) <- colnames(data)[pos]
 
+  # return data frame?
+  if (as.df) {
+    return(tibble::as_tibble(data[, pos]))
+  }
+
+  # return variable labels?
+  if (as.varlab) {
+    return(tibble::tibble(
+      col.nr = pos,
+      var.name = colnames(data)[pos],
+      var.label = get_label(data[, pos], def.value = colnames(data)[pos])
+    ))
+  }
+
+  # use column names
+  names(pos) <- colnames(data)[pos]
   pos
 }
