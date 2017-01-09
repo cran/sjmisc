@@ -1,7 +1,7 @@
-b2a77e0ef38cb2d7b5cb532b9a0e9d65 *DESCRIPTION
+b369c67f3052a46104c181857a34792b *DESCRIPTION
 a292cef5fe4ab3247b01b1e3ec598c3f *NAMESPACE
-3ee8d22b38f749e756deb1c3d27c76c2 *NEWS
-40e13053284dc85e99c081d559fe34eb *NEWS.md
+762dfbbd337339258a15aab733d423b2 *NEWS
+07f02730163ba5cc7f070b021ba1320a *NEWS.md
 7c8b4e41c160516d5f2468e4f0cd7fa9 *R/S3-methods.R
 63d0ad39d3a9181d754b7a0092e19d84 *R/add_labels.R
 01180f13634bbb1bec2380ad5905fc65 *R/as_labelled.R
@@ -14,7 +14,7 @@ ab56685d28215c00d796828ae115a49a *R/dicho.R
 b86aaad09bd313ed2f34548a117e36b3 *R/efc.R
 41c73bb9274208a9a6a5c51fb1f0c855 *R/fill_labels.R
 a04623f6eadd37eb62b30e3c0a88bd10 *R/find_var.R
-7bca8e531ef2a8a6db44abaaf2b21a0b *R/frq.R
+28d84b65651c675f383d58de90a2d36c *R/frq.R
 ab0cdbead0172c66437d510210a83401 *R/get_label.R
 4df8bad1b4f1753b1a3815eb634a6fb6 *R/get_labels.R
 dd18bbbe1bdb35d0e71cdf0ea1aea272 *R/get_na.R
@@ -43,7 +43,7 @@ afb01dcbbce648f73fd57b82bb9a6abf *R/ref_lvl.R
 8390cb17016156c2058c9ad8d456c51f *R/set_labels.R
 1e1e7c5fcbdbb5c4f2bdee04c6ba61b4 *R/set_na.R
 908d3599c08bc579ba85097fd4b965ba *R/split_var.R
-8eee91cea56ae932f30f821a327671d9 *R/spread_coef.R
+591d98bf25a08662d39dbbf872a6dac4 *R/spread_coef.R
 3e23e0aac0cad788d143ce1dec4d98ee *R/str_contains.R
 9bae9c8301c88bf7c40d3524705c8750 *R/str_pos.R
 52e065937bb605a6eb9b7cd039516bcc *R/to_dummy.R
@@ -57,7 +57,7 @@ e63680b18c59f3a7d5c6fd6b9b19e035 *R/var_labels.R
 769823403be0c2f76db09dc88d3fb9fd *R/word_wrap.R
 959dc157ff3b9838009fba932abd246a *R/zap_labels.R
 db47a0564c71ede922dbc0dd8b196d51 *README.md
-1c96960e5d8ade2b2a4377426c9cf7aa *build/partial.rdb
+e5f1701b27e3e5d31e23c222585aab17 *build/partial.rdb
 3172b22b3d87d0f86d78326bc26891fc *data/efc.RData
 eaa45c409d036aa8493d2b7298315171 *inst/CITATION
 866459a242b7af69e4313af06a294f5d *man/add_labels.Rd
@@ -98,9 +98,9 @@ d75ce90f5597f972954c5646d44e2c02 *man/lbl_df.Rd
 5ab576cede2964b6afd02c2df096ca10 *man/set_labels.Rd
 066a956557699cb854cf412bf586ce2e *man/set_na.Rd
 cdff49fd5abd86e089fe8b0eac402bde *man/set_note.Rd
-9e5ede64e2b745b0b2752a226ee6f743 *man/sjmisc-package.Rd
+d0e6ec7e479fc7779c9f3f757da55fc6 *man/sjmisc-package.Rd
 e184069765db129fd5e9a3160598d617 *man/split_var.Rd
-77de853d76190997937854e4cb5fe55e *man/spread_coef.Rd
+8bec70febdd552db3bf1628ac0012896 *man/spread_coef.Rd
 586b3e96946e90f054c6583797089e75 *man/str_contains.Rd
 0a3bec5341bd7c31b20ceffecfbb39e6 *man/str_pos.Rd
 c05c421c5f9fd3419aa92ee98dcb4466 *man/to_character.Rd
