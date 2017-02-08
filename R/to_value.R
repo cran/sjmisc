@@ -5,20 +5,15 @@
 #' related factor level index number, thus the factor is converted to
 #' a numeric variable.
 #'
-#' @seealso \code{\link{to_label}} to convert a labelled vector into a factor with labelled
-#'            factor levels and \code{\link{to_factor}} to convert a numeric variable
-#'            into a factor (and preserve labels)
-#'
-#' @param x \code{\link{factor}} or a data frame with factors. May also be
-#'          a character vector.
-#' @param start.at starting index, i.e. the lowest numeric value of the variable's
+#' @param start.at Starting index, i.e. the lowest numeric value of the variable's
 #'          value range. By default, this argument is \code{NULL}, hence the lowest
 #'          value of the returned numeric variable corresponds to the lowest factor
-#'          level (if factor is \code{\link{numeric}}) or to \code{1} (if factor levels
+#'          level (if factor levels are numeric) or to \code{1} (if factor levels
 #'          are not numeric).
-#' @param keep.labels logical, if \code{TRUE}, former factor levels will be added as
+#' @param keep.labels Logical, if \code{TRUE}, former factor levels will be added as
 #'          value labels. For numeric factor levels, values labels will be used,
 #'          if present. See 'Examples' and \code{\link{set_labels}} for more details.
+#'
 #' @return A numeric variable with values ranging either from \code{start.at} to
 #'           \code{start.at} + length of factor levels, or to the corresponding
 #'           factor levels (if these were numeric). Or a data frame with numeric
@@ -53,14 +48,14 @@
 #'
 #' # for numeric factor levels, value labels will be used, if present
 #' dummy1 <- factor(c("3", "4", "6"))
-#' set_labels(dummy1) <- c("first", "2nd", "3rd")
+#' dummy1 <- set_labels(dummy1, labels = c("first", "2nd", "3rd"))
 #' dummy1
 #' to_value(dummy1)
 #'
 #' # for non-numeric factor levels, these will be used.
 #' # value labels will be ignored
 #' dummy2 <- factor(c("D", "F", "H"))
-#' set_labels(dummy2) <- c("first", "2nd", "3rd")
+#' dummy2 <- set_labels(dummy2, labels = c("first", "2nd", "3rd"))
 #' dummy2
 #' to_value(dummy2)
 #'
@@ -81,17 +76,9 @@ to_value <- function(x, ..., start.at = NULL, keep.labels = TRUE) {
   .dots <- match.call(expand.dots = FALSE)$`...`
   .dat <- get_dot_data(x, .dots)
 
-  # get variable names
-  .vars <- dot_names(.dots)
-
-  # if user only provided a data frame, get all variable names
-  if (is.null(.vars) && is.data.frame(x)) .vars <- colnames(x)
-
-  # if we have any dot names, we definitely have a data frame
-  if (!is.null(.vars)) {
-
+  if (is.data.frame(x)) {
     # iterate variables of data frame
-    for (i in .vars) {
+    for (i in colnames(.dat)) {
       x[[i]] <- to_value_helper(.dat[[i]], start.at, keep.labels)
     }
     # coerce to tibble
@@ -106,10 +93,16 @@ to_value <- function(x, ..., start.at = NULL, keep.labels = TRUE) {
 
 to_value_helper <- function(x, start.at, keep.labels) {
   labels <- NULL
+
   # is already numeric?
   if (is.numeric(x)) return(x)
+
+  # save variable label
+  varlab <- get_label(x)
+
   # get labels
   labels <- get_labels(x, attr.only = T, include.values = "n")
+
   # is character?
   if (is.character(x)) {
     # has labels?
@@ -118,12 +111,16 @@ to_value_helper <- function(x, start.at, keep.labels) {
       lvls <- levels(as.factor(x))
       # do we have more labels than values? If yes, drop unused labels
       if (length(labels) > length(lvls)) labels <- labels[names(labels) %in% lvls]
+      # it might be that we have more levels than labels, in this case
+      # drop unused levels - else, ordering won't work
+      if (length(lvls) > length(labels)) lvls <- lvls[lvls %in% names(labels)]
       # sort labels correctly
       labels <- unname(labels[order(names(labels), lvls)])
     }
     # convert to factor
     x <- as.factor(x)
   }
+
   # check if we have numeric factor levels
   if (is_num_fac(x)) {
     # retrieve "value labels"
@@ -152,7 +149,12 @@ to_value_helper <- function(x, start.at, keep.labels) {
     # convert to numeric
     new_value <- as.numeric(as.character(x))
   }
-  # check if we should attach former labels as value labels
-  if (keep.labels) new_value <- set_labels(new_value, labels, force.labels = T)
+
+  # check if we should set back former variable and value labels
+  if (keep.labels) {
+    new_value <- set_labels(new_value, labels = labels, force.labels = T)
+    new_value <- set_label(new_value, lab = varlab)
+  }
+
   return(new_value)
 }

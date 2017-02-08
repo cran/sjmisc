@@ -4,13 +4,18 @@
 \alias{descr}
 \title{Basic descriptive statistics}
 \usage{
-descr(data, ...)
+descr(x, ...)
 }
 \arguments{
-\item{data}{A vector or a data frame. May also be a grouped data frame
+\item{x}{A vector or a data frame. May also be a grouped data frame
 (see 'Note' and 'Examples').}
 
-\item{...}{One or more variables of \code{data} that should be printed as table.}
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 }
 \value{
 A data frame with basic descriptive statistics, derived from the
@@ -44,4 +49,3 @@ efc \%>\%
   descr()
 
 }
-

@@ -9,13 +9,10 @@
 #'            for re-shifting value ranges and \code{\link{ref_lvl}} to change the
 #'            reference level of (numeric) factors.
 #'
-#' @param x A variable, data frame or list-object.
 #' @param recodes String with recode pairs of old and new values. See
 #'          'Details' for examples. \code{\link{rec_pattern}} is a convenient
 #'          function to create recode strings for grouping variables.
-#' @param value See \code{recodes}.
-#' @param as.fac Logical, if \code{TRUE}, recoded variable is returned as factor.
-#'          Default is \code{FALSE}, thus a numeric variable is returned.
+#' @param as.num Logical, if \code{TRUE}, return value will be numeric, not a factor.
 #' @param var.label Optional string, to set variable label attribute for the
 #'          returned variable (see \code{\link{set_label}}). If \code{NULL}
 #'          (default), variable label attribute of \code{x} will be used (if present).
@@ -31,13 +28,18 @@
 #'           column names in a data frame depends on the function call:
 #'           \itemize{
 #'             \item recoded variables (\code{rec()}) will be suffixed with \code{"_r"}
+#'             \item recoded variables (\code{recode_to()}) will be suffixed with \code{"_r0"}
 #'             \item dichotomized variables (\code{dicho()}) will be suffixed with \code{"_d"}
 #'             \item grouped variables (\code{split_var()}) will be suffixed with \code{"_g"}
+#'             \item grouped variables (\code{group_var()}) will be suffixed with \code{"_gr"}
+#'             \item standardized variables (\code{std()}) will be suffixed with \code{"_z"}
+#'             \item centered variables (\code{center()}) will be suffixed with \code{"_c"}
 #'           }
 #'
-#' @return A numeric variable (or a factor, if \code{as.fac = TRUE} or if \code{x}
-#'           was a character vector) with recoded category values, or a data
-#'           frame or \code{list}-object with recoded categories for all variables.
+#' @inheritParams to_factor
+#'
+#' @return \code{x} with recoded categories. If \code{x} is a data frame, only
+#'         the recoded variables will be returned.
 #'
 #' @details  The \code{recodes} string has following syntax:
 #'           \describe{
@@ -83,6 +85,12 @@
 #'       val.labels = c("low dependency", "high dependency")) %>%
 #'   str()
 #'
+#' # works with mutate
+#' efc %>%
+#'   select(e42dep, e17age) %>%
+#'   mutate(dependency_rev = rec(e42dep, recodes = "rev")) %>%
+#'   head()
+#'
 #' # recode 1 to 3 into 4 into 2
 #' table(rec(efc$e42dep, recodes = "min:3=1; 4=2"), useNA = "always")
 #'
@@ -100,18 +108,17 @@
 #' head(efc[, 6:9])
 #' head(rec(efc[, 6:9], recodes = "1=10;2=20;3=30;4=40"))
 #'
-#' # recode variable and set value labels via recode-syntax
-#' dummy <- rec(efc$c160age,
+#' # recode multiple variables and set value labels via recode-syntax
+#' dummy <- rec(efc, c160age, e17age,
 #'              recodes = "15:30=1 [young]; 31:55=2 [middle]; 56:max=3 [old]")
 #' frq(dummy)
 #'
-#' # recode list of variables. create dummy-list of
-#' # variables with same value-range
-#' dummy <- list(efc$c82cop1, efc$c83cop2, efc$c84cop3)
-#' # show original distribution
-#' lapply(dummy, table, useNA = "always")
-#' # show recodes
-#' lapply(rec(dummy, recodes = "1,2=1; NA=9; else=copy"), table, useNA = "always")
+#' # recode variables with same value-range
+#' lapply(
+#'   rec(efc, c82cop1, c83cop2, c84cop3, recodes = "1,2=1; NA=9; else=copy"),
+#'   table,
+#'   useNA = "always"
+#' )
 #'
 #' # recode character vector
 #' dummy <- c("M", "F", "F", "X")
@@ -119,7 +126,7 @@
 #'
 #' # recode non-numeric factors
 #' data(iris)
-#' rec(iris$Species, "setosa=huhu; else=copy")
+#' table(rec(iris, Species, recodes = "setosa=huhu; else=copy"))
 #'
 #' # preserve tagged NAs
 #' library(haven)
@@ -132,42 +139,52 @@
 #' rec(x, recodes = "2=5;else=copy")
 #' na_tag(rec(x, recodes = "2=5;else=copy"))
 #'
+#' # use select-helpers from dplyr-package
+#' rec(efc, ~contains("cop"), c161sex:c175empl, recodes = "0,1=0; else=1")
+#'
+#'
 #' @export
-rec <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r") {
-  UseMethod("rec")
+rec <- function(x, ..., recodes, as.num = TRUE, var.label = NULL, val.labels = NULL, suffix = "_r") {
+  # evaluate arguments, generate data
+  .dots <- match.call(expand.dots = FALSE)$`...`
+  .dat <- get_dot_data(x, .dots)
+
+  if (is.data.frame(x)) {
+
+    # iterate variables of data frame
+    for (i in colnames(.dat)) {
+      x[[i]] <- rec_helper(
+        x = .dat[[i]],
+        recodes = recodes,
+        as.num = as.num,
+        var.label = var.label,
+        val.labels = val.labels
+      )
+    }
+
+    # coerce to tibble and select only recoded variables
+    x <- tibble::as_tibble(x[colnames(.dat)])
+
+    # add suffix to recoded variables?
+    if (!is.null(suffix) && !sjmisc::is_empty(suffix)) {
+      colnames(x) <- sprintf("%s%s", colnames(x), suffix)
+    }
+  } else {
+    x <- rec_helper(
+      x = .dat,
+      recodes = recodes,
+      as.num = as.num,
+      var.label = var.label,
+      val.labels = val.labels
+    )
+  }
+
+  x
 }
 
-#' @export
-rec.data.frame <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r") {
-  tmp <- tibble::as_tibble(lapply(x, FUN = rec_helper, recodes, as.fac, var.label, val.labels))
-  # change variable names, add suffix "_r"
-  if (!is.null(suffix) && !sjmisc::is_empty(suffix)) colnames(tmp) <- sprintf("%s%s", colnames(tmp), suffix)
-  tmp
-}
-
-#' @export
-rec.list <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r") {
-  lapply(x, FUN = rec_helper, recodes, as.fac, var.label, val.labels)
-}
-
-#' @export
-rec.default <- function(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r") {
-  rec_helper(x, recodes, as.fac, var.label, val.labels)
-}
-
-#' @rdname rec
-#' @export
-`rec<-` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r", value) {
-  UseMethod("rec<-")
-}
-
-#' @export
-`rec<-.default` <- function(x, as.fac = FALSE, var.label = NULL, val.labels = NULL, suffix = "_r", value) {
-  rec(x = x, recodes = value, as.fac = as.fac, var.label = var.label, val.labels = val.labels, suffix = suffix)
-}
 
 #' @importFrom stats na.omit
-rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
+rec_helper <- function(x, recodes, as.num, var.label, val.labels) {
   # retrieve variable label
   if (is.null(var.label))
     var_lab <- get_label(x)
@@ -200,7 +217,7 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
       # non-numeric factors coerced to character
       x <- as.character(x)
       # non-numeric factors will always be factor again
-      as.fac = TRUE
+      as.num <- FALSE
     }
   }
 
@@ -392,6 +409,6 @@ rec_helper <- function(x, recodes, as.fac, var.label, val.labels) {
   new_var <- suppressWarnings(set_label(x = new_var, lab = var_lab))
   new_var <- suppressWarnings(set_labels(x = new_var, labels = val_lab))
   # return result as factor?
-  if (as.fac) new_var <- to_factor(new_var)
+  if (!as.num) new_var <- to_factor(new_var)
   return(new_var)
 }

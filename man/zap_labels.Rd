@@ -5,11 +5,11 @@
 \alias{fill_labels}
 \alias{zap_labels}
 \alias{zap_unlabelled}
-\title{Drop, add or convert (non-)labelled values to vectors}
+\title{Drop, add or convert (non-)labelled values}
 \usage{
-drop_labels(x, drop.na = TRUE)
+drop_labels(x, ..., drop.na = TRUE)
 
-fill_labels(x)
+fill_labels(x, ...)
 
 zap_labels(x, ...)
 
@@ -19,14 +19,17 @@ zap_unlabelled(x, ...)
 \item{x}{(partially) \code{\link[haven]{labelled}} vector or a data frame
 with such vectors.}
 
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
+
 \item{drop.na}{Logical, whether existing value labels of tagged NA values
 (see \code{\link[haven]{tagged_na}}) should be removed (\code{drop.na = TRUE},
 the default) or preserved (\code{drop.na = FALSE}).
 See \code{\link{get_na}} for more details on tagged NA values.}
-
-\item{...}{Optional, unquoted names of variables. Required, if either
-\code{x} is a data frame and no vector, or if only selected variables
-from \code{x} should be used in the function. See 'Examples'.}
 }
 \value{
 \itemize{
@@ -35,6 +38,10 @@ from \code{x} should be used in the function. See 'Examples'.}
           \item For \code{drop_labels()}, \code{x}, where value labels for non-existing values are removed.
           \item For \code{fill_labels()}, \code{x}, where labels for non-labelled values are added.
         }
+        If \code{x} is a data frame, the complete data frame \code{x} will be
+        returned, with variables specified in \code{...} being converted;
+        if \code{...} is not specified, applies to all variables in the
+        data frame.
 }
 \description{
 For (partially) labelled vectors, \code{zap_labels()} will replace
@@ -55,28 +62,32 @@ For (partially) labelled vectors, \code{zap_labels()} will replace
 data(efc)
 str(efc$e42dep)
 
-x <- set_labels(efc$e42dep, c("independent" = 1, "severe dependency" = 4))
+x <- set_labels(
+  efc$e42dep,
+  labels = c("independent" = 1, "severe dependency" = 4)
+)
 table(x)
 get_values(x)
 str(x)
 
 # zap all labelled values
-x <- set_labels(efc$e42dep, c("independent" = 1, "severe dependency" = 4))
 table(zap_labels(x))
 get_values(zap_labels(x))
 str(zap_labels(x))
 
 # zap all unlabelled values
-x <- set_labels(efc$e42dep, c("independent" = 1, "severe dependency" = 4))
 table(zap_unlabelled(x))
 get_values(zap_unlabelled(x))
 str(zap_unlabelled(x))
 
 # in a pipe-workflow
 library(dplyr)
-set_labels(efc$e42dep) <-  c("independent" = 1, "severe dependency" = 4)
 efc \%>\%
   select(c172code, e42dep) \%>\%
+  set_labels(
+    e42dep,
+    labels = c("independent" = 1, "severe dependency" = 4)
+  ) \%>\%
   zap_labels()
 
 # ------------------------
@@ -90,7 +101,7 @@ data(efc)
 # recode carers age into groups of width 5
 x <- rec(efc$c160age, recodes = rp$pattern)
 # add value labels to new vector
-set_labels(x) <- rp$labels
+x <- set_labels(x, labels = rp$labels)
 
 # watch result. due to recode-pattern, we have age groups with
 # no observations (zero-counts)
@@ -126,4 +137,3 @@ get_labels(fill_labels(x))
 get_labels(x, include.non.labelled = TRUE)
 
 }
-

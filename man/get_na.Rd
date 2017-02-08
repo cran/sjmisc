@@ -49,8 +49,8 @@ get_na(x)
 get_na(x, as.tag = TRUE)
 
 # replace only the NA, which is tagged as NA(c)
-replace_na(x, 2, tagged.na = "c")
-get_na(replace_na(x, 2, tagged.na = "c"))
+replace_na(x, value = 2, tagged.na = "c")
+get_na(replace_na(x, value = 2, tagged.na = "c"))
 
 # data frame as input
 y <- labelled(c(2:3, 3:1, tagged_na("y"), 4:1),
@@ -64,4 +64,3 @@ get_na(data.frame(x, y))
            to get values associated with labels; see \code{\link{set_na}} to
            replace specific values with \code{NA}.
 }
-

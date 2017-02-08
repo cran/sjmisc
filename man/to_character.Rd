@@ -8,13 +8,14 @@ to_character(x, ..., add.non.labelled = FALSE, prefix = FALSE,
   var.label = NULL, drop.na = TRUE, drop.levels = FALSE)
 }
 \arguments{
-\item{x}{A labelled vector (see \code{\link{set_labels}} or
-\code{\link[haven]{labelled}}), respectively a data frame with
-such variables.}
+\item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if either
-\code{x} is a data frame and no vector, or if only selected variables
-from \code{x} should be used in the function. See 'Examples'.}
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{add.non.labelled}{logical, if \code{TRUE}, values without associated
 value label will also be converted to labels (as is). See 'Examples'.}
@@ -36,8 +37,12 @@ dropped (i.e. \code{\link{droplevels}} will be applied before returning
 the result).}
 }
 \value{
-A character vector with the associated value labels as values, or a
-          data frame with such factor variables (if \code{x} was a data frame).
+A character vector with the associated value labels as values. If \code{x}
+          is a data frame, the complete data frame \code{x} will be returned,
+          where variables specified in \code{...} are coerced
+          to character variables;
+          if \code{...} is not specified, applies to all variables in the
+          data frame.
 }
 \description{
 This function converts (replaces) variable values (also of factors
@@ -72,7 +77,7 @@ str(to_character(efc$e17age))
 
 # factor with non-numeric levels, non-prefixed and prefixed
 x <- factor(c("a", "b", "c"))
-set_labels(x) <- c("ape", "bear", "cat")
+x <- set_labels(x, labels = c("ape", "bear", "cat"))
 
 to_character(x, prefix = FALSE)
 to_character(x, prefix = TRUE)
@@ -81,7 +86,8 @@ to_character(x, prefix = TRUE)
 # create vector
 x <- c(1, 2, 3, 2, 4, NA)
 # add less labels than values
-x <- set_labels(x, c("yes", "maybe", "no"),
+x <- set_labels(x,
+                labels = c("yes", "maybe", "no"),
                 force.labels = FALSE,
                 force.values = FALSE)
 # convert to character w/o non-labelled values
@@ -108,4 +114,3 @@ to_character(x, add.non.labelled = TRUE, drop.na = FALSE)
 to_character(efc, e42dep, e16sex, c172code)
 
 }
-

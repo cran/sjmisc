@@ -3,8 +3,6 @@
 #'
 #' @description This function returns a frequency table of labelled vectors, as data frame.
 #'
-#' @param x A labelled vector or a \code{data.frame} with labelled vectors.
-#'          May also be a grouped data frame (see 'Note' and 'Examples').
 #' @param sort.frq Determines whether categories should be sorted
 #'          according to their frequencies or not. Default is \code{"none"}, so
 #'          categories are not sorted by frequency. Use \code{"asc"} or
@@ -13,7 +11,9 @@
 #'          Must be a vector of same length as the input vector. Default is
 #'          \code{NULL}, so no weights are used.
 #'
-#' @return A data frame with values, value labels, frequencies, raw, valid and
+#' @inheritParams descr
+#'
+#' @return A list of data frames with values, value labels, frequencies, raw, valid and
 #'           cumulative percentages of \code{x}.
 #'
 #' @note \code{x} may also be a grouped data frame (see \code{\link[dplyr]{group_by}})
@@ -25,67 +25,94 @@
 #' @examples
 #' library(haven)
 #' # create labelled integer
-#' x <- labelled(c(1, 2, 1, 3, 4, 1),
-#'               c(Male = 1, Female = 2, Refused = 3, "N/A" = 4))
+#' x <- labelled(
+#'   c(1, 2, 1, 3, 4, 1),
+#'   c(Male = 1, Female = 2, Refused = 3, "N/A" = 4)
+#' )
 #' frq(x)
 #'
-#' x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
-#'               c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
-#'                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
+#' x <- labelled(
+#'   c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
+#'   c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+#'     "Refused" = tagged_na("a"), "Not home" = tagged_na("z"))
+#' )
 #' frq(x)
 #'
 #' # in a pipe
 #' data(efc)
 #' library(dplyr)
-#' efc %>% select(e42dep, e15relat, c172code) %>% frq()
+#' efc %>%
+#'   select(e42dep, e15relat, c172code) %>%
+#'   frq()
+#'
+#' # or:
+#' # frq(efc, e42dep, e15relat, c172code)
 #'
 #' # with grouped data frames, in a pipe
 #' efc %>%
 #'   group_by(e16sex, c172code) %>%
-#'   select(e16sex, c172code, e42dep) %>%
-#'   frq()
+#'   frq(e16sex, c172code, e42dep)
+#'
+#' # with select-helpers: all variables from the COPE-Index
+#' # (which all have a "cop" in their name)
+#' frq(efc, ~contains("cop"))
+#'
+#' # all variables from column "c161sex" to column "c175empl"
+#' frq(efc, c161sex:c175empl)
 #'
 #' @importFrom stats na.omit
 #' @importFrom dplyr full_join
 #' @export
-#' @export
-frq <- function(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
-  UseMethod("frq")
-}
+frq <- function(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
 
-#' @export
-frq.data.frame <- function(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
+  # get dot data
+  x <- get_dot_data(x, match.call(expand.dots = FALSE)$`...`)
+
+  # match args
   sort.frq <- match.arg(sort.frq)
+
+  # return values
+  dataframes <- list()
 
   # do we have a grouped data frame?
   if (inherits(x, "grouped_df")) {
     # get grouped data
     grps <- get_grouped_data(x)
+
     # now plot everything
     for (i in seq_len(nrow(grps))) {
       # copy back labels to grouped data frame
       tmp <- copy_labels(grps$data[[i]], x)
+
       # print title for grouping
-      cat(sprintf("\nGrouped by:\n%s\n", get_grouped_title(x, grps, i, sep = "\n")))
+      cat(sprintf("\nGrouped by:\n%s\n\n", get_grouped_title(x, grps, i, sep = "\n")))
+
       # print frequencies
-      print(frq_helper(x = tmp[[1]], sort.frq = sort.frq, weight.by = weight.by))
+      dummy <- frq_helper(x = tmp[[1]], sort.frq = sort.frq, weight.by = weight.by)
+      print(dummy)
       cat("\n")
+
+      # save data frame for return value
+      dataframes[[length(dataframes) + 1]] <- dummy
     }
   } else {
-    lapply(x, FUN = frq_helper, sort.frq = sort.frq, weight.by = weight.by)
+
+    # if we don't have data frame, coerce
+    if (!is.data.frame(x)) x <- tibble::tibble(x)
+
+    for (i in seq_len(ncol(x))) {
+      # print frequencies
+      dummy <- frq_helper(x = x[[i]], sort.frq = sort.frq, weight.by = weight.by)
+      print(dummy)
+      cat("\n\n")
+
+      # save data frame for return value
+      dataframes[[length(dataframes) + 1]] <- dummy
+    }
   }
-}
 
-#' @export
-frq.list <- function(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
-  sort.frq <- match.arg(sort.frq)
-  lapply(x, FUN = frq_helper, sort.frq = sort.frq, weight.by = weight.by)
-}
-
-#' @export
-frq.default <- function(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
-  sort.frq <- match.arg(sort.frq)
-  frq_helper(x = x, sort.frq = sort.frq, weight.by = weight.by)
+  # return list of df
+  invisible(dataframes)
 }
 
 
@@ -127,12 +154,15 @@ frq_helper <- function(x, sort.frq, weight.by) {
       dat$val <- as.numeric(dat$val)
     # weight data?
     if (!is.null(weight.by)) {
-      dat2 <- data.frame(
-        round(stats::xtabs(weights ~ x,
-                           data = data.frame(weights = weight.by, x = x),
-                           na.action = stats::na.pass,
-                           exclude = NULL), 0)
-      )
+      dat2 <- data.frame(round(
+        stats::xtabs(
+          weights ~ x,
+          data = data.frame(weights = weight.by, x = x),
+          na.action = stats::na.pass,
+          exclude = NULL
+        ),
+        0
+      ))
     } else {
       # create frequency table
       dat2 <- data.frame(table(x, useNA = "always"))
@@ -143,16 +173,19 @@ frq_helper <- function(x, sort.frq, weight.by) {
     mydat <- suppressMessages(dplyr::full_join(dat, dat2))
     # replace NA with 0, for proper percentages, i.e.
     # missing values don't appear (zero counts)
-    suppressMessages(replace_na(mydat$frq) <- 0)
+    mydat$frq <- suppressMessages(replace_na(mydat$frq, value = 0))
   } else {
     # weight data?
     if (!is.null(weight.by)) {
-      mydat <- data.frame(
-        round(stats::xtabs(weights ~ x,
-                           data = data.frame(weights = weight.by, x = x),
-                           na.action = stats::na.pass,
-                           exclude = NULL), 0)
-      )
+      mydat <- data.frame(round(
+        stats::xtabs(
+          weights ~ x,
+          data = data.frame(weights = weight.by, x = x),
+          na.action = stats::na.pass,
+          exclude = NULL
+        ),
+        0
+      ))
     } else {
       # if we have no labels, do simple frq table
       mydat <- data.frame(table(x, useNA = "always"))
@@ -190,7 +223,7 @@ frq_helper <- function(x, sort.frq, weight.by) {
   # "rename" NA values
   # -------------------------------------
   if (!is.null(mydat$label)) mydat$label[is.na(mydat$label)] <- "NA"
-  suppressMessages(replace_na(mydat$val) <- max(to_value(mydat$val), na.rm = T) + 1)
+  mydat$val <- suppressMessages(replace_na(mydat$val, value = max(to_value(mydat$val), na.rm = T) + 1))
   # save original order
   reihe <- to_value(mydat$val, start.at = 1, keep.labels = F)
   # sort for x-axis

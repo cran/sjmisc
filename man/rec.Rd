@@ -2,24 +2,26 @@
 % Please edit documentation in R/rec.R
 \name{rec}
 \alias{rec}
-\alias{rec<-}
 \title{Recode variables}
 \usage{
-rec(x, recodes, as.fac = FALSE, var.label = NULL, val.labels = NULL,
+rec(x, ..., recodes, as.num = TRUE, var.label = NULL, val.labels = NULL,
   suffix = "_r")
-
-rec(x, as.fac = FALSE, var.label = NULL, val.labels = NULL,
-  suffix = "_r") <- value
 }
 \arguments{
-\item{x}{A variable, data frame or list-object.}
+\item{x}{A vector or data frame.}
+
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{recodes}{String with recode pairs of old and new values. See
 'Details' for examples. \code{\link{rec_pattern}} is a convenient
 function to create recode strings for grouping variables.}
 
-\item{as.fac}{Logical, if \code{TRUE}, recoded variable is returned as factor.
-Default is \code{FALSE}, thus a numeric variable is returned.}
+\item{as.num}{Logical, if \code{TRUE}, return value will be numeric, not a factor.}
 
 \item{var.label}{Optional string, to set variable label attribute for the
 returned variable (see \code{\link{set_label}}). If \code{NULL}
@@ -38,16 +40,17 @@ frame, this argument will be ignored. The default value to suffix
 column names in a data frame depends on the function call:
 \itemize{
   \item recoded variables (\code{rec()}) will be suffixed with \code{"_r"}
+  \item recoded variables (\code{recode_to()}) will be suffixed with \code{"_r0"}
   \item dichotomized variables (\code{dicho()}) will be suffixed with \code{"_d"}
   \item grouped variables (\code{split_var()}) will be suffixed with \code{"_g"}
+  \item grouped variables (\code{group_var()}) will be suffixed with \code{"_gr"}
+  \item standardized variables (\code{std()}) will be suffixed with \code{"_z"}
+  \item centered variables (\code{center()}) will be suffixed with \code{"_c"}
 }}
-
-\item{value}{See \code{recodes}.}
 }
 \value{
-A numeric variable (or a factor, if \code{as.fac = TRUE} or if \code{x}
-          was a character vector) with recoded category values, or a data
-          frame or \code{list}-object with recoded categories for all variables.
+\code{x} with recoded categories. If \code{x} is a data frame, only
+        the recoded variables will be returned.
 }
 \description{
 Recodes the categories / values of a variable \code{x} into new
@@ -99,6 +102,12 @@ efc \%>\%
       val.labels = c("low dependency", "high dependency")) \%>\%
   str()
 
+# works with mutate
+efc \%>\%
+  select(e42dep, e17age) \%>\%
+  mutate(dependency_rev = rec(e42dep, recodes = "rev")) \%>\%
+  head()
+
 # recode 1 to 3 into 4 into 2
 table(rec(efc$e42dep, recodes = "min:3=1; 4=2"), useNA = "always")
 
@@ -116,18 +125,17 @@ table(rec(efc$e15relat, recodes = "1,2,4=1; else=copy"))
 head(efc[, 6:9])
 head(rec(efc[, 6:9], recodes = "1=10;2=20;3=30;4=40"))
 
-# recode variable and set value labels via recode-syntax
-dummy <- rec(efc$c160age,
+# recode multiple variables and set value labels via recode-syntax
+dummy <- rec(efc, c160age, e17age,
              recodes = "15:30=1 [young]; 31:55=2 [middle]; 56:max=3 [old]")
 frq(dummy)
 
-# recode list of variables. create dummy-list of
-# variables with same value-range
-dummy <- list(efc$c82cop1, efc$c83cop2, efc$c84cop3)
-# show original distribution
-lapply(dummy, table, useNA = "always")
-# show recodes
-lapply(rec(dummy, recodes = "1,2=1; NA=9; else=copy"), table, useNA = "always")
+# recode variables with same value-range
+lapply(
+  rec(efc, c82cop1, c83cop2, c84cop3, recodes = "1,2=1; NA=9; else=copy"),
+  table,
+  useNA = "always"
+)
 
 # recode character vector
 dummy <- c("M", "F", "F", "X")
@@ -135,7 +143,7 @@ rec(dummy, recodes = "M=Male; F=Female; X=Refused")
 
 # recode non-numeric factors
 data(iris)
-rec(iris$Species, "setosa=huhu; else=copy")
+table(rec(iris, Species, recodes = "setosa=huhu; else=copy"))
 
 # preserve tagged NAs
 library(haven)
@@ -148,6 +156,10 @@ x
 rec(x, recodes = "2=5;else=copy")
 na_tag(rec(x, recodes = "2=5;else=copy"))
 
+# use select-helpers from dplyr-package
+rec(efc, ~contains("cop"), c161sex:c175empl, recodes = "0,1=0; else=1")
+
+
 }
 \seealso{
 \code{\link{set_na}} for setting \code{NA} values, \code{\link{replace_na}}
@@ -155,4 +167,3 @@ na_tag(rec(x, recodes = "2=5;else=copy"))
            for re-shifting value ranges and \code{\link{ref_lvl}} to change the
            reference level of (numeric) factors.
 }
-

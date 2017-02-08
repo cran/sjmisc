@@ -1,4 +1,4 @@
-#' @title Convert variable into factor and replace values with associated value labels
+#' @title Convert variable into factor with associated value labels
 #' @name to_label
 #'
 #' @description This function converts (replaces) variable values (also of factors
@@ -6,17 +6,8 @@
 #'                be helpful for factor variables.
 #'                For instance, if you have a Gender variable with 0/1 value, and associated
 #'                labels are male/female, this function would convert all 0 to male and
-#'                all 1 to female and returns the new variable as \code{\link{factor}}.
+#'                all 1 to female and returns the new variable as factor.
 #'
-#' @seealso \code{\link{to_factor}} to convert a numeric variable into a factor (and
-#'            preserve labels); \code{\link{to_value}} to convert a factor into
-#'            a numeric variable and \code{\link{to_character}} to convert a
-#'            labelled vector into a character vector (using label attributes as
-#'            values).
-#'
-#' @param x A labelled vector (see \code{\link{set_labels}} or
-#'          \code{\link[haven]{labelled}}), respectively a data frame with
-#'          such variables.
 #' @param add.non.labelled logical, if \code{TRUE}, values without associated
 #'          value label will also be converted to labels (as is). See 'Examples'.
 #' @param prefix Logical, if \code{TRUE}, the value labels used as factor levels
@@ -31,10 +22,13 @@
 #' @inheritParams to_factor
 #' @inheritParams rec
 #'
-#' @return A factor variable with the associated value labels as factor levels, or a
-#'           data frame with such factor variables (if \code{x} was a data frame).
+#' @return A factor variable with the associated value labels as factor levels. If \code{x}
+#'           is a data frame, the complete data frame \code{x} will be returned,
+#'           where variables specified in \code{...} are coerced to factors;
+#'           if \code{...} is not specified, applies to all variables in the
+#'           data frame.
 #'
-#' @note Value label attributes (see, for instance, \code{\link{get_labels}})
+#' @note Value label attributes (see \code{\link{get_labels}})
 #'       will be removed when converting variables to factors.
 #'
 #' @details See 'Details' in \code{\link{get_na}}.
@@ -64,14 +58,15 @@
 #'
 #' # factor with non-numeric levels, prefixed
 #' x <- factor(c("a", "b", "c"))
-#' set_labels(x) <- c("ape", "bear", "cat")
+#' x <- set_labels(x, labels = c("ape", "bear", "cat"))
 #' to_label(x, prefix = TRUE)
 #'
 #'
 #' # create vector
 #' x <- c(1, 2, 3, 2, 4, NA)
 #' # add less labels than values
-#' x <- set_labels(x, c("yes", "maybe", "no"),
+#' x <- set_labels(x,
+#'                 labels = c("yes", "maybe", "no"),
 #'                 force.labels = FALSE,
 #'                 force.values = FALSE)
 #' # convert to label w/o non-labelled values
@@ -95,13 +90,16 @@
 #'
 #' # convert labelled character to factor
 #' dummy <- c("M", "F", "F", "X")
-#' set_labels(dummy) <- c(`M` = "Male", `F` = "Female", `X` = "Refused")
+#' dummy <- set_labels(
+#'   dummy,
+#'   labels = c(`M` = "Male", `F` = "Female", `X` = "Refused")
+#' )
 #' get_labels(dummy,, "p")
 #' to_label(dummy)
 #'
 #' # drop unused factor levels, but preserve variable label
 #' x <- factor(c("a", "b", "c"), levels = c("a", "b", "c", "d"))
-#' set_labels(x) <- c("ape", "bear", "cat")
+#' x <- set_labels(x, labels = c("ape", "bear", "cat"))
 #' set_label(x) <- "A factor!"
 #' x
 #' to_label(x, drop.levels = TRUE)
@@ -120,17 +118,9 @@ to_label <- function(x, ..., add.non.labelled = FALSE, prefix = FALSE, var.label
   .dots <- match.call(expand.dots = FALSE)$`...`
   .dat <- get_dot_data(x, .dots)
 
-  # get variable names
-  .vars <- dot_names(.dots)
-
-  # if user only provided a data frame, get all variable names
-  if (is.null(.vars) && is.data.frame(x)) .vars <- colnames(x)
-
-  # if we have any dot names, we definitely have a data frame
-  if (!is.null(.vars)) {
-
+  if (is.data.frame(x)) {
     # iterate variables of data frame
-    for (i in .vars) {
+    for (i in colnames(.dat)) {
       x[[i]] <- to_label_helper(.dat[[i]], add.non.labelled, prefix, var.label, drop.na, drop.levels)
     }
     # coerce to tibble
@@ -229,8 +219,12 @@ to_label_helper <- function(x, add.non.labelled, prefix, var.label, drop.na, dro
 #' @note Value and variable label attributes (see, for instance, \code{\link{get_labels}}
 #'         or \code{\link{set_labels}}) will be removed  when converting variables to factors.
 #'
-#' @return A character vector with the associated value labels as values, or a
-#'           data frame with such factor variables (if \code{x} was a data frame).
+#' @return A character vector with the associated value labels as values. If \code{x}
+#'           is a data frame, the complete data frame \code{x} will be returned,
+#'           where variables specified in \code{...} are coerced
+#'           to character variables;
+#'           if \code{...} is not specified, applies to all variables in the
+#'           data frame.
 #'
 #' @details See 'Details' in \code{\link{get_na}}.
 #'
@@ -254,7 +248,7 @@ to_label_helper <- function(x, add.non.labelled, prefix, var.label, drop.na, dro
 #'
 #' # factor with non-numeric levels, non-prefixed and prefixed
 #' x <- factor(c("a", "b", "c"))
-#' set_labels(x) <- c("ape", "bear", "cat")
+#' x <- set_labels(x, labels = c("ape", "bear", "cat"))
 #'
 #' to_character(x, prefix = FALSE)
 #' to_character(x, prefix = TRUE)
@@ -263,7 +257,8 @@ to_label_helper <- function(x, add.non.labelled, prefix, var.label, drop.na, dro
 #' # create vector
 #' x <- c(1, 2, 3, 2, 4, NA)
 #' # add less labels than values
-#' x <- set_labels(x, c("yes", "maybe", "no"),
+#' x <- set_labels(x,
+#'                 labels = c("yes", "maybe", "no"),
 #'                 force.labels = FALSE,
 #'                 force.values = FALSE)
 #' # convert to character w/o non-labelled values
@@ -295,17 +290,10 @@ to_character <- function(x, ..., add.non.labelled = FALSE, prefix = FALSE, var.l
   .dots <- match.call(expand.dots = FALSE)$`...`
   .dat <- get_dot_data(x, .dots)
 
-  # get variable names
-  .vars <- dot_names(.dots)
-
-  # if user only provided a data frame, get all variable names
-  if (is.null(.vars) && is.data.frame(x)) .vars <- colnames(x)
-
-  # if we have any dot names, we definitely have a data frame
-  if (!is.null(.vars)) {
+  if (is.data.frame(x)) {
 
     # iterate variables of data frame
-    for (i in .vars) {
+    for (i in colnames(.dat)) {
       x[[i]] <- as.character(to_label_helper(.dat[[i]], add.non.labelled, prefix, var.label, drop.na, drop.levels))
     }
     # coerce to tibble

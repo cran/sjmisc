@@ -10,8 +10,7 @@
 #'
 #' @param value \describe{
 #'          \item{For \code{add_labels()}}{A named (numeric) vector of labels
-#'          that will be added to \code{x} as label attribute. If \code{x} is
-#'          a data frame, \code{value} will be applied to each column of \code{x}.}
+#'          that will be added to \code{x} as label attribute.}
 #'          \item{For \code{remove_labels()}}{Either a numeric vector, indicating
 #'          the position of one or more label attributes that should be removed;
 #'          a character vector with names of label attributes that should be
@@ -19,9 +18,13 @@
 #'          from specific NA values.}
 #'          }
 #'
-#' @inheritParams rec
+#' @inheritParams to_factor
 #'
-#' @return \code{x} with additional or removed value labels.
+#' @return \code{x} with additional or removed value labels. If \code{x}
+#'           is a data frame, the complete data frame \code{x} will be returned,
+#'           with removed or added to variables specified in \code{...};
+#'           if \code{...} is not specified, applies to all variables in the
+#'           data frame.
 #'
 #' @details \code{add_labels()} adds \code{value} to the existing value
 #'          labels of \code{x}, however, unlike \code{\link{set_labels}}, it
@@ -41,18 +44,27 @@
 #' data(efc)
 #' get_labels(efc$e42dep)
 #'
-#' x <- add_labels(efc$e42dep, c(`nothing` = 5))
+#' x <- add_labels(efc$e42dep, value = c(`nothing` = 5))
 #' get_labels(x)
 #'
-#' x <- add_labels(efc$e42dep, c(`nothing` = 5, `zero value` = 0))
+#' library(dplyr)
+#' x <- efc %>%
+#'   # select three variables
+#'   dplyr::select(e42dep, c172code, c161sex) %>%
+#'   # only add new label to two of those
+#'   add_labels(e42dep, c172code, value = c(`nothing` = 5))
+#' # see data frame, with selected variables having new labels
+#' get_labels(x)
+#'
+#' x <- add_labels(efc$e42dep, value = c(`nothing` = 5, `zero value` = 0))
 #' get_labels(x, include.values = "p")
 #'
 #' # replace old value labels
-#' x <- add_labels(efc$e42dep, c(`not so dependent` = 4, `lorem ipsum` = 5))
+#' x <- add_labels(
+#'   efc$e42dep,
+#'   value = c(`not so dependent` = 4, `lorem ipsum` = 5)
+#' )
 #' get_labels(x, include.values = "p")
-#'
-#' # replace values, alternative function call
-#' replace_labels(x) <- c(`new second` = 2)
 #'
 #' # replace specific missing value (tagged NA)
 #' library(haven)
@@ -63,16 +75,16 @@
 #' x
 #' # tagged NA(c) has currently the value label "First", will be
 #' # replaced by "Second" now.
-#' replace_labels(x, c("Second" = tagged_na("c")))
+#' replace_labels(x, value = c("Second" = tagged_na("c")))
 #'
 #'
 #' # ----------------------
 #' # remove_labels()
 #' # ----------------------
-#' x <- remove_labels(efc$e42dep, 2)
+#' x <- remove_labels(efc$e42dep, value = 2)
 #' get_labels(x, include.values = "p")
 #'
-#' x <- remove_labels(efc$e42dep, "independent")
+#' x <- remove_labels(efc$e42dep, value = "independent")
 #' get_labels(x, include.values = "p")
 #'
 #' library(haven)
@@ -81,31 +93,31 @@
 #'                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
 #' # get current NA values
 #' get_na(x)
-#' get_na(remove_labels(x, tagged_na("c")))
+#' get_na(remove_labels(x, value = tagged_na("c")))
 #'
 #' @importFrom tibble as_tibble
 #' @export
-add_labels <- function(x, value) {
+add_labels <- function(x, ..., value) {
   # check for valid value. value must be a named vector
   if (is.null(value)) stop("`value` is NULL.", call. = F)
   if (is.null(names(value))) stop("`value` must be a named vector.", call. = F)
 
-  UseMethod("add_labels")
-}
+  # evaluate arguments, generate data
+  .dots <- match.call(expand.dots = FALSE)$`...`
+  .dat <- get_dot_data(x, .dots)
 
-#' @export
-add_labels.data.frame <- function(x, value) {
-  tibble::as_tibble(lapply(x, FUN = add_labels_helper, value))
-}
+  if (is.data.frame(x)) {
+    # iterate variables of data frame
+    for (i in colnames(.dat)) {
+      x[[i]] <- add_labels_helper(.dat[[i]], value)
+    }
+    # coerce to tibble
+    x <- tibble::as_tibble(x)
+  } else {
+    x <- add_labels_helper(.dat, value)
+  }
 
-#' @export
-add_labels.list <- function(x, value) {
-  lapply(x, FUN = add_labels_helper, value)
-}
-
-#' @export
-add_labels.default <- function(x, value) {
-  add_labels_helper(x, value)
+  x
 }
 
 #' @importFrom haven is_tagged_na na_tag
@@ -147,46 +159,32 @@ add_labels_helper <- function(x, value) {
     # get tagged NAs
     value_tag <- haven::na_tag(value)[haven::is_tagged_na(value)]
     cna_tag <- haven::na_tag(current.na)
+
     # find matches (replaced NA)
     doubles <- na.omit(match(value_tag, cna_tag))
     if (any(doubles)) {
       message(sprintf("tagged NA '%s' was replaced with new value label.\n",
                       names(current.na)[doubles]))
     }
+
     # remove multiple tagged NA
     current.na <- current.na[-doubles]
   }
 
   # sort labels by values
   all.labels <- all.labels[order(as.numeric(all.labels))]
+
   # add NA
   if (!is.null(current.na)) all.labels <- c(all.labels, current.na)
+
   # set back labels
   x <- set_labels(x, labels = all.labels)
   return(x)
 }
 
-#' @rdname add_labels
-#' @export
-`add_labels<-` <- function(x, value) {
-  UseMethod("add_labels<-")
-}
-
-#' @export
-`add_labels<-.default` <- function(x, value) {
-  add_labels(x, value)
-}
-
-
 
 #' @rdname add_labels
 #' @export
-replace_labels <- function(x, value) {
-  UseMethod("add_labels")
-}
-
-#' @rdname add_labels
-#' @export
-`replace_labels<-` <- function(x, value) {
-  UseMethod("add_labels<-")
+replace_labels <- function(x, ..., value) {
+  add_labels(x = x, ..., value = value)
 }

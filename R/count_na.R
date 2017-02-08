@@ -6,10 +6,9 @@ utils::globalVariables("label")
 #' @description This method counts tagged NA values (see \code{\link[haven]{tagged_na}})
 #'              in a vector and prints a frequency table of counted tagged NAs.
 #'
-#' @param x A vector with tagged NA values, or a data frame or list with such
-#'          vectors.
+#' @inheritParams to_factor
 #'
-#' @return A \code{\link[tibble]{tibble}} with counted tagged NA values.
+#' @return A data frame with counted tagged NA values.
 #'
 #' @examples
 #' library(haven)
@@ -23,29 +22,55 @@ utils::globalVariables("label")
 #'                 1:3, tagged_na("f", "d", "d"), 1:4, tagged_na("f", "d", "f")),
 #'               c("Agreement" = 1, "Disagreement" = 4, "An E" = tagged_na("e"),
 #'                 "A D" = tagged_na("d"), "The eff" = tagged_na("f")))
-#' count_na(tibble::data_frame(x, y))
+#' # create data frame
+#' dat <- tibble::data_frame(x, y)
+#'
+#' # possible count()-function calls
+#' count_na(dat)
+#' count_na(dat$x)
+#' count_na(dat, x)
+#' count_na(dat, x, y)
 #'
 #' @importFrom tibble as_tibble
 #' @importFrom dplyr select_ filter
 #' @importFrom haven is_tagged_na na_tag
 #' @export
-count_na <- function(x) {
-  UseMethod("count_na")
-}
+count_na <- function(x, ...) {
+  # evaluate arguments, generate data
+  .dots <- match.call(expand.dots = FALSE)$`...`
+  .dat <- get_dot_data(x, .dots)
 
-#' @export
-count_na.data.frame <- function(x) {
-  lapply(x, FUN = count_na_helper)
-}
+  # return values
+  dataframes <- list()
 
-#' @export
-count_na.list <- function(x) {
-  lapply(x, FUN = count_na_helper)
-}
+  if (is.data.frame(x)) {
+    # iterate variables of data frame
+    for (i in colnames(.dat)) {
+      # print freq
+      dummy <- count_na_helper(.dat[[i]])
+      cat(sprintf("# %s\n\n", get_label(.dat[[i]], def.value = i)))
+      print(dummy)
+      cat("\n\n")
+      # save data frame for return value
+      dataframes[[length(dataframes) + 1]] <- dummy
+    }
+    # return list
+    invisible(dataframes)
+  } else {
+    # get counts
+    dummy <- count_na_helper(.dat)
 
-#' @export
-count_na.default <- function(x) {
-  count_na_helper(x)
+    # check if we have variable label and print, if yes
+    vl <- get_label(.dat)
+    if (!is.null(vl)) cat(sprintf("# %s\n\n", vl))
+
+    # print count table
+    print(dummy)
+    cat("\n")
+
+    # return data frame
+    invisible(dummy)
+  }
 }
 
 count_na_helper <- function(x) {
@@ -67,7 +92,7 @@ count_na_helper <- function(x) {
     values[values == nav[i]] <- nav.labels[i]
   }
   # now compute frequency, and return a proper data frame
-  tibble::as_tibble(frq(values)) %>%
+  frq_helper(values, sort.frq = "none", weight.by = NULL) %>%
     dplyr::select_("-val") %>%
     dplyr::filter(label != "NA")
 }

@@ -9,9 +9,12 @@ zap_inf(x, ...)
 \arguments{
 \item{x}{A vector or a data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if either
-\code{x} is a data frame and no vector, or if only selected variables
-from \code{x} should be used in the function. See 'Examples'.}
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 }
 \value{
 \code{x}, where all \code{Inf}, \code{-Inf} and \code{NaN} are converted to \code{NA}.
@@ -44,4 +47,3 @@ zap_inf(efc, c12hour, e17age)
 zap_inf(efc)
 
 }
-

@@ -17,18 +17,17 @@
 #'          a maximum of 30 groups (which is the ggplot-default grouping when
 #'          plotting histograms). Use \code{groupcount} to determine the amount
 #'          of groups.
-#' @param as.num Logical; if \code{TRUE}, the recoded variable will
-#'          be returned as numeric vector. If \code{FALSE}, a factor is returned.
 #' @param right.interval Logical; if \code{TRUE}, grouping starts with the lower
 #'          bound of \code{groupsize}. See 'Details'.
 #' @param groupcount Sets the maximum number of groups that are defined when auto-grouping is on
 #'          (\code{groupsize="auto"}). Default is 30. If \code{groupsize} is not set to \code{"auto"},
 #'          this argument will be ignored.
 #'
+#' @inheritParams to_factor
 #' @inheritParams rec
 #'
 #' @return \itemize{
-#'           \item For \code{group_var}, a grouped variable, either as numeric or as factor (see paramter \code{as.num}).
+#'           \item For \code{group_var}, a grouped variable, either as numeric or as factor (see paramter \code{as.num}). If \code{x} is a data frame, only the grouped variables will be returned.
 #'           \item For \code{group_label}, a string vector or a list of string vectors containing labels based on the grouped categories of \code{x}, formatted as "from lower bound to upper bound", e.g. \code{"10-19"  "20-29"  "30-39"} etc. See 'Examples'.
 #'         }
 #'
@@ -63,11 +62,11 @@
 #'
 #' @examples
 #' age <- abs(round(rnorm(100, 65, 20)))
-#' age.grp <- group_var(age, 10)
+#' age.grp <- group_var(age, groupsize = 10)
 #' hist(age)
 #' hist(age.grp)
 #'
-#' age.grpvar <- group_labels(age, 10)
+#' age.grpvar <- group_labels(age, groupsize = 10)
 #' table(age.grp)
 #' print(age.grpvar)
 #'
@@ -84,7 +83,9 @@
 #'
 #' # within a pipe-chain
 #' library(dplyr)
-#' efc %>% select(e17age, c12hour, c160age) %>% group_var(groupsize = 20)
+#' efc %>%
+#'   select(e17age, c12hour, c160age) %>%
+#'   group_var(groupsize = 20)
 #'
 #' # create vector with values from 50 to 80
 #' dummy <- round(runif(200, 50, 80))
@@ -93,32 +94,45 @@
 #' # labels with grouping startint at upper bound
 #' group_labels(dummy, right.interval = TRUE)
 #'
+#' @importFrom purrr map
 #' @export
-group_var <- function(x, groupsize = 5, as.num = TRUE, right.interval = FALSE,
-                      groupcount = 30) {
-  UseMethod("group_var")
-}
+group_var <- function(x, ..., groupsize = 5, as.num = TRUE, right.interval = FALSE,
+                      groupcount = 30, suffix = "_gr") {
+  # evaluate arguments, generate data
+  .dots <- match.call(expand.dots = FALSE)$`...`
+  .dat <- get_dot_data(x, .dots)
 
-#' @export
-group_var.data.frame <- function(x, groupsize = 5, as.num = TRUE, right.interval = FALSE,
-                                 groupcount = 30) {
-  tibble::as_tibble(lapply(x, FUN = g_v_helper, groupsize = groupsize,
-                           as.num = as.num, right.interval = right.interval,
-                           groupcount = groupcount))
-}
+  if (is.data.frame(x)) {
 
-#' @export
-group_var.list <- function(x, groupsize = 5, as.num = TRUE, right.interval = FALSE,
-                           groupcount = 30) {
-  lapply(x, FUN = g_v_helper, groupsize = groupsize, as.num = as.num,
-         right.interval = right.interval, groupcount = groupcount)
-}
+    # iterate variables of data frame
+    for (i in colnames(.dat)) {
+      x[[i]] <- g_v_helper(
+        x = .dat[[i]],
+        groupsize = groupsize,
+        as.num = as.num,
+        right.interval = right.interval,
+        groupcount = groupcount
+      )
+    }
 
-#' @export
-group_var.default <- function(x, groupsize = 5, as.num = TRUE, right.interval = FALSE,
-                              groupcount = 30) {
-  g_v_helper(x = x, groupsize = groupsize,  as.num = as.num,
-             right.interval = right.interval, groupcount = groupcount)
+    # coerce to tibble and select only recoded variables
+    x <- tibble::as_tibble(x[colnames(.dat)])
+
+    # add suffix to recoded variables?
+    if (!is.null(suffix) && !sjmisc::is_empty(suffix)) {
+      colnames(x) <- sprintf("%s%s", colnames(x), suffix)
+    }
+  } else {
+    x <- g_v_helper(
+      x = .dat,
+      groupsize = groupsize,
+      as.num = as.num,
+      right.interval = right.interval,
+      groupcount = groupcount
+    )
+  }
+
+  x
 }
 
 
@@ -139,24 +153,31 @@ g_v_helper <- function(x, groupsize, as.num, right.interval, groupcount) {
 
 #' @rdname group_var
 #' @export
-group_labels <- function(x, groupsize = 5, right.interval = FALSE, groupcount = 30) {
-  UseMethod("group_labels")
-}
+group_labels <- function(x, ..., groupsize = 5, right.interval = FALSE, groupcount = 30) {
+  # evaluate arguments, generate data
+  .dots <- match.call(expand.dots = FALSE)$`...`
+  .dat <- get_dot_data(x, .dots)
 
-#' @export
-group_labels.data.frame <- function(x, groupsize = 5, right.interval = FALSE, groupcount = 30) {
-  lapply(x, FUN = g_l_helper, groupsize = groupsize, right.interval = right.interval, groupcount = groupcount)
-}
+  if (is.data.frame(x)) {
+    # iterate variables of data frame
+    return(
+      purrr::map(.dat, ~ g_l_helper(
+        x = .x,
+        groupsize = groupsize,
+        right.interval = right.interval,
+        groupcount = groupcount
+    )))
 
-#' @export
-group_labels.list <- function(x, groupsize = 5, right.interval = FALSE, groupcount = 30) {
-  lapply(x, FUN = g_l_helper, groupsize = groupsize, right.interval = right.interval, groupcount = groupcount)
-}
+  } else {
+    x <- g_l_helper(
+      x = .dat,
+      groupsize = groupsize,
+      right.interval = right.interval,
+      groupcount = groupcount
+    )
+  }
 
-#' @export
-group_labels.default <- function(x, groupsize = 5, right.interval = FALSE, groupcount = 30) {
-  g_l_helper(x = x, groupsize = groupsize, right.interval = right.interval,
-             groupcount = groupcount)
+  x
 }
 
 

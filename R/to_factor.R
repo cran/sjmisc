@@ -8,11 +8,13 @@
 #'            \code{\link{to_label}} to convert a value into a factor with labelled
 #'            factor levels.
 #'
-#' @param x Numeric, atomic or character vector or a data frame with
-#'          such vectors.
-#' @param ... Optional, unquoted names of variables. Required, if either
-#'          \code{x} is a data frame and no vector, or if only selected variables
-#'          from \code{x} should be used in the function. See 'Examples'.
+#' @param x A vector or data frame.
+#' @param ... Optional, unquoted names of variables. Required, if \code{x} is
+#'          a data frame (and no vector) and only selected variables
+#'          from \code{x} should be processed. You may also use functions like
+#'          \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+#'          The latter must be stated as formula (i.e. beginning with \code{~}).
+#'          See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.
 #' @param add.non.labelled Logical, if \code{TRUE}, non-labelled values also
 #'          get value labels.
 #' @param ref.lvl Numeric, specifies the reference level for the new factor. Use
@@ -20,9 +22,13 @@
 #'          should be used as reference level. If \code{NULL}, lowest value
 #'          will become the reference level. See \code{\link{ref_lvl}} for
 #'          details.
-#' @return A factor variable, including variable and value labels, respectively
-#'           a data frame with factor variables (including variable and value labels)
-#'           if \code{x} was a data frame.
+#'
+#' @return A factor variable, including variable and value labels. If \code{x}
+#'           is a data frame, the complete data frame \code{x} will be returned,
+#'           where variables specified in \code{...} are coerced
+#'           to factor variables (including variable and value labels);
+#'           if \code{...} is not specified, applies to all variables in the
+#'           data frame.
 #'
 #' @note This function is intended for use with vectors that have value and variable
 #'        label attributes. Unlike \code{\link{as.factor}}, \code{to_factor} converts
@@ -49,8 +55,9 @@
 #' frq(x)
 #'
 #' # create parially labelled vector
-#' x <- set_labels(efc$e42dep, c(`1` = "independent", `4` = "severe dependency",
-#'                               `9` = "missing value"))
+#' x <- set_labels(efc$e42dep,
+#'                 labels = c(`1` = "independent", `4` = "severe dependency",
+#'                            `9` = "missing value"))
 #'
 #' # only copy existing value labels
 #' to_factor(x)
@@ -75,6 +82,10 @@
 #' # and keep other variables, with their class preserved
 #' to_factor(efc, e42dep, e16sex, c172code)
 #'
+#' # use select-helpers from dplyr-package
+#' library(dplyr)
+#' to_factor(efc, ~contains("cop"), c161sex:c175empl)
+#'
 #'
 #' @importFrom tibble as_tibble
 #' @export
@@ -83,17 +94,9 @@ to_factor <- function(x, ..., add.non.labelled = FALSE, ref.lvl = NULL) {
   .dots <- match.call(expand.dots = FALSE)$`...`
   .dat <- get_dot_data(x, .dots)
 
-  # get variable names
-  .vars <- dot_names(.dots)
-
-  # if user only provided a data frame, get all variable names
-  if (is.null(.vars) && is.data.frame(x)) .vars <- colnames(x)
-
-  # if we have any dot names, we definitely have a data frame
-  if (!is.null(.vars)) {
-
+  if (is.data.frame(x)) {
     # iterate variables of data frame
-    for (i in .vars) {
+    for (i in colnames(.dat)) {
       x[[i]] <- to_fac_helper(.dat[[i]], add.non.labelled, ref.lvl)
     }
     # coerce to tibble
@@ -133,10 +136,10 @@ to_fac_helper <- function(x, add.non.labelled, ref.lvl) {
   x <- factor(x, exclude = c(NA_character_, "NaN"))
 
   # set back value labels
-  x <- suppressMessages(set_labels(x, lab.switch, force.labels = TRUE, force.values = FALSE))
+  x <- suppressMessages(set_labels(x, labels = lab.switch, force.labels = TRUE, force.values = FALSE))
   # set back variable labels
   x <- set_label(x, varlab)
   # change reference level?
-  if (!is.null(ref.lvl)) ref_lvl(x) <- ref.lvl
+  if (!is.null(ref.lvl)) x <- ref_lvl(x, value = ref.lvl)
   return(x)
 }

@@ -2,32 +2,29 @@
 % Please edit documentation in R/add_labels.R, R/remove_labels.R
 \name{add_labels}
 \alias{add_labels}
-\alias{add_labels<-}
-\alias{remove_labels}
-\alias{remove_labels<-}
 \alias{replace_labels}
-\alias{replace_labels<-}
+\alias{remove_labels}
 \title{Add, replace or remove value labels of variables}
 \usage{
-add_labels(x, value)
+add_labels(x, ..., value)
 
-add_labels(x) <- value
+replace_labels(x, ..., value)
 
-replace_labels(x, value)
-
-replace_labels(x) <- value
-
-remove_labels(x, value)
-
-remove_labels(x) <- value
+remove_labels(x, ..., value)
 }
 \arguments{
-\item{x}{A variable, data frame or list-object.}
+\item{x}{A vector or data frame.}
+
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{value}{\describe{
 \item{For \code{add_labels()}}{A named (numeric) vector of labels
-that will be added to \code{x} as label attribute. If \code{x} is
-a data frame, \code{value} will be applied to each column of \code{x}.}
+that will be added to \code{x} as label attribute.}
 \item{For \code{remove_labels()}}{Either a numeric vector, indicating
 the position of one or more label attributes that should be removed;
 a character vector with names of label attributes that should be
@@ -36,7 +33,11 @@ from specific NA values.}
 }}
 }
 \value{
-\code{x} with additional or removed value labels.
+\code{x} with additional or removed value labels. If \code{x}
+          is a data frame, the complete data frame \code{x} will be returned,
+          with removed or added to variables specified in \code{...};
+          if \code{...} is not specified, applies to all variables in the
+          data frame.
 }
 \description{
 These functions add, replace or remove value labels to or from variables.
@@ -60,18 +61,27 @@ These functions add, replace or remove value labels to or from variables.
 data(efc)
 get_labels(efc$e42dep)
 
-x <- add_labels(efc$e42dep, c(`nothing` = 5))
+x <- add_labels(efc$e42dep, value = c(`nothing` = 5))
 get_labels(x)
 
-x <- add_labels(efc$e42dep, c(`nothing` = 5, `zero value` = 0))
+library(dplyr)
+x <- efc \%>\%
+  # select three variables
+  dplyr::select(e42dep, c172code, c161sex) \%>\%
+  # only add new label to two of those
+  add_labels(e42dep, c172code, value = c(`nothing` = 5))
+# see data frame, with selected variables having new labels
+get_labels(x)
+
+x <- add_labels(efc$e42dep, value = c(`nothing` = 5, `zero value` = 0))
 get_labels(x, include.values = "p")
 
 # replace old value labels
-x <- add_labels(efc$e42dep, c(`not so dependent` = 4, `lorem ipsum` = 5))
+x <- add_labels(
+  efc$e42dep,
+  value = c(`not so dependent` = 4, `lorem ipsum` = 5)
+)
 get_labels(x, include.values = "p")
-
-# replace values, alternative function call
-replace_labels(x) <- c(`new second` = 2)
 
 # replace specific missing value (tagged NA)
 library(haven)
@@ -82,16 +92,16 @@ x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
 x
 # tagged NA(c) has currently the value label "First", will be
 # replaced by "Second" now.
-replace_labels(x, c("Second" = tagged_na("c")))
+replace_labels(x, value = c("Second" = tagged_na("c")))
 
 
 # ----------------------
 # remove_labels()
 # ----------------------
-x <- remove_labels(efc$e42dep, 2)
+x <- remove_labels(efc$e42dep, value = 2)
 get_labels(x, include.values = "p")
 
-x <- remove_labels(efc$e42dep, "independent")
+x <- remove_labels(efc$e42dep, value = "independent")
 get_labels(x, include.values = "p")
 
 library(haven)
@@ -100,7 +110,7 @@ x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
                 "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
 # get current NA values
 get_na(x)
-get_na(remove_labels(x, tagged_na("c")))
+get_na(remove_labels(x, value = tagged_na("c")))
 
 }
 \seealso{
@@ -109,4 +119,3 @@ get_na(remove_labels(x, tagged_na("c")))
            add value labels, replacing the existing ones (and removing non-specified
            value labels).
 }
-

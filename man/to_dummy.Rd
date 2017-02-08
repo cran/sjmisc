@@ -7,11 +7,14 @@
 to_dummy(x, ..., var.name = "name", suffix = c("numeric", "label"))
 }
 \arguments{
-\item{x}{A vector or a data frame.}
+\item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if either
-\code{x} is a data frame and no vector, or if only selected variables
-from \code{x} should be used in the function. See 'Examples'.}
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{var.name}{Indicates how the new dummy variables are named. Use
 \code{"name"} to use the variable name or any other string that will
@@ -23,9 +26,8 @@ Use \code{"numeric"} to number dummy variables, e.g. \emph{x_1},
 e.g. \emph{x_low}, \emph{x_mid}, \emph{x_high}. May be abbreviated.}
 }
 \value{
-A data frame with dummy variables for each category of \code{x}, or
-          \code{data} where new dummy variables are appended as additional
-          columns. The dummy coded variables are of type \code{\link{atomic}}.
+A data frame with dummy variables for each category of \code{x}.
+        The dummy coded variables are of type \code{\link{atomic}}.
 }
 \description{
 This function splits categorical or numeric vectors with
@@ -52,8 +54,6 @@ to_dummy(efc, c172code, e42dep)
 library(dplyr)
 efc \%>\%
   select(e42dep, e16sex, c172code) \%>\%
-  to_dummy(c172code, e42dep)
-
+  to_dummy()
 
 }
-

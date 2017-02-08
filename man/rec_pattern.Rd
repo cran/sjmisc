@@ -39,9 +39,11 @@ table(efc$c160age, exclude = NULL)
 table(rec(efc$c160age, recodes = rp$pattern), exclude = NULL)
 
 # recode carers age into groups of width 5
-x <- rec(efc$c160age, recodes = rp$pattern)
-# add value labels to new vector
-set_labels(x) <- rp$labels
+x <- rec(
+  efc$c160age,
+  recodes = rp$pattern,
+  val.labels = rp$labels
+)
 # watch result
 frq(x)
 
@@ -50,4 +52,3 @@ frq(x)
 \code{\link{group_var}} for recoding variables into smaller groups, and
           \code{\link{group_labels}} to create the asssociated value labels.
 }
-

@@ -1,22 +1,22 @@
 #' @rdname zap_labels
 #' @export
-drop_labels <- function(x, drop.na = TRUE) {
-  UseMethod("drop_labels")
-}
+drop_labels <- function(x, ..., drop.na = TRUE) {
+  # evaluate arguments, generate data
+  .dots <- match.call(expand.dots = FALSE)$`...`
+  .dat <- get_dot_data(x, .dots)
 
-#' @export
-drop_labels.data.frame <- function(x, drop.na = TRUE) {
-  tibble::as_tibble(lapply(x, FUN = drop_labels_helper, drop.na))
-}
+  if (is.data.frame(x)) {
+    # iterate variables of data frame
+    for (i in colnames(.dat)) {
+      x[[i]] <- drop_labels_helper(.dat[[i]], drop.na = drop.na)
+    }
+    # coerce to tibble
+    x <- tibble::as_tibble(x)
+  } else {
+    x <- drop_labels_helper(.dat, drop.na = drop.na)
+  }
 
-#' @export
-drop_labels.list <- function(x, drop.na = TRUE) {
-  lapply(x, FUN = drop_labels_helper, drop.na)
-}
-
-#' @export
-drop_labels.default <- function(x, drop.na = TRUE) {
-  drop_labels_helper(x, drop.na)
+  x
 }
 
 drop_labels_helper <- function(x, drop.na) {
@@ -29,6 +29,6 @@ drop_labels_helper <- function(x, drop.na) {
   # remove labels with no values in data
   tidy.labels <- tidy.labels[get_values(x, drop.na = drop.na) %in% names(table(x))]
   # set labels
-  set_labels(x, drop.na = drop.na) <- tidy.labels
+  x <- set_labels(x, labels = tidy.labels, drop.na = drop.na)
   return(x)
 }

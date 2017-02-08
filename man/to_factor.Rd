@@ -7,12 +7,14 @@
 to_factor(x, ..., add.non.labelled = FALSE, ref.lvl = NULL)
 }
 \arguments{
-\item{x}{Numeric, atomic or character vector or a data frame with
-such vectors.}
+\item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if either
-\code{x} is a data frame and no vector, or if only selected variables
-from \code{x} should be used in the function. See 'Examples'.}
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{add.non.labelled}{Logical, if \code{TRUE}, non-labelled values also
 get value labels.}
@@ -24,9 +26,12 @@ will become the reference level. See \code{\link{ref_lvl}} for
 details.}
 }
 \value{
-A factor variable, including variable and value labels, respectively
-          a data frame with factor variables (including variable and value labels)
-          if \code{x} was a data frame.
+A factor variable, including variable and value labels. If \code{x}
+          is a data frame, the complete data frame \code{x} will be returned,
+          where variables specified in \code{...} are coerced
+          to factor variables (including variable and value labels);
+          if \code{...} is not specified, applies to all variables in the
+          data frame.
 }
 \description{
 This function converts a variable into a factor, but preserves
@@ -59,8 +64,9 @@ x <- to_factor(efc$e42dep)
 frq(x)
 
 # create parially labelled vector
-x <- set_labels(efc$e42dep, c(`1` = "independent", `4` = "severe dependency",
-                              `9` = "missing value"))
+x <- set_labels(efc$e42dep,
+                labels = c(`1` = "independent", `4` = "severe dependency",
+                           `9` = "missing value"))
 
 # only copy existing value labels
 to_factor(x)
@@ -85,6 +91,10 @@ table(x)
 # and keep other variables, with their class preserved
 to_factor(efc, e42dep, e16sex, c172code)
 
+# use select-helpers from dplyr-package
+library(dplyr)
+to_factor(efc, ~contains("cop"), c161sex:c175empl)
+
 
 }
 \seealso{
@@ -92,4 +102,3 @@ to_factor(efc, e42dep, e16sex, c172code)
            \code{\link{to_label}} to convert a value into a factor with labelled
            factor levels.
 }
-

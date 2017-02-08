@@ -4,11 +4,18 @@
 \alias{frq}
 \title{Frequencies of labelled variables}
 \usage{
-frq(x, sort.frq = c("none", "asc", "desc"), weight.by = NULL)
+frq(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL)
 }
 \arguments{
-\item{x}{A labelled vector or a \code{data.frame} with labelled vectors.
-May also be a grouped data frame (see 'Note' and 'Examples').}
+\item{x}{A vector or a data frame. May also be a grouped data frame
+(see 'Note' and 'Examples').}
+
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{sort.frq}{Determines whether categories should be sorted
 according to their frequencies or not. Default is \code{"none"}, so
@@ -20,7 +27,7 @@ Must be a vector of same length as the input vector. Default is
 \code{NULL}, so no weights are used.}
 }
 \value{
-A data frame with values, value labels, frequencies, raw, valid and
+A list of data frames with values, value labels, frequencies, raw, valid and
           cumulative percentages of \code{x}.
 }
 \description{
@@ -34,28 +41,42 @@ This function returns a frequency table of labelled vectors, as data frame.
 \examples{
 library(haven)
 # create labelled integer
-x <- labelled(c(1, 2, 1, 3, 4, 1),
-              c(Male = 1, Female = 2, Refused = 3, "N/A" = 4))
+x <- labelled(
+  c(1, 2, 1, 3, 4, 1),
+  c(Male = 1, Female = 2, Refused = 3, "N/A" = 4)
+)
 frq(x)
 
-x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
-              c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
-                "Refused" = tagged_na("a"), "Not home" = tagged_na("z")))
+x <- labelled(
+  c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
+  c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
+    "Refused" = tagged_na("a"), "Not home" = tagged_na("z"))
+)
 frq(x)
 
 # in a pipe
 data(efc)
 library(dplyr)
-efc \%>\% select(e42dep, e15relat, c172code) \%>\% frq()
+efc \%>\%
+  select(e42dep, e15relat, c172code) \%>\%
+  frq()
+
+# or:
+# frq(efc, e42dep, e15relat, c172code)
 
 # with grouped data frames, in a pipe
 efc \%>\%
   group_by(e16sex, c172code) \%>\%
-  select(e16sex, c172code, e42dep) \%>\%
-  frq()
+  frq(e16sex, c172code, e42dep)
+
+# with select-helpers: all variables from the COPE-Index
+# (which all have a "cop" in their name)
+frq(efc, ~contains("cop"))
+
+# all variables from column "c161sex" to column "c175empl"
+frq(efc, c161sex:c175empl)
 
 }
 \seealso{
 \code{\link{flat_table}} for labelled (proportional) tables.
 }
-

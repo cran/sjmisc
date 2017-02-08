@@ -1,22 +1,22 @@
 #' @rdname zap_labels
 #' @export
-fill_labels <- function(x) {
-  UseMethod("fill_labels")
-}
+fill_labels <- function(x, ...) {
+  # evaluate arguments, generate data
+  .dots <- match.call(expand.dots = FALSE)$`...`
+  .dat <- get_dot_data(x, .dots)
 
-#' @export
-fill_labels.data.frame <- function(x) {
-  tibble::as_tibble(lapply(x, FUN = fill_labels_helper))
-}
+  if (is.data.frame(x)) {
+    # iterate variables of data frame
+    for (i in colnames(.dat)) {
+      x[[i]] <- fill_labels_helper(.dat[[i]])
+    }
+    # coerce to tibble
+    x <- tibble::as_tibble(x)
+  } else {
+    x <- fill_labels_helper(.dat)
+  }
 
-#' @export
-fill_labels.list <- function(x) {
-  lapply(x, FUN = fill_labels_helper)
-}
-
-#' @export
-fill_labels.default <- function(x) {
-  fill_labels_helper(x)
+  x
 }
 
 fill_labels_helper <- function(x) {
@@ -40,7 +40,12 @@ fill_labels_helper <- function(x) {
       # add NA
       if (!is.null(current.na)) all.val.switch <- c(all.val.switch, current.na)
       # then set labels
-      x <- set_labels(x, all.val.switch, force.labels = T, force.values = T)
+      x <- set_labels(
+        x,
+        labels = all.val.switch,
+        force.labels = T,
+        force.values = T
+      )
     }
   }
   return(x)

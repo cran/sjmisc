@@ -31,7 +31,8 @@
 #' str(x)
 #'
 #' data(efc)
-#' x <- set_labels(efc$e42dep, c(`1` = "independent", `4` = "severe dependency"))
+#' x <- set_labels(efc$e42dep,
+#'                 labels = c(`1` = "independent", `4` = "severe dependency"))
 #' x1 <- as_labelled(x, add.labels = FALSE)
 #' x2 <- as_labelled(x, add.labels = TRUE)
 #'
@@ -49,7 +50,7 @@ as_labelled <- function(x, add.labels = FALSE, add.class = FALSE) {
 
 #' @export
 as_labelled.data.frame <- function(x, add.labels = FALSE, add.class = FALSE) {
-  tibble::as_tibble(lapply(x, FUN = as_labelled_helper, add.labels, add.class))
+  data.frame(lapply(x, FUN = as_labelled_helper, add.labels, add.class))
 }
 
 #' @export
@@ -63,25 +64,22 @@ as_labelled.default <- function(x, add.labels = FALSE, add.class = FALSE) {
 }
 
 as_labelled_helper <- function(x, add.labels, add.class) {
-  # check if we have any value label attributes
-  vallabel <- get_labels(x, attr.only = T)
-  # nothing?
-  if (is.null(vallabel)) {
-    # factor levels as labels?
-    vallabel <- get_labels(x, attr.only = F)
-    # still nothing?
-    if (is.null(vallabel)) {
-      # get unique values
-      vallabel <- as.character(unique(stats::na.omit(x)))
-    }
-    # set value labels
-    x <- suppressWarnings(set_labels(x, vallabel, force.labels = T, force.values = T))
-  }
+  # do nothing for labelled class
+  if (is_labelled(x)) return(x)
+
+  # if factor, convert to numeric
+  if (is.factor(x)) x <- to_value(x, keep.labels = T)
+
+  # return atomics
+  if (is.null(get_labels(x, attr.only = T))) return(x)
+
   # fill up missing attributes
   if (add.labels) x <- fill_labels(x)
+
   # reset missings
   xna <- get_na(x)
-  if (!sjmisc::is_empty(xna)) x <- set_na(x, xna)
+  if (!sjmisc::is_empty(xna)) x <- set_na(x, value = xna)
+
   # get former class attributes
   xc <- class(x)
   if (add.class)
@@ -124,7 +122,7 @@ as_labelled_helper <- function(x, add.labels, add.class) {
 #' @export
 lbl_df <- function(x) {
   # add class attribute, if necessary
-  if (!"lbl_df" %in% class(x))
-    class(x) <- c("lbl_df", class(x))
+  if (!"lbl_df" %in% class(x)) class(x) <- c("lbl_df", class(x))
+
   x
 }

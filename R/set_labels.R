@@ -1,6 +1,5 @@
 #' @title Add value labels to variables
 #' @name set_labels
-#' @usage set_labels(x, labels, force.labels = FALSE, force.values = TRUE, drop.na = TRUE)
 #'
 #' @description This function adds labels as attribute (named \code{"labels"})
 #'                to a variable or vector \code{x}, resp. to a set of variables in a
@@ -13,8 +12,6 @@
 #'            \code{\link{get_label}} to get variable labels; \code{\link{add_labels}} to
 #'            add additional value labels without replacing the existing ones.
 #'
-#' @param x Variable (vector), \code{list} of variables or a \code{data.frame}
-#'          where value label attributes should be added. Replaces former value labels.
 #' @param labels (Named) character vector of labels that will be added to \code{x} as
 #'          \code{"labels"} or \code{"value.labels"} attribute.
 #'          \itemize{
@@ -26,7 +23,6 @@
 #'            \item if \code{labels} is a vector and \code{x} is a data frame, \code{labels} will be applied to each column of \code{x}.
 #'            }
 #'          Use \code{labels = ""} to remove labels-attribute from \code{x}.
-#' @param value See \code{labels}.
 #' @param force.labels Logical; if \code{TRUE}, all \code{labels} are added as value label
 #'          attribute, even if \code{x} has less unique values then length of \code{labels}
 #'          or if \code{x} has a smaller range then length of \code{labels}. See 'Examples'.
@@ -39,8 +35,14 @@
 #'          (see \code{\link[haven]{tagged_na}}) should be removed (\code{drop.na = TRUE},
 #'          the default) or preserved (\code{drop.na = FALSE}).
 #'          See \code{\link{get_na}} for more details on tagged NA values.
+#'
+#' @inheritParams to_factor
+#'
 #' @return \code{x} with value label attributes; or with removed label-attributes if
-#'            \code{labels = ""}.
+#'           \code{labels = ""}. If \code{x} is a data frame, the complete data
+#'           frame \code{x} will be returned, with removed or added to variables
+#'           specified in \code{...}; if \code{...} is not specified, applies
+#'           to all variables in the data frame.
 #'
 #' @details See 'Details' in \code{\link{get_labels}}.
 #'
@@ -56,44 +58,41 @@
 #' dummy <- sample(1:4, 40, replace = TRUE)
 #' frq(dummy)
 #'
-#' dummy <- set_labels(dummy, c("very low", "low", "mid", "hi"))
+#' dummy <- set_labels(dummy, labels = c("very low", "low", "mid", "hi"))
 #' frq(dummy)
 #'
 #' # assign labels with named vector
 #' dummy <- sample(1:4, 40, replace = TRUE)
-#' set_labels(dummy) <- c("very low" = 1, "very high" = 4)
+#' dummy <- set_labels(dummy, labels = c("very low" = 1, "very high" = 4))
 #' frq(dummy)
 #'
 #' # force using all labels, even if not all labels
 #' # have associated values in vector
 #' x <- c(2, 2, 3, 3, 2)
 #' # only two value labels
-#' x <- set_labels(x, c("1", "2", "3"))
+#' x <- set_labels(x, labels = c("1", "2", "3"))
 #' x
 #' frq(x)
 #'
-#' # or use:
-#' # set_labels(x) <- c("1", "2", "3")
-#'
 #' # all three value labels
-#' x <- set_labels(x, c("1", "2", "3"), force.labels = TRUE)
+#' x <- set_labels(x, labels = c("1", "2", "3"), force.labels = TRUE)
 #' x
 #' frq(x)
 #'
 #' # create vector
 #' x <- c(1, 2, 3, 2, 4, NA)
 #' # add less labels than values
-#' x <- set_labels(x, c("yes", "maybe", "no"), force.values = FALSE)
+#' x <- set_labels(x, labels = c("yes", "maybe", "no"), force.values = FALSE)
 #' x
 #' # add all necessary labels
-#' x <- set_labels(x, c("yes", "maybe", "no"), force.values = TRUE)
+#' x <- set_labels(x, labels = c("yes", "maybe", "no"), force.values = TRUE)
 #' x
 #'
 #' # set labels and missings
 #' x <- c(1, 1, 1, 2, 2, -2, 3, 3, 3, 3, 3, 9)
-#' x <- set_labels(x, c("Refused", "One", "Two", "Three", "Missing"))
+#' x <- set_labels(x, labels = c("Refused", "One", "Two", "Three", "Missing"))
 #' x
-#' set_na(x, c(-2, 9))
+#' set_na(x, value = c(-2, 9))
 #'
 #'
 #' library(haven)
@@ -104,9 +103,9 @@
 #' x
 #' get_na(x)
 #' # lose value labels from tagged NA by default, if not specified
-#' set_labels(x, c("New Three" = 3))
+#' set_labels(x, labels = c("New Three" = 3))
 #' # do not drop na
-#' set_labels(x, c("New Three" = 3), drop.na = FALSE)
+#' set_labels(x, labels = c("New Three" = 3), drop.na = FALSE)
 #'
 #'
 #' # set labels via named vector,
@@ -114,9 +113,12 @@
 #' data(efc)
 #' get_labels(efc$e42dep)
 #'
-#' x <- set_labels(efc$e42dep, c(`independent` = 1,
-#'                               `severe dependency` = 2,
-#'                               `missing value` = 9))
+#' x <- set_labels(
+#'   efc$e42dep,
+#'   labels = c(`independent` = 1,
+#'              `severe dependency` = 2,
+#'              `missing value` = 9)
+#'   )
 #' get_labels(x, include.values = "p")
 #' get_labels(x, include.values = "p", include.non.labelled = TRUE)
 #'
@@ -125,110 +127,89 @@
 #' x <- c(1, 2, 3, 4)
 #' # set 2 and 3 as missing, which will automatically set as
 #' # tagged NA by 'set_na()'
-#' set_na(x) <- c(2, 3)
+#' x <- set_na(x, value = c(2, 3))
 #' x
 #' # set label via named vector just for tagged NA(3)
-#' set_labels(x, c(`New Value` = tagged_na("3")))
+#' set_labels(x, labels = c(`New Value` = tagged_na("3")))
 #'
 #' # setting same value labels to multiple vectors
-#' # create a set of dummy variables
-#' dummy1 <- sample(1:4, 40, replace = TRUE)
-#' dummy2 <- sample(1:4, 40, replace = TRUE)
-#' dummy3 <- sample(1:4, 40, replace = TRUE)
-#' # put them in list-object
-#' dummies <- list(dummy1, dummy2, dummy3)
-#' # and set same value labels for all three dummies
-#' dummies <- set_labels(dummies, c("very low", "low", "mid", "hi"))
+#' dummies <- data.frame(
+#'   dummy1 = sample(1:4, 40, replace = TRUE),
+#'   dummy2 = sample(1:4, 40, replace = TRUE),
+#'   dummy3 = sample(1:4, 40, replace = TRUE)
+#' )
+#'
+#' # and set same value labels for two of three variables
+#' dummies <- set_labels(
+#'   dummies, dummy1, dummy2,
+#'   labels = c("very low", "low", "mid", "hi")
+#' )
 #' # see result...
 #' get_labels(dummies)
 #'
 #' @export
-set_labels <- function(x,
+set_labels <- function(x, ...,
                        labels,
                        force.labels = FALSE,
                        force.values = TRUE,
                        drop.na = TRUE) {
-  return(set_labels_helper(x, labels, force.labels, force.values, drop.na))
+
+  # evaluate arguments, generate data
+  .dots <- match.call(expand.dots = FALSE)$`...`
+  .dat <- get_dot_data(x, .dots)
+
+  # special handling for data frames
+  if (is.data.frame(x)) {
+    # check if we have one label per variable
+    if (length(labels) == ncol(.dat)) {
+      # get column names
+      cn <- colnames(.dat)
+      # iterate all columns by number
+      for (i in seq_len(ncol(.dat))) {
+        x[[cn[i]]] <- set_labels_helper(
+          x = .dat[[cn[i]]],
+          labels = labels[[i]],
+          force.labels = force.labels,
+          force.values = force.values,
+          drop.na = drop.na,
+          var.name = cn[i]
+        )
+      }
+    } else {
+      # iterate variables of data frame
+      for (i in colnames(.dat)) {
+        x[[i]] <- set_labels_helper(
+          x = .dat[[i]],
+          labels = labels,
+          force.labels = force.labels,
+          force.values = force.values,
+          drop.na = drop.na,
+          var.name = i
+        )
+      }
+    }
+    # coerce to tibble
+    x <- tibble::as_tibble(x)
+  } else {
+    x <- set_labels_helper(
+      x = .dat,
+      labels = labels,
+      force.labels = force.labels,
+      force.values = force.values,
+      drop.na = drop.na,
+      var.name = NULL
+    )
+  }
+
+  x
 }
 
 
-set_labels_helper <- function(x, labels, force.labels, force.values, drop.na) {
+#' @importFrom stats na.omit
+set_labels_helper <- function(x, labels, force.labels, force.values, drop.na, var.name) {
   # any valid labels? if not, return vector
   if (is.null(labels) || length(labels) == 0) return(x)
 
-  # convert single vector
-  if (!is.list(x) && (is.vector(x) || is.atomic(x))) {
-    return(set_values_vector(x, labels, NULL, force.labels, force.values, drop.na))
-  } else if (is.data.frame(x) || is.list(x)) {
-    # get length of data frame or list, i.e.
-    # determine number of variables
-    if (is.data.frame(x))
-      nvars <- ncol(x)
-    else
-      nvars <- length(x)
-    for (i in seq_len(nvars)) {
-      # list of labels makes sense if multiple variable
-      # should be labelled with different labels
-      if (is.list(labels)) {
-        # check for valid length of supplied label-list
-        if (i <= length(labels)) {
-          x[[i]] <- set_values_vector(x[[i]], labels[[i]], colnames(x)[i],
-                                      force.labels, force.values, drop.na)
-        }
-      } else if (is.vector(labels)) {
-        # user supplied only one vector of labels.
-        # so each variable gets the same labels
-        x[[i]] <- set_values_vector(x[[i]], labels, colnames(x)[i], force.labels,
-                                    force.values, drop.na)
-      } else {
-        warning("`labels` must be a list of same length as `ncol(x)` or a vector.", call. = TRUE)
-      }
-    }
-    return(x)
-  }
-}
-
-
-#' @importFrom stats na.omit
-get_value_range <- function(x) {
-  # check if var is a factor
-  if (is.factor(x)) {
-    # check if we have numeric levels
-    if (!is_num_fac(x)) {
-      # retrieve levels. since levels are numeric, we
-      # have minimum and maximum values
-      minval <- 1
-      maxval <- nlevels(x)
-    } else {
-      # levels are not numeric. we need to convert them
-      # first to retrieve minimum level, as numeric
-      minval <- min(as.numeric(levels(x)), na.rm = T)
-
-      # check range, add minimum, so we have max
-      maxval <- diff(range(as.numeric(levels(x)))) + minval
-    }
-  } else if (is.character(x)) {
-    # if we have a character vector, we don't have
-    # min and max values. instead, we count the
-    # amount of unique string values
-    minval <- 1
-    maxval <- length(unique(stats::na.omit(x)))
-  } else {
-    # retrieve values
-    minval <- min(x, na.rm = TRUE)
-    maxval <- max(x, na.rm = TRUE)
-  }
-  # determine value range
-  valrange <- maxval - minval + 1
-  # return all
-  return(list(minval = minval,
-              maxval = maxval,
-              valrange = valrange))
-}
-
-
-#' @importFrom stats na.omit
-set_values_vector <- function(x, labels, var.name, force.labels, force.values, drop.na) {
   # valid vector?
   if (is.null(x)) {
     warning("can't add value labels to NULL vectors.", call. = T)
@@ -271,8 +252,9 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values, d
       valrange <- vr$valrange
       minval <- vr$minval
       maxval <- vr$maxval
+
       # check for unlisting
-      if (is.list(labels)) labels <- unlist(labels)
+      if (is.list(labels)) labels <- labels[[1]]
 
       # determine amount of labels and unique values
       lablen <- length(labels)
@@ -391,15 +373,40 @@ set_values_vector <- function(x, labels, var.name, force.labels, force.values, d
   return(x)
 }
 
-#' @rdname set_labels
-#' @usage set_labels(x, force.labels = FALSE, force.values = TRUE, drop.na = TRUE) <- value
-#' @export
-`set_labels<-` <- function(x, force.labels = FALSE, force.values = TRUE, drop.na = TRUE, value) {
-  UseMethod("set_labels<-")
-}
 
-#' @export
-`set_labels<-.default` <- function(x, force.labels = FALSE, force.values = TRUE, drop.na = TRUE, value) {
-  x <- set_labels(x, labels = value, force.labels = force.labels, force.values = force.values, drop.na = drop.na)
-  x
+#' @importFrom stats na.omit
+get_value_range <- function(x) {
+  # check if var is a factor
+  if (is.factor(x)) {
+    # check if we have numeric levels
+    if (!is_num_fac(x)) {
+      # retrieve levels. since levels are numeric, we
+      # have minimum and maximum values
+      minval <- 1
+      maxval <- nlevels(x)
+    } else {
+      # levels are not numeric. we need to convert them
+      # first to retrieve minimum level, as numeric
+      minval <- min(as.numeric(levels(x)), na.rm = T)
+
+      # check range, add minimum, so we have max
+      maxval <- diff(range(as.numeric(levels(x)))) + minval
+    }
+  } else if (is.character(x)) {
+    # if we have a character vector, we don't have
+    # min and max values. instead, we count the
+    # amount of unique string values
+    minval <- 1
+    maxval <- length(unique(stats::na.omit(x)))
+  } else {
+    # retrieve values
+    minval <- min(x, na.rm = TRUE)
+    maxval <- max(x, na.rm = TRUE)
+  }
+  # determine value range
+  valrange <- maxval - minval + 1
+  # return all
+  return(list(minval = minval,
+              maxval = maxval,
+              valrange = valrange))
 }

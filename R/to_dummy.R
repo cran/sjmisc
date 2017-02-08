@@ -4,7 +4,6 @@
 #' @description This function splits categorical or numeric vectors with
 #'                more than two categories into 0/1-coded dummy variables.
 #'
-#' @param x A vector or a data frame.
 #' @param var.name Indicates how the new dummy variables are named. Use
 #'          \code{"name"} to use the variable name or any other string that will
 #'          be used as is. Only applies, if \code{x} is a vector. See 'Examples'.
@@ -15,9 +14,8 @@
 #'
 #' @inheritParams to_factor
 #'
-#' @return A data frame with dummy variables for each category of \code{x}, or
-#'           \code{data} where new dummy variables are appended as additional
-#'           columns. The dummy coded variables are of type \code{\link{atomic}}.
+#' @return A data frame with dummy variables for each category of \code{x}.
+#'         The dummy coded variables are of type \code{\link{atomic}}.
 #'
 #' @note \code{NA} values will be copied from \code{x}, so each dummy variable
 #'         has the same amount of \code{NA}'s at the same position as \code{x}.
@@ -39,8 +37,7 @@
 #' library(dplyr)
 #' efc %>%
 #'   select(e42dep, e16sex, c172code) %>%
-#'   to_dummy(c172code, e42dep)
-#'
+#'   to_dummy()
 #'
 #' @importFrom tibble as_tibble
 #' @export
@@ -54,20 +51,13 @@ to_dummy <- function(x, ..., var.name = "name", suffix = c("numeric", "label")) 
   .dots <- match.call(expand.dots = FALSE)$`...`
   .dat <- get_dot_data(x, .dots)
 
-  # get variable names
-  .vars <- dot_names(.dots)
-
-  # if user only provided a data frame, get all variable names
-  if (is.null(.vars) && is.data.frame(x)) .vars <- colnames(x)
-
-  # if we have any dot names, we definitely have a data frame
-  if (!is.null(.vars)) {
-
+  if (is.data.frame(x)) {
     # iterate variables of data frame
-    for (i in .vars) {
-      # convert to dummy
-      x <- dplyr::bind_cols(x, to_dummy_helper(x = .dat[[i]], varname = i, suffix = suffix))
-    }
+    x <- dplyr::bind_cols(
+      purrr::map(colnames(.dat), ~ to_dummy_helper(
+        x = .dat[[.x]], varname = .x, suffix = suffix
+      ))
+    )
   } else {
     # remove "data frame name"
     dollar_pos <- regexpr("$", varname, fixed = T)[1]

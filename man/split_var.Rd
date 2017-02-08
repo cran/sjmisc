@@ -4,16 +4,22 @@
 \alias{split_var}
 \title{Split numeric variables into smaller groups}
 \usage{
-split_var(x, groupcount, as.num = FALSE, val.labels = NULL,
+split_var(x, ..., groupcount, as.num = FALSE, val.labels = NULL,
   var.label = NULL, inclusive = FALSE, suffix = "_g")
 }
 \arguments{
-\item{x}{A variable, data frame or list-object.}
+\item{x}{A vector or data frame.}
+
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{groupcount}{The new number of groups that \code{x} should be split into.}
 
-\item{as.num}{Logical; if \code{TRUE}, the recoded variable will
-be returned as numeric vector. If \code{FALSE}, a factor is returned.}
+\item{as.num}{Logical, if \code{TRUE}, return value will be numeric, not a factor.}
 
 \item{val.labels}{Optional character vector, to set value label attributes
 of recoded variable (see \code{\link{set_labels}}).
@@ -37,12 +43,17 @@ frame, this argument will be ignored. The default value to suffix
 column names in a data frame depends on the function call:
 \itemize{
   \item recoded variables (\code{rec()}) will be suffixed with \code{"_r"}
+  \item recoded variables (\code{recode_to()}) will be suffixed with \code{"_r0"}
   \item dichotomized variables (\code{dicho()}) will be suffixed with \code{"_d"}
   \item grouped variables (\code{split_var()}) will be suffixed with \code{"_g"}
+  \item grouped variables (\code{group_var()}) will be suffixed with \code{"_gr"}
+  \item standardized variables (\code{std()}) will be suffixed with \code{"_z"}
+  \item centered variables (\code{center()}) will be suffixed with \code{"_c"}
 }}
 }
 \value{
-A grouped variable with equal sized groups.
+A grouped variable with equal sized groups. If \code{x} is a data
+        frame, only the grouped variables will be returned.
 }
 \description{
 Recode numeric variables into equal sized groups, i.e. a
@@ -71,23 +82,25 @@ data(efc)
 table(efc$neg_c_7)
 
 # split into 3 groups
-table(split_var(efc$neg_c_7, 3))
+table(split_var(efc$neg_c_7, groupcount = 3))
 
+# split multiple variables into 3 groups
+split_var(efc, neg_c_7, pos_v_4, e17age, groupcount = 3)
+frq(split_var(efc, neg_c_7, pos_v_4, e17age, groupcount = 3))
 
 # original
 table(efc$e42dep)
 
 # two groups, non-inclusive cut-point
 # vector split leads to unequal group sizes
-table(split_var(efc$e42dep, 2))
+table(split_var(efc$e42dep, groupcount = 2))
 
 # two groups, inclusive cut-point
 # group sizes are equal
-table(split_var(efc$e42dep, 2, inclusive = TRUE))
+table(split_var(efc$e42dep, groupcount = 2, inclusive = TRUE))
 
 }
 \seealso{
 \code{\link{group_var}} to group variables into equal ranged groups,
          or \code{\link{rec}} to recode variables.
 }
-

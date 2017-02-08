@@ -4,11 +4,18 @@
 \alias{dicho}
 \title{Dichotomize variables}
 \usage{
-dicho(x, dich.by = "median", as.num = FALSE, var.label = NULL,
+dicho(x, ..., dich.by = "median", as.num = FALSE, var.label = NULL,
   val.labels = NULL, suffix = "_d")
 }
 \arguments{
-\item{x}{A variable, data frame or list-object.}
+\item{x}{A vector or data frame.}
+
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{dich.by}{Indicates the split criterion where a variable is dichotomized.
 Must be one of the following values (may be abbreviated):
@@ -35,22 +42,24 @@ frame, this argument will be ignored. The default value to suffix
 column names in a data frame depends on the function call:
 \itemize{
   \item recoded variables (\code{rec()}) will be suffixed with \code{"_r"}
+  \item recoded variables (\code{recode_to()}) will be suffixed with \code{"_r0"}
   \item dichotomized variables (\code{dicho()}) will be suffixed with \code{"_d"}
   \item grouped variables (\code{split_var()}) will be suffixed with \code{"_g"}
+  \item grouped variables (\code{group_var()}) will be suffixed with \code{"_gr"}
+  \item standardized variables (\code{std()}) will be suffixed with \code{"_z"}
+  \item centered variables (\code{center()}) will be suffixed with \code{"_c"}
 }}
 }
 \value{
-A dichotomized factor (or numeric, if \code{as.num = TRUE}) variable (0/1-coded),
-          respectively a data frame or list of dichotomized factor (or numeric) variables.
+\code{x}, dichotomized. If \code{x} is a data frame, only
+        the dichotomized variables will be returned.
 }
 \description{
 Dichotomizes variables into dummy variables (0/1). Dichotomization is
                either done by median, mean or a specific value (see \code{dich.by}).
-               Either single vectors, a complete data frame or a list of
-               variables can be dichotomized.
 }
 \note{
-Variable label attributes are preserved (unless changes via
+Variable label attributes are preserved (unless changed via
       \code{var.label}-argument).
 }
 \examples{
@@ -59,9 +68,9 @@ summary(efc$c12hour)
 # split at median
 table(dicho(efc$c12hour))
 # split at mean
-table(dicho(efc$c12hour, "mean"))
+table(dicho(efc$c12hour, dich.by = "mean"))
 # split between value lowest to 30, and above 30
-table(dicho(efc$c12hour, 30))
+table(dicho(efc$c12hour, dich.by = 30))
 
 # sample data frame, values from 1-4
 head(efc[, 6:10])
@@ -73,13 +82,11 @@ efc \%>\%
   dicho(dich.by = 2) \%>\%
   head()
 
-# dichtomize several variables in a list
-dummy <- list(efc$c12hour, efc$e17age, efc$c160age)
-dicho(dummy)
+# dichtomize several variables in a data frame
+dicho(efc, c12hour, e17age, c160age)
 
 # dichotomize and set labels
-frq(dicho(efc$e42dep, var.label = "Dependency (dichotomized)",
+frq(dicho(efc, e42dep, var.label = "Dependency (dichotomized)",
           val.labels = c("lower", "higher")))
 
 }
-

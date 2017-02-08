@@ -7,20 +7,22 @@
 to_value(x, ..., start.at = NULL, keep.labels = TRUE)
 }
 \arguments{
-\item{x}{\code{\link{factor}} or a data frame with factors. May also be
-a character vector.}
+\item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if either
-\code{x} is a data frame and no vector, or if only selected variables
-from \code{x} should be used in the function. See 'Examples'.}
+\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
+a data frame (and no vector) and only selected variables
+from \code{x} should be processed. You may also use functions like
+\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+The latter must be stated as formula (i.e. beginning with \code{~}).
+See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
-\item{start.at}{starting index, i.e. the lowest numeric value of the variable's
+\item{start.at}{Starting index, i.e. the lowest numeric value of the variable's
 value range. By default, this argument is \code{NULL}, hence the lowest
 value of the returned numeric variable corresponds to the lowest factor
-level (if factor is \code{\link{numeric}}) or to \code{1} (if factor levels
+level (if factor levels are numeric) or to \code{1} (if factor levels
 are not numeric).}
 
-\item{keep.labels}{logical, if \code{TRUE}, former factor levels will be added as
+\item{keep.labels}{Logical, if \code{TRUE}, former factor levels will be added as
 value labels. For numeric factor levels, values labels will be used,
 if present. See 'Examples' and \code{\link{set_labels}} for more details.}
 }
@@ -62,14 +64,14 @@ table(to_value(dummy))
 
 # for numeric factor levels, value labels will be used, if present
 dummy1 <- factor(c("3", "4", "6"))
-set_labels(dummy1) <- c("first", "2nd", "3rd")
+dummy1 <- set_labels(dummy1, labels = c("first", "2nd", "3rd"))
 dummy1
 to_value(dummy1)
 
 # for non-numeric factor levels, these will be used.
 # value labels will be ignored
 dummy2 <- factor(c("D", "F", "H"))
-set_labels(dummy2) <- c("first", "2nd", "3rd")
+dummy2 <- set_labels(dummy2, labels = c("first", "2nd", "3rd"))
 dummy2
 to_value(dummy2)
 
@@ -85,9 +87,3 @@ efc$e17age <- as.factor(efc$e17age)
 to_value(efc, e16sex, e17age)
 
 }
-\seealso{
-\code{\link{to_label}} to convert a labelled vector into a factor with labelled
-           factor levels and \code{\link{to_factor}} to convert a numeric variable
-           into a factor (and preserve labels)
-}
-
