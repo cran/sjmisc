@@ -108,7 +108,7 @@ x
 x <- c(1, 1, 1, 2, 2, -2, 3, 3, 3, 3, 3, 9)
 x <- set_labels(x, labels = c("Refused", "One", "Two", "Three", "Missing"))
 x
-set_na(x, value = c(-2, 9))
+set_na(x, na = c(-2, 9))
 
 
 library(haven)
@@ -143,7 +143,7 @@ get_labels(x, include.values = "p", include.non.labelled = TRUE)
 x <- c(1, 2, 3, 4)
 # set 2 and 3 as missing, which will automatically set as
 # tagged NA by 'set_na()'
-x <- set_na(x, value = c(2, 3))
+x <- set_na(x, na = c(2, 3))
 x
 # set label via named vector just for tagged NA(3)
 set_labels(x, labels = c(`New Value` = tagged_na("3")))
@@ -165,7 +165,7 @@ get_labels(dummies)
 
 }
 \seealso{
-See package vignettes or \href{http://www.strengejacke.de/sjPlot/}{online documentation}
+See vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}
            for more details; \code{\link{set_label}} to manually set variable labels or
            \code{\link{get_label}} to get variable labels; \code{\link{add_labels}} to
            add additional value labels without replacing the existing ones.

@@ -50,13 +50,15 @@ copy_labels <- function(df_new, df_origin = NULL) {
       # check for valid colnames, i.e. if all column
       # names really match the original column names.
       if (sum(cn %in% colnames(df_origin) == F) > 0) {
-        # if not, return only matching colnames
+        # if not, return only matching colnames, because
+        # we only copy attributes from variables that also
+        # exist in the new data frame (of course)
         cn <- cn[cn %in% colnames(df_origin)]
       }
 
       # get var-labels of original data frame, and select only those
       # labels from variables that appear in the new (subsetted) data frame
-      df_new <- set_label(df_new, lab = get_label(df_origin[, cn]))
+      df_new <- set_label(df_new, label = get_label(df_origin[, cn]))
 
       # same for value labels
       df_new <- suppressMessages(set_labels(

@@ -1,3 +1,20 @@
+Version 2.3.1
+------------------------------------------------------------------------------
+General:
+* Re-exports `magrittr::%>%` (Bob Rudis said more packages should do so).
+
+New functions:
+* `replace_columns()` to replace variables in one data frame with variables from other data frames.
+
+Changes to functions:
+* `descr()` gets a `max.length`-argument to shorten variable labels in the output to a specific number of chars.
+* `descr()` now also reports the percentage of missing values.
+* `set_na()` no longer gives a warning when trying to replace values with `NA` for vectors that completely contained `NA`s.
+
+Bug fixes:
+* `descr()` now also works on single vectors as data argument.
+* Fixed bugs with `write_*()`-functions.
+
 Version 2.3.0
 ------------------------------------------------------------------------------
 General:

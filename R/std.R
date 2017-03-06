@@ -18,7 +18,6 @@
 #'         data frame (see 'Examples').
 #'
 #' @examples
-#' library(dplyr)
 #' data(efc)
 #' std(efc$c160age) %>% head()
 #' std(efc, e17age, c160age) %>% head()
@@ -31,6 +30,7 @@
 #' std(efc, e17age) # returns a tibble
 #'
 #' # works with mutate()
+#' library(dplyr)
 #' efc %>%
 #'   select(e17age, neg_c_7) %>%
 #'   mutate(age_std = std(e17age), burden = center(neg_c_7)) %>%
@@ -107,5 +107,5 @@ std_helper <- function(x, include.fac, standardize) {
   # and fill in values in original vector
   x[!is.na(x)] <- tmp
   # add back label
-  set_label(x, lab)
+  set_label(x, label = lab)
 }

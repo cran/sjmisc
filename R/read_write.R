@@ -4,12 +4,7 @@
 #' @description Import data from SPSS, SAS or Stata, including NA's, value and variable
 #'   labels.
 #'
-#' @seealso \itemize{
-#'  \item \href{http://www.strengejacke.de/sjPlot/datainit/}{sjPlot manual: data initialization}
-#'  \item \href{http://www.strengejacke.de/sjPlot/labelleddata/}{sjPlot-manual: working with labelled data}
-#'  \item \href{http://www.strengejacke.de/sjPlot/view_spss/}{sjPlot manual: inspecting (SPSS imported) data frames}
-#'  \item \code{\link{write_spss}}
-#'  }
+#' @seealso Vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}.
 #'
 #' @param path File path to the data file.
 #' @param atomic.to.fac Logical, if \code{TRUE}, categorical variables imported
@@ -111,15 +106,15 @@ read_spss <- function(path, atomic.to.fac = FALSE, tag.na = FALSE) {
           max.range.end <- max(na.range[!is.infinite(na.range)], na.rm = T)
           # we start with range up to highest value
           if (any(na.range == Inf) && min.range.start <= max(x, na.rm = TRUE)) {
-            x <- set_na(x, value = sort(stats::na.omit(unique(x[x >= min.range.start]))), as.tag = TRUE)
+            x <- set_na(x, na = sort(stats::na.omit(unique(x[x >= min.range.start]))), as.tag = TRUE)
           }
           # we start with range up to highest value
           if (any(na.range == -Inf) && max.range.end >= min(x, na.rm = TRUE)) {
-            x <- set_na(x, value = sort(stats::na.omit(unique(x[x <= max.range.end]))), as.tag = TRUE)
+            x <- set_na(x, na = sort(stats::na.omit(unique(x[x <= max.range.end]))), as.tag = TRUE)
           }
           # here we have no infinite value range
           if (!any(is.infinite(na.range))) {
-            x <- set_na(x, value = sort(stats::na.omit(unique(c(
+            x <- set_na(x, na = sort(stats::na.omit(unique(c(
               na.range[!is.infinite(na.range)], x[x >= min.range.start & x <= max.range.end]
             )))), as.tag = TRUE)
           }
@@ -191,6 +186,18 @@ atomic_to_fac <- function(data.spss, attr.string) {
 read_sas <- function(path, path.cat = NULL, atomic.to.fac = FALSE, enc = NULL) {
   # read data file
   data <- haven::read_sas(data_file = path, catalog_file = path.cat, encoding = enc)
+
+  # find all-NA values
+  len <- nrow(data)
+  all_missings <- names(which(unlist(lapply(data, function(x) sum(is.na(x)) == len)) == TRUE))
+
+  # do we have any "all-missing-variables"?
+  if (!sjmisc::is_empty(all_missings)) {
+    message(sprintf("Following %i variables have only missing values:", length(all_missings)))
+    cat(paste(all_missings, collapse = ", "))
+    cat("\n")
+  }
+
   # convert to sjPlot
   data <- unlabel(data)
   # convert atomic values to factors
@@ -205,6 +212,18 @@ read_sas <- function(path, path.cat = NULL, atomic.to.fac = FALSE, enc = NULL) {
 read_stata <- function(path, atomic.to.fac = FALSE, enc = NULL) {
   # read data file
   data <- haven::read_dta(file = path, encoding = enc)
+
+  # find all-NA values
+  len <- nrow(data)
+  all_missings <- names(which(unlist(lapply(data, function(x) sum(is.na(x)) == len)) == TRUE))
+
+  # do we have any "all-missing-variables"?
+  if (!sjmisc::is_empty(all_missings)) {
+    message(sprintf("Following %i variables have only missing values:", length(all_missings)))
+    cat(paste(all_missings, collapse = ", "))
+    cat("\n")
+  }
+
   # convert to sjPlot
   data <- unlabel(data)
   # convert atomic values to factors
@@ -220,12 +239,6 @@ read_stata <- function(path, atomic.to.fac = FALSE, enc = NULL) {
 #' @description These functions write the content of a data frame to an SPSS, SAS or
 #'                Stata-file.
 #'
-#' @seealso \itemize{
-#'            \item \href{http://www.strengejacke.de/sjPlot/datainit/}{sjPlot manual: data initialization}
-#'            \item \href{http://www.strengejacke.de/sjPlot/view_spss/}{sjPlot manual: inspecting (SPSS imported) data frames}
-#'            \item \code{\link{read_spss}}
-#'            }
-#'
 #' @note You don't need to take care whether variables have been imported with
 #'         the \code{read_*} function from this package or from \pkg{haven}
 #'         or even the \pkg{foreign} package, or if you have imported data and
@@ -234,38 +247,34 @@ read_stata <- function(path, atomic.to.fac = FALSE, enc = NULL) {
 #'
 #' @param x A data frame that should be saved as file.
 #' @param path File path of the output file.
-#' @param use.tagged.na Logical, if \code{TRUE}, \code{\link[haven]{tagged_na}}
-#'          values are converted to their values, i.e. values of tagged NA's are
-#'          converted to factor levels. If \code{FALSE} (default), tagged NA's
-#'          are converted to regular NA's.
-#' @param enc.to.utf8 Logical, if \code{TRUE}, character encoding of variable and
-#'          value labels will be converted to UTF-8.
 #' @param version File version to use. Supports versions 8-14.
 #'
+#' @inheritParams to_label
+#'
 #' @export
-write_spss <- function(x, path, use.tagged.na = FALSE, enc.to.utf8 = FALSE) {
-  write_data(x = x, path = path, type = "spss", use.tagged.na = use.tagged.na, enc.to.utf8 = enc.to.utf8, version = 14)
+write_spss <- function(x, path, drop.na = FALSE) {
+  write_data(x = x, path = path, type = "spss", version = 14, drop.na = drop.na)
 }
 
 
 #' @rdname write_spss
 #' @export
-write_stata <- function(x, path, use.tagged.na = FALSE, enc.to.utf8 = FALSE, version = 14) {
-  write_data(x = x, path = path, type = "stata", use.tagged.na = use.tagged.na, enc.to.utf8 = enc.to.utf8, version = version)
+write_stata <- function(x, path, drop.na = FALSE, version = 14) {
+  write_data(x = x, path = path, type = "stata", version = version, drop.na = drop.na)
 }
 
 
 #' @rdname write_spss
 #' @export
-write_sas <- function(x, path, use.tagged.na = FALSE, enc.to.utf8 = FALSE) {
-  write_data(x = x, path = path, type = "sas", use.tagged.na = use.tagged.na, enc.to.utf8 = enc.to.utf8, version = 14)
+write_sas <- function(x, path, drop.na = FALSE) {
+  write_data(x = x, path = path, type = "sas", version = 14, drop.na = drop.na)
 }
 
 
 #' @importFrom haven write_sav write_dta write_sas
-write_data <- function(x, path, type, use.tagged.na, enc.to.utf8, version) {
-  # convert to labelled class
-  x <- as_labelled(x, add.labels = F, add.class = F)
+write_data <- function(x, path, type, version, drop.na) {
+  # convert data to labelled
+  x <- to_label(x, add.non.labelled = T, drop.na = drop.na)
 
   # check for correct column names
   for (i in seq_len(ncol(x))) {
