@@ -18,10 +18,12 @@
 #' @inheritParams group_var
 #' @inheritParams rec
 #'
-#' @return A grouped variable with equal sized groups. If \code{x} is a data
-#'         frame, only the grouped variables will be returned.
+#' @return A grouped variable with equal sized groups. If \code{x} is a data frame,
+#'         for \code{append = TRUE}, \code{x} including the grouped variables
+#'         as new columns is returned; if \code{append = FALSE}, only
+#'         the grouped variables will be returned.
 #'
-#' @details \code{split_var} splits a variable into equal sized groups, where the
+#' @details \code{split_var()} splits a variable into equal sized groups, where the
 #'            amount of groups depends on the \code{groupcount}-argument. Thus,
 #'            this functions \code{\link{cut}s} a variable into groups at the
 #'            specified \code{\link[stats]{quantile}s}.
@@ -30,7 +32,7 @@
 #'            groups, where groups have the same value range
 #'            (e.g., from 1-5, 6-10, 11-15 etc.).
 #'
-#' @note In case a vector has only few different unique values, splitting into
+#' @note In case a vector has only few number of unique values, splitting into
 #'         equal sized groups may fail. In this case, use the \code{inclusive}-argument
 #'         to shift a value at the cut point into the lower, preceeding group to
 #'         get equal sized groups. See 'Examples'.
@@ -60,12 +62,15 @@
 #'
 #' @importFrom stats quantile
 #' @export
-split_var <- function(x, ..., groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE, suffix = "_g") {
+split_var <- function(x, ..., groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE, append = FALSE, suffix = "_g") {
   # evaluate arguments, generate data
   .dots <- match.call(expand.dots = FALSE)$`...`
   .dat <- get_dot_data(x, .dots)
 
   if (is.data.frame(x)) {
+
+    # remember original data, if user wants to bind columns
+    orix <- tibble::as_tibble(x)
 
     # iterate variables of data frame
     for (i in colnames(.dat)) {
@@ -86,6 +91,9 @@ split_var <- function(x, ..., groupcount, as.num = FALSE, val.labels = NULL, var
     if (!is.null(suffix) && !sjmisc::is_empty(suffix)) {
       colnames(x) <- sprintf("%s%s", colnames(x), suffix)
     }
+
+    # combine data
+    if (append) x <- dplyr::bind_cols(orix, x)
   } else {
     x <- split_var_helper(
       x = .dat,
@@ -128,6 +136,7 @@ split_var_helper <- function(x, groupcount, as.num, val.labels, var.label, inclu
   # set back variable and value labels
   retval <- suppressWarnings(set_label(retval, label = var_lab))
   retval <- suppressWarnings(set_labels(retval, labels = val_lab))
+
   # return value
-  return(retval)
+  retval
 }

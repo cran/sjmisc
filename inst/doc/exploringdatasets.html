@@ -4,7 +4,7 @@
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 
@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2017-03-04" />
+<meta name="date" content="2017-04-04" />
 
 <title>Exploring Data Sets</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Exploring Data Sets</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2017-03-04</em></h4>
+<h4 class="date"><em>2017-04-04</em></h4>
 
 
 
@@ -133,11 +133,10 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>Next, we need the negatice impact of care (_neg_c_7) and want to create three groups: low, middle and high negative impact. We can easily recode and label vectors with <code>rec()</code>. This function does not only recode vectors, it also allows direct labelling of categories inside the recode-syntax (this is optional, you can also use the <code>val.labels</code>-argument). We now recode neg_c_7 into a new variable <em>burden</em>. The cut-points are a bit arbitrary, for the sake of demonstration.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc$burden &lt;-<span class="st"> </span><span class="kw">rec</span>(
   efc$neg_c_7,
-  <span class="dt">recodes =</span> <span class="kw">c</span>(<span class="st">&quot;min:9=1 [low]; 10:12=2 [moderate]; 13:max=3 [high]; else=NA&quot;</span>),
+  <span class="dt">rec =</span> <span class="kw">c</span>(<span class="st">&quot;min:9=1 [low]; 10:12=2 [moderate]; 13:max=3 [high]; else=NA&quot;</span>),
   <span class="dt">var.label =</span> <span class="st">&quot;Subjective burden&quot;</span>,
   <span class="dt">as.num =</span> <span class="ot">FALSE</span> <span class="co"># we want a factor</span>
 )
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
 <span class="co"># print frequencies</span>
 <span class="kw">frq</span>(efc$burden)
 <span class="co">#&gt; # Subjective burden</span>

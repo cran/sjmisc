@@ -10,23 +10,23 @@ to_character(x, ..., add.non.labelled = FALSE, prefix = FALSE,
 \arguments{
 \item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
-a data frame (and no vector) and only selected variables
-from \code{x} should be processed. You may also use functions like
-\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+\item{...}{Optional, unquoted names of variables that should be selected for
+further processing. Required, if \code{x} is a data frame (and no
+vector) and only selected variables from \code{x} should be processed.
+You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
 The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
-\item{add.non.labelled}{logical, if \code{TRUE}, values without associated
+\item{add.non.labelled}{Logical, if \code{TRUE}, values without associated
 value label will also be converted to labels (as is). See 'Examples'.}
 
 \item{prefix}{Logical, if \code{TRUE}, the value labels used as factor levels
 or character values will be prefixed with their associated values. See 'Examples'.}
 
 \item{var.label}{Optional string, to set variable label attribute for the
-returned variable (see \code{\link{set_label}}). If \code{NULL}
-(default), variable label attribute of \code{x} will be used (if present).
-If empty, variable label attributes will be removed.}
+returned variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
+If \code{NULL} (default), variable label attribute of \code{x} will
+be used (if present). If empty, variable label attributes will be removed.}
 
 \item{drop.na}{Logical, if \code{TRUE}, tagged \code{NA} values with value labels
 will be converted to regular NA's. Else, tagged \code{NA} values will be replaced

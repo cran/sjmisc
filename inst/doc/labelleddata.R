@@ -42,8 +42,8 @@ data(efc)
 efc$c172code <- to_factor(efc$c172code)
 fit <- lm(barthtot ~ c160age + c12hour + c172code + c161sex, data = efc)
 
-## ----eval=FALSE----------------------------------------------------------
-#  sjt.lm(fit, group.pred = TRUE)
+## ------------------------------------------------------------------------
+sjt.lm(fit, group.pred = TRUE)
 
 ## ------------------------------------------------------------------------
 efc.sub <- subset(efc, subset = e16sex == 1, select = c(4:8))

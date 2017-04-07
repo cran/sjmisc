@@ -155,7 +155,7 @@ testit(dummy)
 x <- sample(1:4, 10, replace = TRUE)
 
 # return new vector
-x <- set_label(x, lab = "Dummy-variable")
+x <- set_label(x, label = "Dummy-variable")
 str(x)
 
 # label existing vector
@@ -168,9 +168,9 @@ x <- data.frame(
   b = sample(1:4, 10, replace = TRUE),
   c = sample(1:4, 10, replace = TRUE)
 )
-x <- set_label(x, lab = c("Variable A",
-                          "Variable B",
-                          "Variable C"))
+x <- set_label(x, label = c("Variable A",
+                            "Variable B",
+                            "Variable C"))
 
 str(x)
 
@@ -197,7 +197,7 @@ x <- sample(1:8, 100, replace = TRUE)
 table(x)
 
 # set value 1 and 8 as tagged missings
-x <- set_na(x, value = c(1, 8), as.tag = TRUE)
+x <- set_na(x, na = c(1, 8), as.tag = TRUE)
 x
 
 # show value distribution, including missings
@@ -210,7 +210,7 @@ x <- factor(c("a", "b", "c"))
 x
 
 # set NA into existing vector
-x <- set_na(x, value = "b", as.tag = TRUE)
+x <- set_na(x, na = "b", as.tag = TRUE)
 x
 
 ## ------------------------------------------------------------------------
@@ -230,10 +230,10 @@ get_na(replace_na(efc$c84cop3, value = 2, na.label = "restored NA", tagged.na = 
 ## ------------------------------------------------------------------------
 str(efc$c82cop1)
 
-efc$c82cop1 <- set_na(efc$c82cop1, value = c(2, 3), as.tag = TRUE)
+efc$c82cop1 <- set_na(efc$c82cop1, na = c(2, 3), as.tag = TRUE)
 get_na(efc$c82cop1, as.tag = TRUE)
 
-efc$c82cop1 <- replace_labels(efc$c82cop1, value = c("new NA label" = tagged_na("2")))
+efc$c82cop1 <- replace_labels(efc$c82cop1, labels = c("new NA label" = tagged_na("2")))
 
 get_na(efc$c82cop1, as.tag = TRUE)
 
@@ -241,7 +241,7 @@ get_na(efc$c82cop1, as.tag = TRUE)
 head(to_label(efc$c87cop6))
 
 ## ------------------------------------------------------------------------
-efc$c83cop2 <- set_na(efc$c83cop2, value = 3, as.tag = TRUE)
+efc$c83cop2 <- set_na(efc$c83cop2, na = 3, as.tag = TRUE)
 
 # "Often" is now a tagged NA
 get_na(efc$c83cop2, as.tag = T)

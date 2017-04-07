@@ -9,10 +9,10 @@ set_na(x, ..., na, drop.levels = TRUE, as.tag = FALSE, value)
 \arguments{
 \item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
-a data frame (and no vector) and only selected variables
-from \code{x} should be processed. You may also use functions like
-\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+\item{...}{Optional, unquoted names of variables that should be selected for
+further processing. Required, if \code{x} is a data frame (and no
+vector) and only selected variables from \code{x} should be processed.
+You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
 The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
@@ -43,18 +43,18 @@ This function replaces specific values of variables with \code{NA}.
 }
 \details{
 \code{set_na()} converts all values defined in \code{na} with
-           a related \code{NA} or tagged NA values (see \code{\link[haven]{tagged_na}}).
+           a related \code{NA} or tagged NA value (see \code{\link[haven]{tagged_na}}).
            Tagged \code{NA}s work exactly like regular R missing values
            except that they store one additional byte of information: a tag,
            which is usually a letter ("a" to "z") or character number ("0" to "9").
            \cr \cr
-           Furthermore, see 'Details' in \code{\link{get_na}}.
+           Furthermore, see also 'Details' in \code{\link{get_na}}.
 }
 \note{
 Labels from values that are replaced with NA and no longer used will be
         removed from \code{x}, however, other value and variable label
-        attributes (see, for instance, \code{\link{get_labels}} or
-        \code{\link{set_labels}}) are preserved.
+        attributes are preserved. For more details on labelled data,
+        see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}.
 }
 \examples{
 # create random variable

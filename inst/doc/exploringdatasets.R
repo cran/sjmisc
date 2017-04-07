@@ -22,7 +22,7 @@ flat_table(efc, e42dep, c161sex, margin = "col")
 ## ------------------------------------------------------------------------
 efc$burden <- rec(
   efc$neg_c_7,
-  recodes = c("min:9=1 [low]; 10:12=2 [moderate]; 13:max=3 [high]; else=NA"),
+  rec = c("min:9=1 [low]; 10:12=2 [moderate]; 13:max=3 [high]; else=NA"),
   var.label = "Subjective burden",
   as.num = FALSE # we want a factor
 )

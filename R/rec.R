@@ -1,8 +1,7 @@
 #' @title Recode variables
 #' @name rec
 #'
-#' @description Recodes the categories / values of a variable \code{x} into new
-#'                category values.
+#' @description Recodes values of variables
 #'
 #' @seealso \code{\link{set_na}} for setting \code{NA} values, \code{\link{replace_na}}
 #'            to replace \code{NA}'s with specific value, \code{\link{recode_to}}
@@ -14,14 +13,17 @@
 #'          function to create recode strings for grouping variables.
 #' @param as.num Logical, if \code{TRUE}, return value will be numeric, not a factor.
 #' @param var.label Optional string, to set variable label attribute for the
-#'          returned variable (see \code{\link{set_label}}). If \code{NULL}
-#'          (default), variable label attribute of \code{x} will be used (if present).
-#'          If empty, variable label attributes will be removed.
+#'          returned variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
+#'          If \code{NULL} (default), variable label attribute of \code{x} will
+#'          be used (if present). If empty, variable label attributes will be removed.
 #' @param val.labels Optional character vector, to set value label attributes
-#'          of recoded variable (see \code{\link{set_labels}}).
+#'          of recoded variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
 #'          If \code{NULL} (default), no value labels will be set. Value labels
-#'          can also be directly defined in the \code{recodes}-syntax, see
+#'          can also be directly defined in the \code{rec}-syntax, see
 #'          'Details'.
+#' @param append Logical, if \code{TRUE} and \code{x} is a data frame,
+#'          \code{x} including the new variables as additional columns is returned;
+#'          if \code{FALSE} (the default), only the new variables are returned.
 #' @param suffix String value, will be appended to variable (column) names of
 #'           \code{x}, if \code{x} is a data frame. If \code{x} is not a data
 #'           frame, this argument will be ignored. The default value to suffix
@@ -39,7 +41,9 @@
 #'
 #' @inheritParams to_factor
 #'
-#' @return \code{x} with recoded categories. If \code{x} is a data frame, only
+#' @return \code{x} with recoded categories. If \code{x} is a data frame,
+#'         for \code{append = TRUE}, \code{x} including the recoded variables
+#'         as new columns is returned; if \code{append = FALSE}, only
 #'         the recoded variables will be returned.
 #'
 #' @details  The \code{rec} string has following syntax:
@@ -61,7 +65,7 @@
 #'         \item Non-matching values will be set to \code{NA}, unless captured by the \code{"else"}-token.
 #'         \item Tagged NA values (see \code{\link[haven]{tagged_na}}) and their value labels will be preserved when copying NA values to the recoded vector with \code{"else=copy"}.
 #'         \item Variable label attributes (see, for instance, \code{\link{get_label}}) are preserved (unless changed via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
-#'         \item If \code{x} is a data frame or list-object, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
+#'         \item If \code{x} is a data frame, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
 #'       }
 #'
 #' @examples
@@ -145,11 +149,11 @@
 #'
 #'
 #' @export
-rec <- function(x, ..., rec, as.num = TRUE, var.label = NULL, val.labels = NULL, suffix = "_r", recodes) {
+rec <- function(x, ..., rec, as.num = TRUE, var.label = NULL, val.labels = NULL, append = FALSE, suffix = "_r", recodes) {
 
   # check deprecated arguments
   if (!missing(recodes)) {
-    # message("Argument `recodes` is deprecated. Please use `rec` instead.")
+    message("Argument `recodes` is deprecated. Please use `rec` instead.")
     rec <- recodes
   }
 
@@ -158,6 +162,9 @@ rec <- function(x, ..., rec, as.num = TRUE, var.label = NULL, val.labels = NULL,
   .dat <- get_dot_data(x, .dots)
 
   if (is.data.frame(x)) {
+
+    # remember original data, if user wants to bind columns
+    orix <- tibble::as_tibble(x)
 
     # iterate variables of data frame
     for (i in colnames(.dat)) {
@@ -177,6 +184,9 @@ rec <- function(x, ..., rec, as.num = TRUE, var.label = NULL, val.labels = NULL,
     if (!is.null(suffix) && !sjmisc::is_empty(suffix)) {
       colnames(x) <- sprintf("%s%s", colnames(x), suffix)
     }
+
+    # combine data
+    if (append) x <- dplyr::bind_cols(orix, x)
   } else {
     x <- rec_helper(
       x = .dat,

@@ -5,15 +5,15 @@
 \title{Recode variables}
 \usage{
 rec(x, ..., rec, as.num = TRUE, var.label = NULL, val.labels = NULL,
-  suffix = "_r", recodes)
+  append = FALSE, suffix = "_r", recodes)
 }
 \arguments{
 \item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
-a data frame (and no vector) and only selected variables
-from \code{x} should be processed. You may also use functions like
-\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+\item{...}{Optional, unquoted names of variables that should be selected for
+further processing. Required, if \code{x} is a data frame (and no
+vector) and only selected variables from \code{x} should be processed.
+You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
 The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
@@ -24,15 +24,19 @@ function to create recode strings for grouping variables.}
 \item{as.num}{Logical, if \code{TRUE}, return value will be numeric, not a factor.}
 
 \item{var.label}{Optional string, to set variable label attribute for the
-returned variable (see \code{\link{set_label}}). If \code{NULL}
-(default), variable label attribute of \code{x} will be used (if present).
-If empty, variable label attributes will be removed.}
+returned variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
+If \code{NULL} (default), variable label attribute of \code{x} will
+be used (if present). If empty, variable label attributes will be removed.}
 
 \item{val.labels}{Optional character vector, to set value label attributes
-of recoded variable (see \code{\link{set_labels}}).
+of recoded variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
 If \code{NULL} (default), no value labels will be set. Value labels
-can also be directly defined in the \code{recodes}-syntax, see
+can also be directly defined in the \code{rec}-syntax, see
 'Details'.}
+
+\item{append}{Logical, if \code{TRUE} and \code{x} is a data frame,
+\code{x} including the new variables as additional columns is returned;
+if \code{FALSE} (the default), only the new variables are returned.}
 
 \item{suffix}{String value, will be appended to variable (column) names of
 \code{x}, if \code{x} is a data frame. If \code{x} is not a data
@@ -51,12 +55,13 @@ column names in a data frame depends on the function call:
 \item{recodes}{Deprecated. Use \code{rec} instead.}
 }
 \value{
-\code{x} with recoded categories. If \code{x} is a data frame, only
+\code{x} with recoded categories. If \code{x} is a data frame,
+        for \code{append = TRUE}, \code{x} including the recoded variables
+        as new columns is returned; if \code{append = FALSE}, only
         the recoded variables will be returned.
 }
 \description{
-Recodes the categories / values of a variable \code{x} into new
-               category values.
+Recodes values of variables
 }
 \details{
 The \code{rec} string has following syntax:
@@ -79,7 +84,7 @@ Please note following behaviours of the function:
         \item Non-matching values will be set to \code{NA}, unless captured by the \code{"else"}-token.
         \item Tagged NA values (see \code{\link[haven]{tagged_na}}) and their value labels will be preserved when copying NA values to the recoded vector with \code{"else=copy"}.
         \item Variable label attributes (see, for instance, \code{\link{get_label}}) are preserved (unless changed via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
-        \item If \code{x} is a data frame or list-object, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
+        \item If \code{x} is a data frame, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
       }
 }
 \examples{

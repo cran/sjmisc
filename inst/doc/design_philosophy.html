@@ -4,7 +4,7 @@
 
 <head>
 
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 
@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2017-03-04" />
+<meta name="date" content="2017-04-04" />
 
 <title>The Design Philosophy of Functions in sjmisc</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">The Design Philosophy of Functions in sjmisc</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2017-03-04</em></h4>
+<h4 class="date"><em>2017-04-04</em></h4>
 
 
 
@@ -94,15 +94,13 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="kw">data</span>(efc)
 
 <span class="co"># returns a vector</span>
-x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span class="dt">recodes =</span> <span class="st">&quot;1,2=1; 3,4=2&quot;</span>)
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
+x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span class="dt">rec =</span> <span class="st">&quot;1,2=1; 3,4=2&quot;</span>)
 <span class="kw">str</span>(x)
 <span class="co">#&gt;  atomic [1:908] 2 2 2 2 2 2 2 2 2 2 ...</span>
 <span class="co">#&gt;  - attr(*, &quot;label&quot;)= chr &quot;elder's dependency&quot;</span>
 
 <span class="co"># returns a data frame (a tibble, to be exactly)</span>
-<span class="kw">rec</span>(efc, e42dep, <span class="dt">recodes =</span> <span class="st">&quot;1,2=1; 3,4=2&quot;</span>)
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
+<span class="kw">rec</span>(efc, e42dep, <span class="dt">rec =</span> <span class="st">&quot;1,2=1; 3,4=2&quot;</span>)
 <span class="co">#&gt; # A tibble: 908 × 1</span>
 <span class="co">#&gt;    e42dep_r</span>
 <span class="co">#&gt;       &lt;dbl&gt;</span>
@@ -124,8 +122,7 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 <p>The selection of variables specified in the <code>...</code>-ellipses-argument is powered by dplyr’s <code>select()</code>. This means, you can use existing functions like <code>:</code> to select a range of variables, or also use dplyr’s <code>select_helpers</code>, like <code>contains()</code> or <code>one_of()</code>. However, <code>select_helpers</code> must begin with a <code>~</code>-sign.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># select all variables with &quot;cop&quot; in their names, and also</span>
 <span class="co"># the range from c161sex to c175empl</span>
-<span class="kw">rec</span>(efc, ~<span class="kw">contains</span>(<span class="st">&quot;cop&quot;</span>), c161sex:c175empl, <span class="dt">recodes =</span> <span class="st">&quot;0,1=0; else=1&quot;</span>)
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
+<span class="kw">rec</span>(efc, ~<span class="kw">contains</span>(<span class="st">&quot;cop&quot;</span>), c161sex:c175empl, <span class="dt">rec =</span> <span class="st">&quot;0,1=0; else=1&quot;</span>)
 <span class="co">#&gt; # A tibble: 908 × 12</span>
 <span class="co">#&gt;    c161sex_r c172code_r c175empl_r c82cop1_r c83cop2_r c84cop3_r c85cop4_r</span>
 <span class="co">#&gt;        &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span>
@@ -165,7 +162,7 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 <p>There are two types of function designs:</p>
 <div id="coercingconverting-functions" class="section level3">
 <h3>coercing/converting functions</h3>
-<p>Functions like <code>to_factor()</code> or <code>add_labels()</code>, which convert variables into other types or add additional information like variable or value labels as attribute, typically <em>return the complete data frame</em> that was given as first argument. The variables specified in the <code>...</code>-ellipses argument are converted, all other variables remain unchanged.</p>
+<p>Functions like <code>to_factor()</code> or <code>add_labels()</code>, which convert variables into other types or add additional information like variable or value labels as attribute, typically <em>return the complete data frame</em> that was given as first argument <em>without any new variables</em>. The variables specified in the <code>...</code>-ellipses argument are converted (overwritten), all other variables remain unchanged.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">to_factor</span>(efc, e42dep, e16sex)
 <span class="co">#&gt; # A tibble: 908 × 26</span>
 <span class="co">#&gt;    c12hour e15relat e16sex e17age e42dep c82cop1 c83cop2 c84cop3 c85cop4</span>
@@ -188,9 +185,31 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 </div>
 <div id="transformationrecoding-functions" class="section level3">
 <h3>transformation/recoding functions</h3>
-<p>Functions like <code>rec()</code> or <code>dicho()</code>, which transform or recode variables, typically do <em>not</em> return the complete data frame that was given as first argument, but only the transformed and recoded variables specified in the <code>...</code>-ellipses argument. The reason for this is to preserve the original variable and not overwriting it with completeley new values.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">rec</span>(efc, c82cop1, c83cop2, <span class="dt">recodes =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>)
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
+<p>Functions like <code>rec()</code> or <code>dicho()</code>, which transform or recode variables, by default <em>only</em> return <em>the transformed or recoded variables</em> as data frame (excluding the original data). To return <em>the complete data frame</em> that was given as first argument, including the transformed and recoded variables specified in the <code>...</code>-ellipses argument as new columns, use argument <code>append = TRUE</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># complete data, including new columns</span>
+<span class="kw">rec</span>(efc, c82cop1, c83cop2, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>, <span class="dt">append =</span> <span class="ot">TRUE</span>)
+<span class="co">#&gt; # A tibble: 908 × 28</span>
+<span class="co">#&gt;    c12hour e15relat e16sex e17age e42dep c82cop1 c83cop2 c84cop3 c85cop4</span>
+<span class="co">#&gt;      &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span>
+<span class="co">#&gt; 1       16        2      2     83      3       3       2       2       2</span>
+<span class="co">#&gt; 2      148        2      2     88      3       3       3       3       3</span>
+<span class="co">#&gt; 3       70        1      2     82      3       2       2       1       4</span>
+<span class="co">#&gt; 4      168        1      2     67      4       4       1       3       1</span>
+<span class="co">#&gt; 5      168        2      2     84      4       3       2       1       2</span>
+<span class="co">#&gt; 6       16        2      2     85      4       2       2       3       3</span>
+<span class="co">#&gt; 7      161        1      1     74      4       4       2       4       1</span>
+<span class="co">#&gt; 8      110        4      2     87      4       3       2       2       1</span>
+<span class="co">#&gt; 9       28        2      2     79      4       3       2       3       2</span>
+<span class="co">#&gt; 10      40        2      2     83      4       3       2       1       2</span>
+<span class="co">#&gt; # ... with 898 more rows, and 19 more variables: c86cop5 &lt;dbl&gt;,</span>
+<span class="co">#&gt; #   c87cop6 &lt;dbl&gt;, c88cop7 &lt;dbl&gt;, c89cop8 &lt;dbl&gt;, c90cop9 &lt;dbl&gt;,</span>
+<span class="co">#&gt; #   c160age &lt;dbl&gt;, c161sex &lt;dbl&gt;, c172code &lt;dbl&gt;, c175empl &lt;dbl&gt;,</span>
+<span class="co">#&gt; #   barthtot &lt;dbl&gt;, neg_c_7 &lt;dbl&gt;, pos_v_4 &lt;dbl&gt;, quol_5 &lt;dbl&gt;,</span>
+<span class="co">#&gt; #   resttotn &lt;dbl&gt;, tot_sc_e &lt;dbl&gt;, n4pstu &lt;dbl&gt;, nur_pst &lt;dbl&gt;,</span>
+<span class="co">#&gt; #   c82cop1_r &lt;dbl&gt;, c83cop2_r &lt;dbl&gt;</span>
+
+<span class="co"># only new columns</span>
+<span class="kw">rec</span>(efc, c82cop1, c83cop2, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>)
 <span class="co">#&gt; # A tibble: 908 × 2</span>
 <span class="co">#&gt;    c82cop1_r c83cop2_r</span>
 <span class="co">#&gt;        &lt;dbl&gt;     &lt;dbl&gt;</span>
@@ -207,9 +226,8 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 <span class="co">#&gt; # ... with 898 more rows</span></code></pre></div>
 <p>These variables usually get a suffix, so you can bind these variables as new columns to a data frame, for instance with <code>add_columns()</code>. The function <code>add_columns()</code> is useful if you want to bind/add columns within a pipe-chain <em>to the end</em> of a data frame.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">rec</span>(c82cop1, c83cop2, <span class="dt">recodes =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">rec</span>(c82cop1, c83cop2, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>, <span class="dt">append =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>
 <span class="st">  </span><span class="kw">add_columns</span>(efc)
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
 <span class="co">#&gt; # A tibble: 908 × 28</span>
 <span class="co">#&gt;    c12hour e15relat e16sex e17age e42dep c82cop1 c83cop2 c84cop3 c85cop4</span>
 <span class="co">#&gt;      &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span>
@@ -236,8 +254,7 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 <p>The functions of <strong>sjmisc</strong> are designed to work together seamlessly with other packes from the tidyverse, like <strong>dplyr</strong>. For instance, you can use the functions from <strong>sjmisc</strong> both within a pipe-worklflow to manipulate data frames, or to create new variables with <code>mutate()</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc %&gt;%<span class="st"> </span>
 <span class="st">  </span><span class="kw">select</span>(c82cop1, c83cop2) %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">rec</span>(<span class="dt">recodes =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>)
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
+<span class="st">  </span><span class="kw">rec</span>(<span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>)
 <span class="co">#&gt; # A tibble: 908 × 2</span>
 <span class="co">#&gt;    c82cop1_r c83cop2_r</span>
 <span class="co">#&gt;        &lt;dbl&gt;     &lt;dbl&gt;</span>
@@ -256,12 +273,10 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 efc %&gt;%<span class="st"> </span>
 <span class="st">  </span><span class="kw">select</span>(c82cop1, c83cop2) %&gt;%<span class="st"> </span>
 <span class="st">  </span><span class="kw">mutate</span>(
-    <span class="dt">c82cop1_dicho =</span> <span class="kw">rec</span>(c82cop1, <span class="dt">recodes =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>),
-    <span class="dt">c83cop2_dicho =</span> <span class="kw">rec</span>(c83cop2, <span class="dt">recodes =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>)
+    <span class="dt">c82cop1_dicho =</span> <span class="kw">rec</span>(c82cop1, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>),
+    <span class="dt">c83cop2_dicho =</span> <span class="kw">rec</span>(c83cop2, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>)
   ) %&gt;%<span class="st"> </span>
 <span class="st">  </span><span class="kw">head</span>()
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
-<span class="co">#&gt; Argument `recodes` is deprecated. Please use `rec` instead.</span>
 <span class="co">#&gt;   c82cop1 c83cop2 c82cop1_dicho c83cop2_dicho</span>
 <span class="co">#&gt; 1       3       2             2             0</span>
 <span class="co">#&gt; 2       3       3             2             2</span>

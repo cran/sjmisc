@@ -4,15 +4,16 @@
 \alias{recode_to}
 \title{Recode variable categories into new values}
 \usage{
-recode_to(x, ..., lowest = 0, highest = -1, suffix = "_r0")
+recode_to(x, ..., lowest = 0, highest = -1, append = FALSE,
+  suffix = "_r0")
 }
 \arguments{
 \item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
-a data frame (and no vector) and only selected variables
-from \code{x} should be processed. You may also use functions like
-\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+\item{...}{Optional, unquoted names of variables that should be selected for
+further processing. Required, if \code{x} is a data frame (and no
+vector) and only selected variables from \code{x} should be processed.
+You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
 The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
@@ -22,6 +23,10 @@ variable starts with value 0.}
 \item{highest}{If specified and greater than \code{lowest}, all category values larger than
 \code{highest} will be set to \code{NA}. Default is \code{-1}, i.e. this argument is ignored
 and no NA's will be produced.}
+
+\item{append}{Logical, if \code{TRUE} and \code{x} is a data frame,
+\code{x} including the new variables as additional columns is returned;
+if \code{FALSE} (the default), only the new variables are returned.}
 
 \item{suffix}{String value, will be appended to variable (column) names of
 \code{x}, if \code{x} is a data frame. If \code{x} is not a data

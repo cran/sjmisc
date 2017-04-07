@@ -6,7 +6,7 @@
 \title{Recode numeric variables into equal-ranged groups}
 \usage{
 group_var(x, ..., groupsize = 5, as.num = TRUE, right.interval = FALSE,
-  groupcount = 30, suffix = "_gr")
+  groupcount = 30, append = FALSE, suffix = "_gr")
 
 group_labels(x, ..., groupsize = 5, right.interval = FALSE,
   groupcount = 30)
@@ -14,10 +14,10 @@ group_labels(x, ..., groupsize = 5, right.interval = FALSE,
 \arguments{
 \item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
-a data frame (and no vector) and only selected variables
-from \code{x} should be processed. You may also use functions like
-\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+\item{...}{Optional, unquoted names of variables that should be selected for
+further processing. Required, if \code{x} is a data frame (and no
+vector) and only selected variables from \code{x} should be processed.
+You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
 The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
@@ -36,6 +36,10 @@ bound of \code{groupsize}. See 'Details'.}
 \item{groupcount}{Sets the maximum number of groups that are defined when auto-grouping is on
 (\code{groupsize="auto"}). Default is 30. If \code{groupsize} is not set to \code{"auto"},
 this argument will be ignored.}
+
+\item{append}{Logical, if \code{TRUE} and \code{x} is a data frame,
+\code{x} including the new variables as additional columns is returned;
+if \code{FALSE} (the default), only the new variables are returned.}
 
 \item{suffix}{String value, will be appended to variable (column) names of
 \code{x}, if \code{x} is a data frame. If \code{x} is not a data

@@ -108,7 +108,7 @@ add_columns <- function(data, ..., replace = TRUE) {
   reihenfolge <- c(which(!doubles), which(doubles))
 
   # remove duplicate column names, if requested
-  if (replace && any(doubles)) tmp <- tmp[, !doubles]
+  if (replace && any(doubles)) tmp <- tmp[, !doubles, drop = FALSE]
 
   # bind all data
   x <- dplyr::bind_cols(tmp, data)
@@ -146,11 +146,11 @@ replace_columns <- function(data, ..., add.unique = TRUE) {
   tmp.doubles <- colnames(tmp) %in% colnames(data)
 
   # replace duplicate variables in "data" with duplicates from "..."
-  data[, data.doubles] <- tmp[, tmp.doubles]
+  data[, data.doubles] <- tmp[, tmp.doubles, drop = FALSE]
 
   # add remaining columns that were not duplicates
   if (add.unique)
-    x <- dplyr::bind_cols(data, tmp[, !tmp.doubles])
+    x <- dplyr::bind_cols(data, tmp[, !tmp.doubles, drop = FALSE])
   else
     x <- data
 

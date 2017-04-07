@@ -79,19 +79,6 @@ group_str <- function(strings,
   # init variable that contains "close" pairs
   pairs <- list()
 
-  # helper function that finds elements in
-  # final list of grouped elements
-  findInPairs <- function(curel) {
-    elfound <- FALSE
-    if (length(pairs) > 0) {
-      for (ll in seq_len(length(pairs))) {
-        pel <- pairs[[ll]]
-        if (any(pel == curel)) elfound <- TRUE
-      }
-    }
-    return(elfound)
-  }
-
   # create progress bar
   if (showProgressBar) pb <- utils::txtProgressBar(min = 0, max = ncol(m), style = 3)
 
@@ -101,7 +88,7 @@ group_str <- function(strings,
     if (showProgressBar) utils::setTxtProgressBar(pb, i)
 
     # check if current element is already grouped
-    if (!findInPairs(rownames(m)[i])) {
+    if (!findInPairs(rownames(m)[i], pairs)) {
       # current row element has not been grouped
       # yet, so go on...
       pairvector <- c()
@@ -133,7 +120,7 @@ group_str <- function(strings,
             # check if we already found a string value
             # within this column. if not, add string values
             # to "close" pairs of this column
-            if (!any(pairvector == token) && !findInPairs(token)) pairvector <- c(pairvector, token)
+            if (!any(pairvector == token) && !findInPairs(token, pairs)) pairvector <- c(pairvector, token)
           }
         }
       }
@@ -167,5 +154,20 @@ group_str <- function(strings,
   # values are replaced by the group of closed values.
   # e.g. the three values "hello", "holle" and "hole"
   # will be "recoded" into on value "hello, holle, hole"
-  return(strings.new)
+  strings.new
 }
+
+
+# helper function that finds elements in
+# final list of grouped elements
+findInPairs <- function(curel, pairs) {
+  elfound <- FALSE
+  if (length(pairs) > 0) {
+    for (ll in seq_len(length(pairs))) {
+      pel <- pairs[[ll]]
+      if (any(pel == curel)) elfound <- TRUE
+    }
+  }
+  elfound
+}
+

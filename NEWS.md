@@ -1,3 +1,33 @@
+# sjmisc 2.4.0
+
+## General
+
+* Argument `value` in `set_na()` is deprecated. Please use `na` instead.
+* Argument `recodes` in `rec()` is deprecated. Please use `rec` instead.
+* Argument `lab` in `set_label()` is deprecated. Please use `label` instead.
+* Argument `value` in `add_labels()` and `replace_labels()` is deprecated. Please use `labels` instead.
+* Argument `value` in `ref_lvl()` is deprecated. Please use `lvl` instead.
+
+## New functions
+
+* `row_sums()` as wrapper of `rowSums()` to compute row sums, but works within pipe-workflow and with select-helpers for variables, and always returns a tibble..
+* `row_means()` as wrapper of `sjstats::mean_n()` to compute row means, but works within pipe-workflow and with select-helpers for variables, and always returns a tibble..
+* `%nin%` as complement to `%in%`.
+
+## Changes to functions
+
+* Functions `rec()`, `dicho()`, `center()`, `std()`, `recode_to()` and `group_var()` get an `append`-argument, to optionally return the original data including the transformed variables as new columns.
+* `var_labels()` and `var_rename()` now give a warning if specified variables to rename or relabel do not exist in the data frame. Non-matching variables are ignored.
+* If `model.term` does not exist in models, `spread_coef()` now prints the name of non-existing coefficients.
+* `find_var()` gets a `fuzzy`-argument to enable fuzzy-matching for search pattern.
+
+## Bug fixes
+
+* `remove_empty_cols()` returned an empty data frame, when input data frame had no empty columns.
+* `remove_empty_rows()` returned an empty data frame, when input data frame had no empty rows.
+* `add_columns()` and `replace_columns()` in some cases coerced data frames of class `data.frame` with only one column into a vector, which gave an error when binding columns.
+* Argument `part.dist.match` in `str_pos()` caused an error when being larger than 0.
+
 # sjmisc 2.3.1
 
 ## General
@@ -152,4 +182,4 @@
 ## Bug fixes
 * `rec()` did not recode values, when these were the first element of a multi-line string of the `recodes` argument.
 * `is_empty()` returned `NA` instead of `TRUE` for empty character vectors.
-* Fixed bug with erroneous assignment of value labels to subset data when using `copy_labels()` ([#20](https://github.com/sjPlot/sjmisc/issues/20))
+* Fixed bug with erroneous assignment of value labels to subset data when using `copy_labels()` ([#20](https://github.com/strengejacke/sjmisc/issues/20))

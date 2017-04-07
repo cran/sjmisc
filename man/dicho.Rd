@@ -5,15 +5,15 @@
 \title{Dichotomize variables}
 \usage{
 dicho(x, ..., dich.by = "median", as.num = FALSE, var.label = NULL,
-  val.labels = NULL, suffix = "_d")
+  val.labels = NULL, append = FALSE, suffix = "_d")
 }
 \arguments{
 \item{x}{A vector or data frame.}
 
-\item{...}{Optional, unquoted names of variables. Required, if \code{x} is
-a data frame (and no vector) and only selected variables
-from \code{x} should be processed. You may also use functions like
-\code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+\item{...}{Optional, unquoted names of variables that should be selected for
+further processing. Required, if \code{x} is a data frame (and no
+vector) and only selected variables from \code{x} should be processed.
+You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
 The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
@@ -28,13 +28,17 @@ Must be one of the following values (may be abbreviated):
 \item{as.num}{Logical, if \code{TRUE}, return value will be numeric, not a factor.}
 
 \item{var.label}{Optional string, to set variable label attribute for the
-returned variable (see \code{\link{set_label}}). If \code{NULL}
-(default), variable label attribute of \code{x} will be used (if present).
-If empty, variable label attributes will be removed.}
+returned variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
+If \code{NULL} (default), variable label attribute of \code{x} will
+be used (if present). If empty, variable label attributes will be removed.}
 
 \item{val.labels}{Optional character vector (of length two), to set value label
 attributes of dichotomized variable (see \code{\link{set_labels}}).
 If \code{NULL} (default), no value labels will be set.}
+
+\item{append}{Logical, if \code{TRUE} and \code{x} is a data frame,
+\code{x} including the new variables as additional columns is returned;
+if \code{FALSE} (the default), only the new variables are returned.}
 
 \item{suffix}{String value, will be appended to variable (column) names of
 \code{x}, if \code{x} is a data frame. If \code{x} is not a data
