@@ -3,12 +3,6 @@
 #'
 #' @description This function returns the value labels of labelled data.
 #'
-#' @seealso See vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}
-#'            for more details; \code{\link{set_labels}} to manually set value
-#'            labels, \code{\link{get_label}} to get variable labels and
-#'            \code{\link{get_values}} to retrieve the values associated
-#'            with value labels.
-#'
 #' @param x A data frame with variables that have value label attributes (e.g.
 #'          from an imported SPSS, SAS or STATA data set, via \code{\link{read_spss}},
 #'          \code{\link{read_sas}} or \code{\link{read_stata}}); a variable
@@ -57,19 +51,8 @@
 #'            which means that the written SPSS file contains proper labels
 #'            for each variable.
 #'
-#' @note This function works with vectors that have value and variable
-#'        label attributes (as provided, for instance, by \code{\link[haven]{labelled}}
-#'        objects). Adding label attributes is automatically done when importing data sets
-#'        with the \code{\link{read_spss}}, \code{\link{read_sas}} or \code{\link{read_stata}}
-#'        functions. Labels can also manually be added using the \code{\link{set_labels}}
-#'        and \code{\link{set_label}} functions. If vectors \emph{do not} have
-#'        label attributes, either factor-levels or the numeric values
-#'        of the vector are returned as labels.
-#'        \cr \cr
-#'        Most functions of the \CRANpkg{sjPlot} package make use of value and variable
-#'        labels to automatically label axes, legend or title labels in plots
-#'        (\code{sjp.}-functions) respectively column or row headers in table
-#'        outputs (\code{sjt.}-functions).
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @examples
 #' # import SPSS data set
@@ -149,6 +132,7 @@
 #' @export
 get_labels <- function(x, attr.only = FALSE, include.values = NULL,
                        include.non.labelled = FALSE, drop.na = TRUE, drop.unused = FALSE) {
+  .Deprecated("get_labels", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::get_labels() instead.")
   UseMethod("get_labels")
 }
 

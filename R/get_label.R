@@ -3,11 +3,6 @@
 #'
 #' @description This function returns the variable labels of labelled data.
 #'
-#' @seealso See vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}
-#'            for more details; \code{\link{set_label}} to manually set variable labels or \code{\link{get_labels}}
-#'            to get value labels; \code{\link{var_labels}} to set multiple variable
-#'            labels at once.
-
 #' @param x A data frame with variables that have label attributes (e.g.
 #'          from an imported SPSS, SAS or STATA data set, via \code{\link{read_spss}},
 #'          \code{\link{read_sas}} or \code{\link{read_stata}}); a variable
@@ -27,9 +22,8 @@
 #'
 #' @details See 'Details' in \code{\link{get_labels}}.
 #'
-#' @note \code{\link{var_labels}} is an alternative way to set variable labels,
-#'       which follows the philosophy of tidyvers API design (data as first argument,
-#'       dots as value pairs indicating variables)
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @examples
 #' # import SPSS data set
@@ -67,8 +61,10 @@
 #'
 #' @export
 get_label <- function(x, ..., def.value = NULL) {
+  .Deprecated("get_label", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::get_label() instead.")
+
   # evaluate arguments, generate data
-  x <- get_dot_data(x, match.call(expand.dots = FALSE)$`...`)
+  x <- get_dot_data(x, dplyr::quos(...))
   # auto-detect variable label attribute
   attr.string <- getVarLabelAttribute(x)
   # do we have a df?

@@ -18,7 +18,6 @@ group_labels(x, ..., groupsize = 5, right.interval = FALSE,
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{groupsize}{Numeric; group-size, i.e. the range for grouping. By default,
@@ -92,7 +91,7 @@ If \code{groupsize} is set to a specific value, the variable is recoded
            range), use the \code{\link{split_var}} function!
 }
 \note{
-Variable label attributes (see, for instance, \code{\link{set_label}}) are preserved.
+Variable label attributes (see, for instance, \code{\link[sjlabelled]{set_label}}) are preserved.
       Usually you should use the same values for \code{groupsize} and
       \code{right.interval} in \code{group_label()} as used in the
       \code{group_var} function if you want matching labels for the related
@@ -110,6 +109,7 @@ print(age.grpvar)
 
 # histogram with EUROFAMCARE sample dataset
 # variable not grouped
+library(sjlabelled)
 data(efc)
 hist(efc$e17age, main = get_label(efc$e17age))
 

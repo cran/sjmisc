@@ -34,6 +34,10 @@ This function retrieves the values associated with value labels
            which may differ from actual values in the vector (e.g. if not all
            values have a related label).
 }
+\note{
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
+}
 \examples{
 data(efc)
 str(efc$e42dep)
@@ -54,8 +58,4 @@ y <- labelled(c(2:3, 3:1, tagged_na("y"), 4:1),
               c("Agreement" = 1, "Disagreement" = 4, "Why" = tagged_na("y")))
 get_values(data.frame(x, y))
 
-}
-\seealso{
-\code{\link{get_labels}} for getting value labels and \code{\link{get_na}}
-           to get values for missing values.
 }

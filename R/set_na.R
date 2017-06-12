@@ -56,6 +56,7 @@
 #' set_na(dummy, na = c("Refused" = 5), as.tag = TRUE)
 #' # see different missing types
 #' library(haven)
+#' library(sjlabelled)
 #' print_tagged_na(set_na(dummy, na = c("Refused" = 5), as.tag = TRUE))
 #'
 #'
@@ -106,7 +107,6 @@
 #'
 #' @export
 set_na <- function(x, ..., na, drop.levels = TRUE, as.tag = FALSE, value) {
-
   # check deprecated arguments
   if (!missing(value)) {
     message("Argument `value` is deprecated. Please use `na` instead.")
@@ -117,8 +117,7 @@ set_na <- function(x, ..., na, drop.levels = TRUE, as.tag = FALSE, value) {
   if (is.null(na) || is.na(na)) return(x)
 
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -146,6 +145,7 @@ set_na <- function(x, ..., na, drop.levels = TRUE, as.tag = FALSE, value) {
 
 #' @importFrom stats na.omit
 #' @importFrom haven tagged_na na_tag
+#' @importFrom sjlabelled get_values get_labels remove_labels
 set_na_helper <- function(x, value, drop.levels, as.tag) {
   # check if values has only NA's
   if (sum(is.na(x)) == length(x)) return(x)
@@ -156,14 +156,14 @@ set_na_helper <- function(x, value, drop.levels, as.tag) {
   # check if value is a named vector
   na.names <- names(value)
   # get values for value labels
-  lab.values <- get_values(x, drop.na = F)
+  lab.values <- sjlabelled::get_values(x, drop.na = F)
 
   # no tagged NA's for date values
   if (inherits(x, "Date")) as.tag <- F
 
   # get value labels
   val.lab <-
-    get_labels(
+    sjlabelled::get_labels(
       x,
       attr.only = TRUE,
       include.values = "n",
@@ -183,7 +183,7 @@ set_na_helper <- function(x, value, drop.levels, as.tag) {
       # if we have no NA, coercing to numeric worked. Now get these
       # NA values and remove value labels from vector
       if (!anyNA(na.values)) {
-        x <- suppressWarnings(remove_labels(x, value = value))
+        x <- suppressWarnings(sjlabelled::remove_labels(x, labels = value))
         value <- na.values
       }
     }
@@ -233,7 +233,8 @@ set_na_helper <- function(x, value, drop.levels, as.tag) {
   }
 
   # remove unused value labels
-  removers <- which(get_values(x) %in% value)
+  removers <- which(sjlabelled::get_values(x) %in% value)
+
   if (!is.null(removers) && !sjmisc::is_empty(removers, first.only = T)) {
     vl <- as.numeric(names(val.lab))
     names(vl) <- unname(val.lab)
@@ -255,5 +256,5 @@ set_na_helper <- function(x, value, drop.levels, as.tag) {
     attr(x, "label") <- keep.var
   }
 
-  return(x)
+  x
 }

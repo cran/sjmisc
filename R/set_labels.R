@@ -44,15 +44,8 @@
 #'           specified in \code{...}; if \code{...} is not specified, applies
 #'           to all variables in the data frame.
 #'
-#' @details See 'Details' in \code{\link{get_labels}}.
-#'
-#' @note \itemize{
-#'         \item if \code{labels} is a named vector, \code{force.labels} and \code{force.values} will be ignored, and only values defined in \code{labels} will be labelled;
-#'         \item if \code{x} has less unique values than \code{labels}, redundant labels will be dropped, see \code{force.labels};
-#'         \item if \code{x} has more unique values than \code{labels}, only matching values will be labelled, other values remain unlabelled, see \code{force.values};
-#'         }
-#'         If you only want to change partial value labels, use \code{\link{add_labels}} instead.
-#'         Furthermore, see 'Note' in \code{\link{get_labels}}.
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @examples
 #' dummy <- sample(1:4, 40, replace = TRUE)
@@ -154,9 +147,10 @@ set_labels <- function(x, ...,
                        force.values = TRUE,
                        drop.na = TRUE) {
 
+  .Deprecated("set_labels", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::set_labels() instead.")
+
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   # special handling for data frames
   if (is.data.frame(x)) {
@@ -218,7 +212,7 @@ set_labels_helper <- function(x, labels, force.labels, force.values, drop.na, va
   # auto-detect variable label attribute
   attr.string <- getValLabelAttribute(x)
   # get labelled / tagged NAs, maybe for later use
-  current.na <- get_na(x)
+  current.na <- sjlabelled::get_na(x)
   # do we have any label attributes?
   if (is.null(attr.string)) attr.string <- "labels"
   # check for null

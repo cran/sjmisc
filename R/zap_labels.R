@@ -29,6 +29,8 @@
 #'         if \code{...} is not specified, applies to all variables in the
 #'         data frame.
 #'
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @examples
 #' # ------------------------
@@ -114,9 +116,10 @@
 #' @importFrom stats na.omit
 #' @export
 zap_labels <- function(x, ...) {
+  .Deprecated("zap_labels", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::zap_labels() instead.")
+
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -137,9 +140,9 @@ zap_labels <- function(x, ...) {
 #' @importFrom stats na.omit
 #' @export
 zap_unlabelled <- function(x, ...) {
+  .Deprecated("zap_unlabelled", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::zap_unlabelled() instead.")
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -191,9 +194,10 @@ zap_unlabelled <- function(x, ...) {
 #' @importFrom stats na.omit
 #' @export
 zap_na_tags <- function(x, ...) {
+  .Deprecated("zap_na_tags", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::zap_na_tags() instead.")
+
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -211,69 +215,8 @@ zap_na_tags <- function(x, ...) {
 
 
 
-#' @title Convert infiite or NaN values into regular NA
-#' @name zap_inf
-#'
-#' @description Replaces all infinite (\code{Inf} and \code{-Inf}) or \code{NaN}
-#'                values with regular \code{NA}.
-#'
-#' @param x A vector or a data frame.
-#'
-#' @inheritParams to_factor
-#'
-#' @return \code{x}, where all \code{Inf}, \code{-Inf} and \code{NaN} are converted to \code{NA}.
-#'
-#' @examples
-#' x <- c(1, 2, NA, 3, NaN, 4, NA, 5, Inf, -Inf, 6, 7)
-#' zap_inf(x)
-#'
-#' data(efc)
-#' # produce some NA and NaN values
-#' efc$e42dep[1] <- NaN
-#' efc$e42dep[2] <- NA
-#' efc$c12hour[1] <- NaN
-#' efc$c12hour[2] <- NA
-#' efc$e17age[2] <- NaN
-#' efc$e17age[1] <- NA
-#'
-#' # only zap NaN for c12hour
-#' zap_inf(efc$c12hour)
-#'
-#' # only zap NaN for c12hour and e17age, not for e42dep,
-#' # but return complete data framee
-#' zap_inf(efc, c12hour, e17age)
-#'
-#' # zap NaN for complete data frame
-#' zap_inf(efc)
-#'
-#' @importFrom tibble as_tibble
-#' @export
-zap_inf <- function(x, ...) {
-  # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
-
-  if (is.data.frame(x)) {
-    # iterate variables of data frame
-    for (i in colnames(.dat)) {
-      # convert NaN and Inf to missing
-      x[[i]][is.nan(x[[i]])] <- NA
-      x[[i]][is.infinite(x[[i]])] <- NA
-    }
-    # coerce to tibble
-    x <- tibble::as_tibble(x)
-  } else {
-    x[is.nan(x)] <- NA
-    x[is.infinite(x)] <- NA
-  }
-
-  x
-}
-
-
-
 zap_labels_helper <- function(x) {
-  x <- set_na(x, na = get_values(x, drop.na = T))
+  x <- set_na(x, na = sjlabelled::get_values(x, drop.na = T))
 
   # auto-detect variable label attribute
   attr.string <- getVarLabelAttribute(x)
@@ -285,10 +228,12 @@ zap_labels_helper <- function(x) {
   x
 }
 
+
+#' @importFrom sjlabelled is_labelled
 zap_unlabelled_helper <- function(x) {
-  vals <- get_values(x)
+  vals <- sjlabelled::get_values(x)
   x <- set_na(x, na = stats::na.omit(unique(x)[!unique(x) %in% vals]))
-  if (is_labelled(x)) class(x) <- NULL
+  if (sjlabelled::is_labelled(x)) class(x) <- NULL
   x
 }
 
@@ -298,5 +243,5 @@ zap_na_tags_helper <- function(x) {
   # convert all NA, including tagged NA, into regular NA
   x[is.na(x)] <- NA
   # "remove" labels from tagged NA values
-  set_labels(x, labels = get_labels(x, attr.only = T, include.values = "n", drop.na = T))
+  sjlabelled::set_labels(x, labels = sjlabelled::get_labels(x, attr.only = T, include.values = "n", drop.na = T))
 }

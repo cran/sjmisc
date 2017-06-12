@@ -50,7 +50,8 @@ These read-functions behave slightly differently from \pkg{haven}'s
   are considered as continuous and not converted to factors.
 }
 \note{
-These are wrapper functions for \CRANpkg{haven}'s \code{read_*}-functions.
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
 }
 \examples{
 \dontrun{
@@ -66,7 +67,4 @@ mydat.var <- get_label(mydat)
 # retrieve value labels
 mydat.val <- get_labels(mydat)}
 
-}
-\seealso{
-Vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}.
 }

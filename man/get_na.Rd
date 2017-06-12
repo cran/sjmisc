@@ -37,6 +37,10 @@ Other statistical software packages (like 'SPSS' or 'SAS') allow to define
            \cr \cr
            Furthermore, see 'Details' in \code{\link{get_values}}.
 }
+\note{
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
+}
 \examples{
 library(haven)
 x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
@@ -58,9 +62,4 @@ y <- labelled(c(2:3, 3:1, tagged_na("y"), 4:1),
 get_na(data.frame(x, y))
 
 
-}
-\seealso{
-\code{\link{get_labels}} to get value labels, or \code{\link{get_values}}
-           to get values associated with labels; see \code{\link{set_na}} to
-           replace specific values with \code{NA}.
 }

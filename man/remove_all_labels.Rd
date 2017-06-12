@@ -19,14 +19,13 @@ This function removes value and variable label attributes
                \code{\link{read_spss}}) or manually adding label attributes
                with \code{\link{set_labels}}.
 }
+\note{
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
+}
 \examples{
 data(efc)
 str(efc)
 str(remove_all_labels(efc))
 
-}
-\seealso{
-See vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package},
-           and \code{\link{copy_labels}} for adding label attributes
-           (subsetted) data frames.
 }

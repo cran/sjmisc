@@ -3,11 +3,6 @@
 #'
 #' @description These functions add, replace or remove value labels to or from variables.
 #'
-#' @seealso \code{\link{set_label}} to manually set variable labels or
-#'            \code{\link{get_label}} to get variable labels; \code{\link{set_labels}} to
-#'            add value labels, replacing the existing ones (and removing non-specified
-#'            value labels).
-#'
 #' @param labels \describe{
 #'          \item{For \code{add_labels()}}{A named (numeric) vector of labels
 #'          that will be added to \code{x} as label attribute.}
@@ -26,6 +21,9 @@
 #'           with removed or added to variables specified in \code{...};
 #'           if \code{...} is not specified, applies to all variables in the
 #'           data frame.
+#'
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @details \code{add_labels()} adds \code{labels} to the existing value
 #'          labels of \code{x}, however, unlike \code{\link{set_labels}}, it
@@ -99,6 +97,7 @@
 #' @importFrom tibble as_tibble
 #' @export
 add_labels <- function(x, ..., labels, value) {
+  .Deprecated("add_labels", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::add_labels() instead.")
 
   # check deprecated arguments
   if (!missing(value)) {
@@ -112,8 +111,7 @@ add_labels <- function(x, ..., labels, value) {
   if (is.null(names(labels))) stop("`labels` must be a named vector.", call. = F)
 
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -130,9 +128,10 @@ add_labels <- function(x, ..., labels, value) {
 }
 
 #' @importFrom haven is_tagged_na na_tag
+#' @importFrom sjlabelled get_na get_labels get_label
 add_labels_helper <- function(x, value) {
   # get current labels of `x`
-  current.labels <- get_labels(
+  current.labels <- sjlabelled::get_labels(
     x,
     attr.only = T,
     include.values = "n",
@@ -141,7 +140,7 @@ add_labels_helper <- function(x, value) {
   )
 
   # get current NA values
-  current.na <- get_na(x)
+  current.na <- sjlabelled::get_na(x)
 
   # if we had already labels, append new ones
   if (!is.null(current.labels)) {
@@ -197,7 +196,7 @@ add_labels_helper <- function(x, value) {
   if (!is.null(current.na)) all.labels <- c(all.labels, current.na)
 
   # set back labels and return
-  set_labels(x, labels = all.labels)
+  sjlabelled::set_labels(x, labels = all.labels)
 }
 
 

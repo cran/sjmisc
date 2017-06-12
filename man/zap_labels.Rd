@@ -23,7 +23,6 @@ with such vectors.}
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{drop.na}{Logical, whether existing value labels of tagged NA values
@@ -54,6 +53,10 @@ For (partially) labelled vectors, \code{zap_labels()} will replace
                counterpart to \code{drop_labels()} and adds value labels to
                a partially labelled vector, i.e. if not all values are
                labelled, non-labelled values get labels.
+}
+\note{
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
 }
 \examples{
 # ------------------------

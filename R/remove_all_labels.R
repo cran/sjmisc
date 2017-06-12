@@ -7,12 +7,12 @@
 #'                \code{\link{read_spss}}) or manually adding label attributes
 #'                with \code{\link{set_labels}}.
 #'
-#' @seealso See vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package},
-#'            and \code{\link{copy_labels}} for adding label attributes
-#'            (subsetted) data frames.
-#'
 #' @param x Vector or \code{data.frame} with variable and/or value label attributes
+#'
 #' @return \code{x} with removed value and variable label attributes.
+#'
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @examples
 #' data(efc)
@@ -21,6 +21,7 @@
 #'
 #' @export
 remove_all_labels <- function(x) {
+  .Deprecated("remove_all_labels", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::remove_all_labels() instead.")
   UseMethod("remove_all_labels")
 }
 

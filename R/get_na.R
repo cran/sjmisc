@@ -4,9 +4,8 @@
 #' @description This function retrieves tagged NA values and their associated
 #'                value labels from a labelled vector.
 #'
-#' @seealso \code{\link{get_labels}} to get value labels, or \code{\link{get_values}}
-#'            to get values associated with labels; see \code{\link{set_na}} to
-#'            replace specific values with \code{NA}.
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @param x Variable (vector) with value label attributes, including
 #'          tagged missing values (see \code{\link[haven]{tagged_na}});
@@ -54,6 +53,7 @@
 #' @importFrom haven is_tagged_na
 #' @export
 get_na <- function(x, as.tag = FALSE) {
+  .Deprecated("get_na", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::get_na() instead.")
   UseMethod("get_na")
 }
 

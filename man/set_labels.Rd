@@ -14,7 +14,6 @@ set_labels(x, ..., labels, force.labels = FALSE, force.values = TRUE,
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{labels}{(Named) character vector of labels that will be added to \code{x} as
@@ -58,17 +57,9 @@ This function adds labels as attribute (named \code{"labels"})
                \CRANpkg{sjPlot}-package, which supports labelled data and automatically
                assigns labels to axes or legends in plots or to be used in tables.
 }
-\details{
-See 'Details' in \code{\link{get_labels}}.
-}
 \note{
-\itemize{
-        \item if \code{labels} is a named vector, \code{force.labels} and \code{force.values} will be ignored, and only values defined in \code{labels} will be labelled;
-        \item if \code{x} has less unique values than \code{labels}, redundant labels will be dropped, see \code{force.labels};
-        \item if \code{x} has more unique values than \code{labels}, only matching values will be labelled, other values remain unlabelled, see \code{force.values};
-        }
-        If you only want to change partial value labels, use \code{\link{add_labels}} instead.
-        Furthermore, see 'Note' in \code{\link{get_labels}}.
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
 }
 \examples{
 dummy <- sample(1:4, 40, replace = TRUE)

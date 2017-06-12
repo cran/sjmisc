@@ -13,7 +13,6 @@
 #'          further processing. Required, if \code{x} is a data frame (and no
 #'          vector) and only selected variables from \code{x} should be processed.
 #'          You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-#'          The latter must be stated as formula (i.e. beginning with \code{~}).
 #'          See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.
 #' @param add.non.labelled Logical, if \code{TRUE}, non-labelled values also
 #'          get value labels.
@@ -37,12 +36,11 @@
 #'        Adding label attributes is automatically done by importing data sets
 #'        with one of the \code{read_*}-functions, like \code{\link{read_spss}}.
 #'        Else, value and variable labels can be manually added to vectors
-#'        with \code{\link{set_labels}} and \code{\link{set_label}}.
+#'        with \code{\link[sjlabelled]{set_labels}} and \code{\link[sjlabelled]{set_label}}.
 #'
 #' @details \code{to_factor} converts numeric values into a factor with numeric
 #'            levels. \code{\link{to_label}}, however, converts a vector into
 #'            a factor and uses value labels as factor levels.
-#'            Furthermore, see 'Details' in \code{\link{get_na}}.
 #'
 #' @examples
 #' data(efc)
@@ -84,15 +82,14 @@
 #'
 #' # use select-helpers from dplyr-package
 #' library(dplyr)
-#' to_factor(efc, ~contains("cop"), c161sex:c175empl)
+#' to_factor(efc, contains("cop"), c161sex:c175empl)
 #'
 #'
 #' @importFrom tibble as_tibble
 #' @export
 to_factor <- function(x, ..., add.non.labelled = FALSE, ref.lvl = NULL) {
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -114,9 +111,16 @@ to_fac_helper <- function(x, add.non.labelled, ref.lvl) {
   if (is.factor(x)) return(x)
 
   # retrieve value labels
-  lab <- get_labels(x, attr.only = TRUE, include.values = "n", include.non.labelled = add.non.labelled)
+  lab <-
+    sjlabelled::get_labels(
+      x,
+      attr.only = TRUE,
+      include.values = "n",
+      include.non.labelled = add.non.labelled
+    )
+
   # retrieve variable labels
-  varlab <- get_label(x)
+  varlab <- sjlabelled::get_label(x)
 
   # switch value and names attribute, since get_labels
   # returns the values as names, and the value labels
@@ -136,9 +140,19 @@ to_fac_helper <- function(x, add.non.labelled, ref.lvl) {
   x <- factor(x, exclude = c(NA_character_, "NaN"))
 
   # set back value labels
-  x <- suppressMessages(set_labels(x, labels = lab.switch, force.labels = TRUE, force.values = FALSE))
+  x <-
+    suppressMessages(
+      sjlabelled::set_labels(
+        x,
+        labels = lab.switch,
+        force.labels = TRUE,
+        force.values = FALSE
+      )
+    )
+
   # set back variable labels
-  x <- set_label(x, label = varlab)
+  x <- sjlabelled::set_label(x, label = varlab)
+
   # change reference level?
   if (!is.null(ref.lvl)) x <- ref_lvl(x, lvl = ref.lvl)
 

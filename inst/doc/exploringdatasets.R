@@ -1,5 +1,5 @@
 ## ----echo = FALSE--------------------------------------------------------
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(collapse = TRUE, warning = FALSE, comment = "#>")
 
 ## ----message=FALSE-------------------------------------------------------
 library(sjmisc)

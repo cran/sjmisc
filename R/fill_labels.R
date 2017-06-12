@@ -1,9 +1,10 @@
 #' @rdname zap_labels
 #' @export
 fill_labels <- function(x, ...) {
+  .Deprecated("fill_labels", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::fill_labels() instead.")
+
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -21,9 +22,9 @@ fill_labels <- function(x, ...) {
 
 fill_labels_helper <- function(x) {
   # get current labels
-  current.values <- get_labels(x, attr.only = T, include.non.labelled = F)
+  current.values <- sjlabelled::get_labels(x, attr.only = T, include.non.labelled = F)
   # get all labels, including non-labelled values
-  all.values <- get_labels(x,
+  all.values <- sjlabelled::get_labels(x,
                            attr.only = T,
                            include.values = "n",
                            include.non.labelled = T)
@@ -36,11 +37,11 @@ fill_labels_helper <- function(x) {
       all.val.switch <- as.numeric(names(all.values))
       names(all.val.switch) <- as.character(all.values)
       # get current NA values
-      current.na <- get_na(x)
+      current.na <- sjlabelled::get_na(x)
       # add NA
       if (!is.null(current.na)) all.val.switch <- c(all.val.switch, current.na)
       # then set labels
-      x <- set_labels(
+      x <- sjlabelled::set_labels(
         x,
         labels = all.val.switch,
         force.labels = T,

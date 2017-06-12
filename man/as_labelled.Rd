@@ -27,6 +27,10 @@ be \code{labelled}.}
 Converts a (labelled) vector of any class into a \code{labelled}
                class vector, resp. adds a \code{labelled} class-attribute.
 }
+\note{
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
+}
 \examples{
 data(efc)
 str(efc$e42dep)

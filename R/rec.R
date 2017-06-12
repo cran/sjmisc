@@ -64,7 +64,7 @@
 #'         \item the \code{"else"}-token should always be the last argument in the \code{rec}-string.
 #'         \item Non-matching values will be set to \code{NA}, unless captured by the \code{"else"}-token.
 #'         \item Tagged NA values (see \code{\link[haven]{tagged_na}}) and their value labels will be preserved when copying NA values to the recoded vector with \code{"else=copy"}.
-#'         \item Variable label attributes (see, for instance, \code{\link{get_label}}) are preserved (unless changed via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
+#'         \item Variable label attributes (see, for instance, \code{\link[sjlabelled]{get_label}}) are preserved (unless changed via \code{var.label}-argument), however, value label attributes are removed (except for \code{"rev"}, where present value labels will be automatically reversed as well). Use \code{val.labels}-argument to add labels for recoded values.
 #'         \item If \code{x} is a data frame, all variables should have the same categories resp. value range (else, see second bullet, \code{NA}s are produced).
 #'       }
 #'
@@ -145,7 +145,7 @@
 #' na_tag(rec(x, rec = "2=5;else=copy"))
 #'
 #' # use select-helpers from dplyr-package
-#' rec(efc, ~contains("cop"), c161sex:c175empl, rec = "0,1=0; else=1")
+#' rec(efc, contains("cop"), c161sex:c175empl, rec = "0,1=0; else=1")
 #'
 #'
 #' @export
@@ -158,8 +158,7 @@ rec <- function(x, ..., rec, as.num = TRUE, var.label = NULL, val.labels = NULL,
   }
 
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
 
@@ -202,10 +201,11 @@ rec <- function(x, ..., rec, as.num = TRUE, var.label = NULL, val.labels = NULL,
 
 
 #' @importFrom stats na.omit
+#' @importFrom sjlabelled drop_labels get_na
 rec_helper <- function(x, recodes, as.num, var.label, val.labels) {
   # retrieve variable label
   if (is.null(var.label))
-    var_lab <- get_label(x)
+    var_lab <- sjlabelled::get_label(x)
   else
     var_lab <- var.label
   # do we have any value labels?
@@ -214,18 +214,26 @@ rec_helper <- function(x, recodes, as.num, var.label, val.labels) {
   na_recoded <- FALSE
 
   # drop labels when reversing
-  if (recodes == "rev") x <- drop_labels(x, drop.na = TRUE)
+  if (recodes == "rev") x <- sjlabelled::drop_labels(x, drop.na = TRUE)
 
   # get current NA values
-  current.na <- get_na(x)
+  current.na <- sjlabelled::get_na(x)
 
   # do we have a factor with "x"?
   if (is.factor(x)) {
     # save variable labels before in case we just want
     # to reverse the order
     if (is.null(val_lab) && recodes == "rev") {
-      val_lab <- rev(get_labels(x, attr.only = TRUE, include.values = NULL,
-                                include.non.labelled = TRUE, drop.na = TRUE))
+      val_lab <-
+        rev(
+          sjlabelled::get_labels(
+            x,
+            attr.only = TRUE,
+            include.values = NULL,
+            include.non.labelled = TRUE,
+            drop.na = TRUE
+          )
+        )
     }
 
     if (is_num_fac(x)) {
@@ -253,8 +261,16 @@ rec_helper <- function(x, recodes, as.num, var.label, val.labels) {
     recodes <- paste(sprintf("%i=%i", ov, nv), collapse = ";")
     # when we simply reverse values, we can keep value labels
     if (is.null(val_lab)) {
-      val_lab <- rev(get_labels(x, attr.only = TRUE, include.values = NULL,
-                                include.non.labelled = TRUE, drop.na = TRUE))
+      val_lab <-
+        rev(
+          sjlabelled::get_labels(
+            x,
+            attr.only = TRUE,
+            include.values = NULL,
+            include.non.labelled = TRUE,
+            drop.na = TRUE
+          )
+        )
     }
   }
 
@@ -424,8 +440,8 @@ rec_helper <- function(x, recodes, as.num, var.label, val.labels) {
     val_lab <- c(val_lab, current.na)
   }
   # set back variable and value labels
-  new_var <- suppressWarnings(set_label(x = new_var, label = var_lab))
-  new_var <- suppressWarnings(set_labels(x = new_var, labels = val_lab))
+  new_var <- suppressWarnings(sjlabelled::set_label(x = new_var, label = var_lab))
+  new_var <- suppressWarnings(sjlabelled::set_labels(x = new_var, labels = val_lab))
   # return result as factor?
   if (!as.num) new_var <- to_factor(new_var)
   return(new_var)

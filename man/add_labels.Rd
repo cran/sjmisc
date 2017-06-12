@@ -10,7 +10,7 @@ add_labels(x, ..., labels, value)
 
 replace_labels(x, ..., labels, value)
 
-remove_labels(x, ..., value)
+remove_labels(x, ..., labels, value)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -19,7 +19,6 @@ remove_labels(x, ..., value)
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{labels}{\describe{
@@ -55,6 +54,10 @@ These functions add, replace or remove value labels to or from variables.
          It removes labels from a label attribute of \code{x}.
          \cr \cr
          \code{replace_labels()} is an alias for \code{add_labels()}.
+}
+\note{
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
 }
 \examples{
 # ----------------------
@@ -114,10 +117,4 @@ x <- labelled(c(1:3, tagged_na("a", "c", "z"), 4:1),
 get_na(x)
 get_na(remove_labels(x, value = tagged_na("c")))
 
-}
-\seealso{
-\code{\link{set_label}} to manually set variable labels or
-           \code{\link{get_label}} to get variable labels; \code{\link{set_labels}} to
-           add value labels, replacing the existing ones (and removing non-specified
-           value labels).
 }

@@ -16,6 +16,9 @@
 #'          be \code{labelled}.
 #' @return \code{x}, as \code{labelled}-class object.
 #'
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
+#'
 #' @examples
 #' data(efc)
 #' str(efc$e42dep)
@@ -43,8 +46,10 @@
 #' get_values(x2)
 #'
 #' @importFrom stats na.omit
+#' @importFrom sjlabelled is_labelled get_labels fill_labels get_na
 #' @export
 as_labelled <- function(x, add.labels = FALSE, add.class = FALSE) {
+  .Deprecated("as_labelled", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::as_labelled() instead.")
   UseMethod("as_labelled")
 }
 
@@ -65,19 +70,19 @@ as_labelled.default <- function(x, add.labels = FALSE, add.class = FALSE) {
 
 as_labelled_helper <- function(x, add.labels, add.class) {
   # do nothing for labelled class
-  if (is_labelled(x)) return(x)
+  if (sjlabelled::is_labelled(x)) return(x)
 
   # if factor, convert to numeric
   if (is.factor(x)) x <- to_value(x, keep.labels = T)
 
   # return atomics
-  if (is.null(get_labels(x, attr.only = T))) return(x)
+  if (is.null(sjlabelled::get_labels(x, attr.only = T))) return(x)
 
   # fill up missing attributes
-  if (add.labels) x <- fill_labels(x)
+  if (add.labels) x <- sjlabelled::fill_labels(x)
 
   # reset missings
-  xna <- get_na(x)
+  xna <- sjlabelled::get_na(x)
   if (!sjmisc::is_empty(xna)) x <- set_na(x, na = xna)
 
   # get former class attributes

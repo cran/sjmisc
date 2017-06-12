@@ -13,7 +13,6 @@ set_na(x, ..., na, drop.levels = TRUE, as.tag = FALSE, value)
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{na}{Numeric vector with values that should be replaced with NA values,
@@ -70,6 +69,7 @@ table(dummy, useNA = "always")
 set_na(dummy, na = c("Refused" = 5), as.tag = TRUE)
 # see different missing types
 library(haven)
+library(sjlabelled)
 print_tagged_na(set_na(dummy, na = c("Refused" = 5), as.tag = TRUE))
 
 

@@ -75,8 +75,7 @@
 #' @export
 to_value <- function(x, ..., start.at = NULL, keep.labels = TRUE) {
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -100,10 +99,10 @@ to_value_helper <- function(x, start.at, keep.labels) {
   if (is.numeric(x)) return(x)
 
   # save variable label
-  varlab <- get_label(x)
+  varlab <- sjlabelled::get_label(x)
 
   # get labels
-  labels <- get_labels(x, attr.only = T, include.values = "n")
+  labels <- sjlabelled::get_labels(x, attr.only = T, include.values = "n")
 
   # is character?
   if (is.character(x)) {
@@ -147,15 +146,15 @@ to_value_helper <- function(x, start.at, keep.labels) {
     # determine highest category value
     end <- start.at + l - 1
     # replace labels with numeric values
-    levels(x) <- c(start.at:end)
+    levels(x) <- start.at:end
     # convert to numeric
     new_value <- as.numeric(as.character(x))
   }
 
   # check if we should set back former variable and value labels
   if (keep.labels) {
-    new_value <- set_labels(new_value, labels = labels, force.labels = T)
-    new_value <- set_label(new_value, label = varlab)
+    new_value <- sjlabelled::set_labels(new_value, labels = labels, force.labels = T)
+    new_value <- sjlabelled::set_label(new_value, label = varlab)
   }
 
   new_value

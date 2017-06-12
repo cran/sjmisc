@@ -1,6 +1,8 @@
 #' @rdname set_label
 #' @export
 var_labels <- function(x, ...) {
+  .Deprecated("var_labels", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::var_labels() instead.")
+
   # get dots
   .dots <- match.call(expand.dots = FALSE)$`...`
 
@@ -41,9 +43,9 @@ var_labels <- function(x, ...) {
 #' @description This function renames variables in a data frame, i.e. it
 #'                renames the columns of the data frame.
 #'
+#' @param x A data frame.
 #' @param ... Pairs of named vectors, where the name equals the column name that
 #'          should be renamed, and the value is the new column name.
-#' @inheritParams set_label
 #'
 #' @return \code{x}, with new column names for those variables specified in \code{...}.
 #'

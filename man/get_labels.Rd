@@ -68,19 +68,8 @@ This package can add (and read) value and variable labels either in \CRANpkg{for
            for each variable.
 }
 \note{
-This function works with vectors that have value and variable
-       label attributes (as provided, for instance, by \code{\link[haven]{labelled}}
-       objects). Adding label attributes is automatically done when importing data sets
-       with the \code{\link{read_spss}}, \code{\link{read_sas}} or \code{\link{read_stata}}
-       functions. Labels can also manually be added using the \code{\link{set_labels}}
-       and \code{\link{set_label}} functions. If vectors \emph{do not} have
-       label attributes, either factor-levels or the numeric values
-       of the vector are returned as labels.
-       \cr \cr
-       Most functions of the \CRANpkg{sjPlot} package make use of value and variable
-       labels to automatically label axes, legend or title labels in plots
-       (\code{sjp.}-functions) respectively column or row headers in table
-       outputs (\code{sjt.}-functions).
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
 }
 \examples{
 # import SPSS data set
@@ -157,11 +146,4 @@ get_labels(efc$e42dep)
 get_labels(efc$e42dep, drop.unused = TRUE)
 get_labels(efc$e42dep, include.non.labelled = TRUE, drop.unused = TRUE)
 
-}
-\seealso{
-See vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}
-           for more details; \code{\link{set_labels}} to manually set value
-           labels, \code{\link{get_label}} to get variable labels and
-           \code{\link{get_values}} to retrieve the values associated
-           with value labels.
 }

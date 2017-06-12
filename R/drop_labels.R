@@ -1,9 +1,10 @@
 #' @rdname zap_labels
 #' @export
 drop_labels <- function(x, ..., drop.na = TRUE) {
+  .Deprecated("drop_labels", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::drop_labels() instead.")
+
   # evaluate arguments, generate data
-  .dots <- match.call(expand.dots = FALSE)$`...`
-  .dat <- get_dot_data(x, .dots)
+  .dat <- get_dot_data(x, dplyr::quos(...))
 
   if (is.data.frame(x)) {
     # iterate variables of data frame
@@ -21,7 +22,14 @@ drop_labels <- function(x, ..., drop.na = TRUE) {
 
 drop_labels_helper <- function(x, drop.na) {
   # get labels
-  tidy.labels <- get_labels(x, attr.only = T, include.values = "n", include.non.labelled = F, drop.na = T)
+  tidy.labels <-
+    sjlabelled::get_labels(
+      x,
+      attr.only = T,
+      include.values = "n",
+      include.non.labelled = F,
+      drop.na = T
+    )
 
   # return x, if no attribute
   if (is.null(tidy.labels)) return(x)
@@ -36,5 +44,5 @@ drop_labels_helper <- function(x, drop.na) {
   if (sjmisc::is_empty(tidy.labels)) tidy.labels <- ""
 
   # set labels
-  set_labels(x, labels = tidy.labels, drop.na = drop.na)
+  sjlabelled::set_labels(x, labels = tidy.labels, drop.na = drop.na)
 }

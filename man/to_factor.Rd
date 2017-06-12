@@ -13,7 +13,6 @@ to_factor(x, ..., add.non.labelled = FALSE, ref.lvl = NULL)
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{add.non.labelled}{Logical, if \code{TRUE}, non-labelled values also
@@ -41,7 +40,6 @@ This function converts a variable into a factor, but preserves
 \code{to_factor} converts numeric values into a factor with numeric
            levels. \code{\link{to_label}}, however, converts a vector into
            a factor and uses value labels as factor levels.
-           Furthermore, see 'Details' in \code{\link{get_na}}.
 }
 \note{
 This function is intended for use with vectors that have value and variable
@@ -51,7 +49,7 @@ This function is intended for use with vectors that have value and variable
        Adding label attributes is automatically done by importing data sets
        with one of the \code{read_*}-functions, like \code{\link{read_spss}}.
        Else, value and variable labels can be manually added to vectors
-       with \code{\link{set_labels}} and \code{\link{set_label}}.
+       with \code{\link[sjlabelled]{set_labels}} and \code{\link[sjlabelled]{set_label}}.
 }
 \examples{
 data(efc)
@@ -93,7 +91,7 @@ to_factor(efc, e42dep, e16sex, c172code)
 
 # use select-helpers from dplyr-package
 library(dplyr)
-to_factor(efc, ~contains("cop"), c161sex:c175empl)
+to_factor(efc, contains("cop"), c161sex:c175empl)
 
 
 }

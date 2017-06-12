@@ -6,9 +6,6 @@
 #'                when imported from SPSS, SAS or STATA via \code{\link{read_spss}},
 #'                \code{\link{read_sas}} or \code{\link{read_stata}}.
 #'
-#' @seealso \code{\link{get_labels}} for getting value labels and \code{\link{get_na}}
-#'            to get values for missing values.
-#'
 #' @param x Variable (vector) with value label attributes; or a data frame or
 #'          list with such variables.
 #' @param sort.val Logical, if \code{TRUE} (default), values of associated value labels
@@ -18,6 +15,9 @@
 #'
 #' @return The values associated with value labels from \code{x},
 #'           or \code{NULL} if \code{x} has no label attributes.
+#'
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @details \code{\link[haven]{labelled}} vectors are numeric by default (when imported with read-functions
 #'            like \code{\link{read_spss}}) and have variable and value labels attributes.
@@ -49,6 +49,7 @@
 #' @importFrom haven is_tagged_na na_tag
 #' @export
 get_values <- function(x, sort.val = TRUE, drop.na = FALSE) {
+  .Deprecated("get_values", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::get_values() instead.")
   UseMethod("get_values")
 }
 

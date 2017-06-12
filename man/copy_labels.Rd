@@ -25,8 +25,8 @@ Subsetting-functions usually drop value and variable labels from
                with \code{\link{subset}}.
 }
 \note{
-In case \code{df_origin = NULL}, all possible label attributes
-        from \code{df_new} are removed.
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
 }
 \examples{
 data(efc)
@@ -39,9 +39,4 @@ str(efc.sub)
 efc.sub <- copy_labels(efc.sub)
 str(efc.sub)
 
-}
-\seealso{
-\href{http://www.strengejacke.de/sjPlot/labelleddata/}{sjPlot-manual}
-           on working with labelled data, and \code{\link{remove_all_labels}} for
-           removing label attributes from data frames.
 }

@@ -34,9 +34,8 @@ This function returns the variable labels of labelled data.
 See 'Details' in \code{\link{get_labels}}.
 }
 \note{
-\code{\link{var_labels}} is an alternative way to set variable labels,
-      which follows the philosophy of tidyvers API design (data as first argument,
-      dots as value pairs indicating variables)
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
 }
 \examples{
 # import SPSS data set
@@ -72,10 +71,4 @@ barplot(table(efc$e42dep),
 # get labels from multiple variables
 get_label(list(efc$e42dep, efc$e16sex, efc$e15relat))
 
-}
-\seealso{
-See vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}
-           for more details; \code{\link{set_label}} to manually set variable labels or \code{\link{get_labels}}
-           to get value labels; \code{\link{var_labels}} to set multiple variable
-           labels at once.
 }

@@ -4,8 +4,6 @@
 #' @description Import data from SPSS, SAS or Stata, including NA's, value and variable
 #'   labels.
 #'
-#' @seealso Vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}.
-#'
 #' @param path File path to the data file.
 #' @param atomic.to.fac Logical, if \code{TRUE}, categorical variables imported
 #'   from the dataset (which are imported as \code{\link{atomic}}) will be
@@ -21,7 +19,8 @@
 #' @return A data frame containing the imported, labelled data. Retrieve value labels with
 #'   \code{\link{get_labels}} and variable labels with \code{\link{get_label}}.
 #'
-#' @note These are wrapper functions for \CRANpkg{haven}'s \code{read_*}-functions.
+#' @note This function is deprecated. Please use \CRANpkg{sjlabelled} for
+#'       labelled data functions now.
 #'
 #' @details These read-functions behave slightly differently from \pkg{haven}'s
 #'   read-functions:
@@ -51,6 +50,7 @@
 #' @importFrom haven read_spss read_sas read_dta
 #' @export
 read_spss <- function(path, atomic.to.fac = FALSE, tag.na = FALSE) {
+  .Deprecated("read_spss", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::read_spss() instead.")
   # read data file
   data.spss <- haven::read_spss(file = path, user_na = tag.na)
   # prepare tagged NA?
@@ -185,6 +185,7 @@ atomic_to_fac <- function(data.spss, attr.string) {
 #' @rdname read_spss
 #' @export
 read_sas <- function(path, path.cat = NULL, atomic.to.fac = FALSE, enc = NULL) {
+  .Deprecated("read_sas", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::read_sas() instead.")
   # read data file
   data <- haven::read_sas(data_file = path, catalog_file = path.cat, encoding = enc)
 
@@ -213,6 +214,7 @@ read_sas <- function(path, path.cat = NULL, atomic.to.fac = FALSE, enc = NULL) {
 #' @rdname read_spss
 #' @export
 read_stata <- function(path, atomic.to.fac = FALSE, enc = NULL) {
+  .Deprecated("read_stata", package = "sjlabelled", msg = "This function will be removed in future versions of sjmisc and has been moved to package 'sjlabelled'. Please use sjlabelled::read_stata() instead.")
   # read data file
   data <- haven::read_dta(file = path, encoding = enc)
 

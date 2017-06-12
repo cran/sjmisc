@@ -14,7 +14,6 @@ dicho(x, ..., dich.by = "median", as.num = FALSE, var.label = NULL,
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{dich.by}{Indicates the split criterion where a variable is dichotomized.
@@ -33,7 +32,7 @@ If \code{NULL} (default), variable label attribute of \code{x} will
 be used (if present). If empty, variable label attributes will be removed.}
 
 \item{val.labels}{Optional character vector (of length two), to set value label
-attributes of dichotomized variable (see \code{\link{set_labels}}).
+attributes of dichotomized variable (see \code{\link[sjlabelled]{set_labels}}).
 If \code{NULL} (default), no value labels will be set.}
 
 \item{append}{Logical, if \code{TRUE} and \code{x} is a data frame,

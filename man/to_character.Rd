@@ -14,7 +14,6 @@ to_character(x, ..., add.non.labelled = FALSE, prefix = FALSE,
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
-The latter must be stated as formula (i.e. beginning with \code{~}).
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{add.non.labelled}{Logical, if \code{TRUE}, values without associated
@@ -49,9 +48,6 @@ This function converts (replaces) variable values (also of factors
                or character vectors) with their associated value labels and returns
                them as character vector. This is just a convenient wrapper for
                \code{as.character(to_label(x))}.
-}
-\details{
-See 'Details' in \code{\link{get_na}}.
 }
 \note{
 Value and variable label attributes (see, for instance, \code{\link{get_labels}}

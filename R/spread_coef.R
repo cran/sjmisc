@@ -1,5 +1,3 @@
-utils::globalVariables("term")
-
 #' @title Spread model coefficients of list-variables into columns
 #' @name spread_coef
 #'
@@ -43,8 +41,9 @@ utils::globalVariables("term")
 #'            model's coefficients in an own \emph{column}.
 #'
 #' @examples
-#' library(tidyr)
 #' library(dplyr)
+#' library(tidyr)
+#' library(purrr)
 #' data(efc)
 #'
 #' # create nested data frame, grouped by dependency (e42dep)
@@ -54,9 +53,9 @@ utils::globalVariables("term")
 #'   filter(!is.na(e42dep)) %>%
 #'   group_by(e42dep) %>%
 #'   nest() %>%
-#'   mutate(models = lapply(data, function(x) {
-#'     lm(neg_c_7 ~ c12hour + c172code, data = x)
-#'   }))
+#'   mutate(
+#'     models = map(data, ~lm(neg_c_7 ~ c12hour + c172code, data = .x))
+#'   )
 #'
 #' # spread coefficients, so we can easily access and compare the
 #' # coefficients over all models. arguments `se` and `p.val` default
@@ -72,33 +71,33 @@ utils::globalVariables("term")
 #'   filter(!is.na(e42dep)) %>%
 #'   group_by(e42dep) %>%
 #'   nest() %>%
-#'   mutate(models = lapply(data, function(x) {
-#'     lm(neg_c_7 ~ c12hour + c172code, data = x)
-#'   })) %>%
+#'   mutate(
+#'     models = map(data, ~lm(neg_c_7 ~ c12hour + c172code, data = .x))
+#'   ) %>%
 #'   spread_coef(models)
 #'
 #' # spread_coef() makes it easy to generate bootstrapped
 #' # confidence intervals, using the 'bootstrap()' and 'boot_ci()'
 #' # functions from the 'sjstats' package, which creates nested
 #' # data frames of bootstrap replicates
-#' library(dplyr)
 #' library(sjstats)
 #' efc %>%
 #'   # generate bootstrap replicates
 #'   bootstrap(100) %>%
 #'   # apply lm to all bootstrapped data sets
-#'   mutate(models = lapply(.$strap, function(x) {
-#'     lm(neg_c_7 ~ e42dep + c161sex + c172code, data = x)
-#'   })) %>%
+#'   mutate(
+#'     models = map(strap, ~lm(neg_c_7 ~ e42dep + c161sex + c172code, data = .x))
+#'   ) %>%
 #'   # spread model coefficient for all 100 models
 #'   spread_coef(models, se = FALSE, p.val = FALSE) %>%
 #'   # compute the CI for all bootstrapped model coefficients
 #'   boot_ci(e42dep, c161sex, c172code)
 #'
 #' @importFrom broom tidy
-#' @importFrom dplyr select_ select one_of bind_cols "%>%"
+#' @importFrom dplyr select one_of bind_cols "%>%"
 #' @importFrom tidyr spread_
 #' @importFrom purrr map_df
+#' @importFrom rlang .data
 #' @export
 spread_coef <- function(data, model.column, model.term, se, p.val, append = TRUE, ...) {
   # check if we have a data frame
@@ -157,7 +156,7 @@ spread_coef <- function(data, model.column, model.term, se, p.val, append = TRUE
         # tidy model. for mixed effects, return fixed effects only
         tmp <- broom::tidy(x, effects = "fixed", ...) %>%
           # filter term
-          dplyr::filter(term == model.term) %>%
+          dplyr::filter(.data$term == model.term) %>%
           # just select estimate and p-value
           dplyr::select(dplyr::one_of(variables))
         # set colnames
@@ -173,7 +172,7 @@ spread_coef <- function(data, model.column, model.term, se, p.val, append = TRUE
 
         # just select term name and estimate value
         df1 <- tmp %>%
-          dplyr::select_("term", "estimate") %>%
+          dplyr::select(.data$term, .data$estimate) %>%
           # spread to columns
           tidyr::spread_(key_col = "term", value_col = "estimate")
 
@@ -184,7 +183,7 @@ spread_coef <- function(data, model.column, model.term, se, p.val, append = TRUE
         if (se) {
           # just select term name and estimate value
           df2 <- tmp %>%
-            dplyr::select_("term", "std.error") %>%
+            dplyr::select(.data$term, .data$std.error) %>%
             # spread to columns
             tidyr::spread_(key_col = "term", value_col = "std.error")
           # fix column names
@@ -197,7 +196,7 @@ spread_coef <- function(data, model.column, model.term, se, p.val, append = TRUE
         if (p.val) {
           # just select term name and estimate value
           df3 <- tmp %>%
-            dplyr::select_("term", "p.value") %>%
+            dplyr::select(.data$term, .data$p.value) %>%
             # spread to columns
             tidyr::spread_(key_col = "term", value_col = "p.value")
           # fix column names

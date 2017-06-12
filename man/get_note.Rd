@@ -16,6 +16,10 @@ The the value of the \code{note}-attribute of \code{x}.
 This function retrieves the value of the \code{note}-attribute
                of vectors.
 }
+\note{
+This function is deprecated. Please use \CRANpkg{sjlabelled} for
+      labelled data functions now.
+}
 \examples{
 library(haven)
 # create labelled factor
