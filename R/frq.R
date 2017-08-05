@@ -86,13 +86,9 @@ frq <- function(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
       # copy back labels to grouped data frame
       tmp <- sjlabelled::copy_labels(grps$data[[i]], x)
 
-      # print title for grouping
-      cat(sprintf("\nGrouped by:\n%s\n\n", get_grouped_title(x, grps, i, sep = "\n")))
-
       # print frequencies
       dummy <- frq_helper(x = tmp[[1]], sort.frq = sort.frq, weight.by = weight.by)
-      print(dummy)
-      cat("\n")
+      attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = "\n")
 
       # save data frame for return value
       dataframes[[length(dataframes) + 1]] <- dummy
@@ -104,20 +100,22 @@ frq <- function(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
     for (i in seq_len(ncol(x))) {
       # print frequencies
       dummy <- frq_helper(x = x[[i]], sort.frq = sort.frq, weight.by = weight.by)
-      print(dummy)
-      cat("\n\n")
-
       # save data frame for return value
       dataframes[[length(dataframes) + 1]] <- dummy
     }
   }
 
-  # return list of df
-  invisible(dataframes)
+  # add class-attr for print-method()
+  class(dataframes) <- c("sjmisc.frq", "list")
+
+  dataframes
 }
 
 
 frq_helper <- function(x, sort.frq, weight.by) {
+  # remember type
+  vartype <- var_type(x)
+
   # convert NaN and Inf to missing
   x <- zap_inf(x)
 
@@ -143,7 +141,13 @@ frq_helper <- function(x, sort.frq, weight.by) {
   # do we have a labelled vector?
   if (!is.null(labels)) {
     # add rownames and values as columns
-    dat <- data.frame(n = names(labels), v = as.character(labels), stringsAsFactors = FALSE)
+    dat <-
+      data.frame(
+        n = names(labels),
+        v = as.character(labels),
+        stringsAsFactors = FALSE
+      )
+
     colnames(dat) <- c("val", "label")
 
     # character vectors need to be converted with to_value
@@ -193,9 +197,11 @@ frq_helper <- function(x, sort.frq, weight.by) {
       # if we have no labels, do simple frq table
       mydat <- data.frame(table(x, useNA = "always"))
     }
+
     colnames(mydat) <- c("val", "frq")
+
     # add values as label
-    mydat$label <- labels <- as.character(mydat$val)
+    mydat$label <- as.character("<none>")
   }
 
   # need numeric
@@ -220,8 +226,6 @@ frq_helper <- function(x, sort.frq, weight.by) {
   if (!is.null(sort.frq) && (sort.frq == "asc" || sort.frq == "desc")) {
     ord <- order(mydat$frq[seq_len(valid.vals)], decreasing = (sort.frq == "desc"))
     mydat <- mydat[c(ord, valid.vals + 1), ]
-    # not needed here?
-    labels <- labels[ord]
   }
 
   # raw percentages
@@ -245,41 +249,50 @@ frq_helper <- function(x, sort.frq, weight.by) {
   # sort
   if (sort.frq == "none") mydat <- mydat[order(reihe), ]
 
-  # add variable label as attribute, for print-method
+  # add variable label and type as attribute, for print-method
   attr(mydat, "label") <- varlab
+  attr(mydat, "vartype") <- vartype
 
-  # return results
-  class(mydat) <- c("sjmisc.frq", "data.frame")
   mydat
 }
 
 
 get_grouped_title <- function(x, grps, i, sep = "\n") {
-  # prepare title for group
-  var.name <- colnames(grps)[1]
-
-  # find position of value labels for current group
-  lab.pos <- which(sjlabelled::get_values(x[[var.name]]) == grps[[var.name]][i])
-
-  t1 <- sjlabelled::get_label(x[[var.name]], def.value = var.name)
-  t2 <- sjlabelled::get_labels(x[[var.name]])[lab.pos]
-  title <- sprintf("%s: %s", t1, t2)
+  # create title for first grouping level
+  tp <- get_title_part(x, grps, 1, i)
+  title <- sprintf("%s: %s", tp[1], tp[2])
 
   # do we have another groupng variable?
   if (length(attr(x, "vars", exact = T)) > 1) {
-    # prepare title for group
-    var.name <- colnames(grps)[2]
-
-    # find position of value labels for current group
-    lab.pos <- which(sjlabelled::get_values(x[[var.name]]) == grps[[var.name]][i])
-
-    t1 <- sjlabelled::get_label(x[[var.name]], def.value = var.name)
-    t2 <- sjlabelled::get_labels(x[[var.name]])[lab.pos]
-    title <- sprintf("%s%s%s: %s", title, sep, t1, t2)
+    tp <- get_title_part(x, grps, 2, i)
+    title <- sprintf("%s%s%s: %s", title, sep, tp[1], tp[2])
   }
 
   # return title
   title
+}
+
+
+get_title_part <- function(x, grps, level, i) {
+  # prepare title for group
+  var.name <- colnames(grps)[level]
+
+  # get values from value labels
+  vals <- sjlabelled::get_values(x[[var.name]])
+  # if we have no value labels, get values directly
+  if (is.null(vals)) vals <- unique(x[[var.name]])
+  # find position of value labels for current group
+  lab.pos <- which(vals == grps[[var.name]][i])
+
+  # get variable and value labels
+  t1 <- sjlabelled::get_label(x[[var.name]], def.value = var.name)
+  t2 <- sjlabelled::get_labels(x[[var.name]])[lab.pos]
+
+  # if we have no value label, use value instead
+  if (is.null(t2)) t2 <- vals[lab.pos]
+
+  # generate title
+  c(t1, t2)
 }
 
 
@@ -294,6 +307,7 @@ get_grouped_data <- function(x) {
   cc <- grps %>%
     dplyr::select(-.data$data) %>%
     stats::complete.cases()
+
   # select only complete cases
   grps <- grps %>% dplyr::filter(cc)
 
@@ -302,7 +316,8 @@ get_grouped_data <- function(x) {
     reihe <- order(grps[[1]])
   else
     reihe <- order(grps[[1]], grps[[2]])
-  grps <- grps[reihe, ]
+
+  grps <- grps[reihe, , drop = FALSE]
 
   grps
 }

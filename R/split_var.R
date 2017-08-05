@@ -8,11 +8,12 @@
 #' @seealso \code{\link{group_var}} to group variables into equal ranged groups,
 #'          or \code{\link{rec}} to recode variables.
 #'
-#' @param groupcount The new number of groups that \code{x} should be split into.
+#' @param n The new number of groups that \code{x} should be split into.
 #' @param inclusive Logical; if \code{TRUE}, cut point value are included in
 #'          the preceeding group. This may be necessary if cutting a vector into
 #'          groups does not define proper ("equal sized") group sizes.
 #'          See 'Note' and 'Examples'.
+#' @param groupcount Deprecated. Use \code{n} instead.
 #'
 #' @inheritParams to_factor
 #' @inheritParams group_var
@@ -31,6 +32,10 @@
 #'            By contrast, \code{\link{group_var}} recodes a variable into
 #'            groups, where groups have the same value range
 #'            (e.g., from 1-5, 6-10, 11-15 etc.).
+#'            \cr \cr
+#'            \code{split_var()} also works on grouped data frames (see \code{\link[dplyr]{group_by}}).
+#'            In this case, splitting is applied to the subsets of variables
+#'            in \code{x}. See 'Examples'.
 #'
 #' @note In case a vector has only few number of unique values, splitting into
 #'         equal sized groups may fail. In this case, use the \code{inclusive}-argument
@@ -43,26 +48,54 @@
 #' table(efc$neg_c_7)
 #'
 #' # split into 3 groups
-#' table(split_var(efc$neg_c_7, groupcount = 3))
+#' table(split_var(efc$neg_c_7, n = 3))
 #'
 #' # split multiple variables into 3 groups
-#' split_var(efc, neg_c_7, pos_v_4, e17age, groupcount = 3)
-#' frq(split_var(efc, neg_c_7, pos_v_4, e17age, groupcount = 3))
+#' split_var(efc, neg_c_7, pos_v_4, e17age, n = 3)
+#' frq(split_var(efc, neg_c_7, pos_v_4, e17age, n = 3))
 #'
 #' # original
 #' table(efc$e42dep)
 #'
 #' # two groups, non-inclusive cut-point
 #' # vector split leads to unequal group sizes
-#' table(split_var(efc$e42dep, groupcount = 2))
+#' table(split_var(efc$e42dep, n = 2))
 #'
 #' # two groups, inclusive cut-point
 #' # group sizes are equal
-#' table(split_var(efc$e42dep, groupcount = 2, inclusive = TRUE))
+#' table(split_var(efc$e42dep, n = 2, inclusive = TRUE))
+#'
+#' # Unlike dplyr's ntile(), split_var() never splits a value
+#' # into two different categories, i.e. you always get a clean
+#' # separation of original categories
+#' library(dplyr)
+#'
+#' x <- dplyr::ntile(efc$neg_c_7, n = 3)
+#' table(efc$neg_c_7, x)
+#'
+#' x <- split_var(efc$neg_c_7, n = 3)
+#' table(efc$neg_c_7, x)
+#'
+#' # works also with gouped data frames
+#' mtcars %>%
+#'   split_var(disp, n = 3) %>%
+#'   table()
+#'
+#' mtcars %>%
+#'   group_by(cyl) %>%
+#'   split_var(disp, n = 3) %>%
+#'   table()
 #'
 #' @importFrom stats quantile
 #' @export
-split_var <- function(x, ..., groupcount, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE, append = FALSE, suffix = "_g") {
+split_var <- function(x, ..., n, as.num = FALSE, val.labels = NULL, var.label = NULL, inclusive = FALSE, append = FALSE, suffix = "_g", groupcount) {
+
+  # check deprecated arguments
+  if (!missing(groupcount)) {
+    message("Argument `groupcount` is deprecated. Please use `n` instead.")
+    n <- groupcount
+  }
+
   # evaluate arguments, generate data
   .dat <- get_dot_data(x, dplyr::quos(...))
 
@@ -70,18 +103,52 @@ split_var <- function(x, ..., groupcount, as.num = FALSE, val.labels = NULL, var
     # remember original data, if user wants to bind columns
     orix <- tibble::as_tibble(x)
 
-    # iterate variables of data frame
-    for (i in colnames(.dat)) {
-      x[[i]] <- split_var_helper(
-        x = .dat[[i]],
-        groupcount = groupcount,
-        as.num = as.num,
-        var.label = var.label,
-        val.labels = val.labels,
-        inclusive = inclusive
-      )
-    }
+    # do we have a grouped data frame?
+    if (inherits(.dat, "grouped_df")) {
 
+      # get grouped data, as nested data frame
+      grps <- get_grouped_data(.dat)
+
+      # iterate all groups
+      for (i in seq_len(nrow(grps))) {
+        # get data from each single group
+        group <- grps$data[[i]]
+
+        # now iterate all variables of interest
+        for (j in colnames(group)) {
+          group[[j]] <- split_var_helper(
+            x = group[[j]],
+            groupcount = n,
+            as.num = as.num,
+            var.label = var.label,
+            val.labels = val.labels,
+            inclusive = inclusive
+          )
+        }
+
+        # write back data
+        grps$data[[i]] <- group
+      }
+
+      # unnest data frame
+      x <- tidyr::unnest(grps)
+
+      # remove grouping column
+      .dat <- .dat[colnames(.dat) %nin% dplyr::group_vars(.dat)]
+
+    } else {
+      # iterate variables of data frame
+      for (i in colnames(.dat)) {
+        x[[i]] <- split_var_helper(
+          x = .dat[[i]],
+          groupcount = n,
+          as.num = as.num,
+          var.label = var.label,
+          val.labels = val.labels,
+          inclusive = inclusive
+        )
+      }
+    }
     # coerce to tibble and select only recoded variables
     x <- tibble::as_tibble(x[colnames(.dat)])
 
@@ -95,7 +162,7 @@ split_var <- function(x, ..., groupcount, as.num = FALSE, val.labels = NULL, var
   } else {
     x <- split_var_helper(
       x = .dat,
-      groupcount = groupcount,
+      groupcount = n,
       as.num = as.num,
       var.label = var.label,
       val.labels = val.labels,
@@ -128,11 +195,16 @@ split_var_helper <- function(x, groupcount, as.num, val.labels, var.label, inclu
   # get quantile values
   grp_cuts <- stats::quantile(x, qu_prob, na.rm = TRUE)
 
+  # create breaks. need to check if these are non-unique
+  breaks <- unique(c(0, grp_cuts, max(x, na.rm = T)))
+
   # cut variables into groups
-  retval <- cut(x,
-                c(0, grp_cuts, max(x, na.rm = T)),
-                include.lowest = !inclusive,
-                right = inclusive)
+  retval <- cut(
+    x = x,
+    breaks = breaks,
+    include.lowest = !inclusive,
+    right = inclusive
+  )
 
   # rename factor levels
   levels(retval) <- seq_len(groupcount)

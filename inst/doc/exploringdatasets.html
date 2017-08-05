@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2017-06-12" />
+<meta name="date" content="2017-08-04" />
 
 <title>Exploring Data Sets</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Exploring Data Sets</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2017-06-12</em></h4>
+<h4 class="date"><em>2017-08-04</em></h4>
 
 
 
@@ -82,8 +82,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="print-frequencies-with-labels" class="section level2">
 <h2>Print frequencies with labels</h2>
 <p>The first thing that may be of interest is probably the distribution of gender. You can plot frequencies for labelled data with <code>frq()</code>. This function requires either a vector or data frame as input and prints the variable label as first line, followed by a frequency-table with values, labels, counts and percentages of the vector.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">frq</span>(efc$c161sex)
-<span class="co">#&gt; # carer's gender</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">frq</span>(efc<span class="op">$</span>c161sex)
+<span class="co">#&gt; # carer's gender &lt;numeric&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val  label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1   Male 215   23.68     23.86   23.86</span>
@@ -131,15 +131,15 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="recoding-variables" class="section level2">
 <h2>Recoding variables</h2>
 <p>Next, we need the negatice impact of care (_neg_c_7) and want to create three groups: low, middle and high negative impact. We can easily recode and label vectors with <code>rec()</code>. This function does not only recode vectors, it also allows direct labelling of categories inside the recode-syntax (this is optional, you can also use the <code>val.labels</code>-argument). We now recode neg_c_7 into a new variable <em>burden</em>. The cut-points are a bit arbitrary, for the sake of demonstration.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc$burden &lt;-<span class="st"> </span><span class="kw">rec</span>(
-  efc$neg_c_7,
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc<span class="op">$</span>burden &lt;-<span class="st"> </span><span class="kw">rec</span>(
+  efc<span class="op">$</span>neg_c_<span class="dv">7</span>,
   <span class="dt">rec =</span> <span class="kw">c</span>(<span class="st">&quot;min:9=1 [low]; 10:12=2 [moderate]; 13:max=3 [high]; else=NA&quot;</span>),
   <span class="dt">var.label =</span> <span class="st">&quot;Subjective burden&quot;</span>,
   <span class="dt">as.num =</span> <span class="ot">FALSE</span> <span class="co"># we want a factor</span>
 )
 <span class="co"># print frequencies</span>
-<span class="kw">frq</span>(efc$burden)
-<span class="co">#&gt; # Subjective burden</span>
+<span class="kw">frq</span>(efc<span class="op">$</span>burden)
+<span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low 280   30.84     31.39   31.39</span>
@@ -151,15 +151,14 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="grouped-data-frames" class="section level2">
 <h2>Grouped data frames</h2>
 <p>How is burden distributed by gender? We can group the data and print frequencies using <code>frq()</code> for this as well, as this function also accepts grouped data frames. Frequencies for grouped data frames first print the group-details (variable name and category), followed by the frequency table. Thanks to labelled data, the output is easy to understand.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">select</span>(burden, c161sex) %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">group_by</span>(c161sex) %&gt;%<span class="st"> </span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(burden, c161sex) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(c161sex) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">frq</span>()
-<span class="co">#&gt; </span>
 <span class="co">#&gt; Grouped by:</span>
 <span class="co">#&gt; carer's gender: Male</span>
 <span class="co">#&gt; </span>
-<span class="co">#&gt; # Subjective burden</span>
+<span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low  80   37.21     37.74   37.74</span>
@@ -171,7 +170,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co">#&gt; Grouped by:</span>
 <span class="co">#&gt; carer's gender: Female</span>
 <span class="co">#&gt; </span>
-<span class="co">#&gt; # Subjective burden</span>
+<span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low 199   29.01     29.31   29.31</span>
@@ -185,11 +184,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>In the following example, we group the data by <em>e42dep</em>, and “nest”&quot; the groups. Now we get a data frame with two columns: First, the grouping variable (<em>e42dep</em>) and second, the datasets (subsets) for each country as data frame, stored in the list-variable <em>data</em>. The data frames in the subsets (in <em>data</em>) all contain the selected variables <code>burden</code>, <code>c161sex</code> and <code>quol_4</code> (quality of life).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># convert variable to labelled factor, because we then </span>
 <span class="co"># have the labels as factor levels in the output</span>
-efc$e42dep &lt;-<span class="st"> </span><span class="kw">to_label</span>(efc$e42dep, <span class="dt">drop.levels =</span> T)
-efc %&gt;%
-<span class="st">  </span><span class="kw">select</span>(e42dep, burden, c161sex, quol_5) %&gt;%
-<span class="st">  </span><span class="kw">group_by</span>(e42dep) %&gt;%
-<span class="st">  </span>tidyr::<span class="kw">nest</span>()
+efc<span class="op">$</span>e42dep &lt;-<span class="st"> </span><span class="kw">to_label</span>(efc<span class="op">$</span>e42dep, <span class="dt">drop.levels =</span> T)
+efc <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(e42dep, burden, c161sex, quol_<span class="dv">5</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(e42dep) <span class="op">%&gt;%</span>
+<span class="st">  </span>tidyr<span class="op">::</span><span class="kw">nest</span>()
 <span class="co">#&gt; # A tibble: 5 x 2</span>
 <span class="co">#&gt;                 e42dep               data</span>
 <span class="co">#&gt;                 &lt;fctr&gt;             &lt;list&gt;</span>
@@ -202,16 +201,16 @@ efc %&gt;%
 <div id="get-coefficients-of-nested-models" class="section level2">
 <h2>Get coefficients of nested models</h2>
 <p>Using <code>map()</code> from the <strong>purrr</strong>-package, we can iterate this list and apply any function on each data frame in the list-variable “data”. We want to apply the <code>lm()</code>-function to the list-variable, to run linear models for all “dependency-datasets”. The results of these linear regressions are stored in another list-variable, <em>models</em> (created with <code>mutate()</code>). To quickly access and look at the coefficients, we can use <code>spread_coef()</code>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc %&gt;%
-<span class="st">  </span><span class="kw">select</span>(e42dep, burden, c161sex, quol_5) %&gt;%
-<span class="st">  </span><span class="kw">group_by</span>(e42dep) %&gt;%
-<span class="st">  </span>tidyr::<span class="kw">nest</span>() %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">na.omit</span>() %&gt;%<span class="st">       </span><span class="co"># remove nested group for NA</span>
-<span class="st">  </span><span class="kw">arrange</span>(e42dep) %&gt;%<span class="st"> </span><span class="co"># arrange by order of levels</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">models =</span> purrr::<span class="kw">map</span>(
-    data, ~<span class="st"> </span>
-<span class="st">    </span><span class="kw">lm</span>(quol_5 ~<span class="st"> </span>burden +<span class="st"> </span>c161sex, <span class="dt">data =</span> .))
-  ) %&gt;%
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(e42dep, burden, c161sex, quol_<span class="dv">5</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(e42dep) <span class="op">%&gt;%</span>
+<span class="st">  </span>tidyr<span class="op">::</span><span class="kw">nest</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">na.omit</span>() <span class="op">%&gt;%</span><span class="st">       </span><span class="co"># remove nested group for NA</span>
+<span class="st">  </span><span class="kw">arrange</span>(e42dep) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># arrange by order of levels</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">models =</span> purrr<span class="op">::</span><span class="kw">map</span>(
+    data, <span class="op">~</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">lm</span>(quol_<span class="dv">5</span> <span class="op">~</span><span class="st"> </span>burden <span class="op">+</span><span class="st"> </span>c161sex, <span class="dt">data =</span> .))
+  ) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">spread_coef</span>(models)
 <span class="co">#&gt; # A tibble: 4 x 7</span>
 <span class="co">#&gt;                 e42dep               data   models `(Intercept)`   burden2</span>
@@ -222,16 +221,16 @@ efc %&gt;%
 <span class="co">#&gt; 4   severely dependent &lt;tibble [304 x 3]&gt; &lt;S3: lm&gt;      19.10617 -3.659523</span>
 <span class="co">#&gt; # ... with 2 more variables: burden3 &lt;dbl&gt;, c161sex &lt;dbl&gt;</span></code></pre></div>
 <p>We see that higher burden is associated with lower quality of life, for all dependency-groups. The <code>se</code> and <code>p.val</code>-arguments add standard errors and p-values to the output. <code>model.term</code> returns the statistics only for a specific term. If you specify a <code>model.term</code>, arguments <code>se</code> and <code>p.val</code> automatically default to <code>TRUE</code>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc %&gt;%
-<span class="st">  </span><span class="kw">select</span>(e42dep, burden, c161sex, quol_5) %&gt;%
-<span class="st">  </span><span class="kw">group_by</span>(e42dep) %&gt;%
-<span class="st">  </span>tidyr::<span class="kw">nest</span>() %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">na.omit</span>() %&gt;%<span class="st">       </span><span class="co"># remove nested group for NA</span>
-<span class="st">  </span><span class="kw">arrange</span>(e42dep) %&gt;%<span class="st"> </span><span class="co"># arrange by order of levels</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">models =</span> purrr::<span class="kw">map</span>(
-    data, ~<span class="st"> </span>
-<span class="st">    </span><span class="kw">lm</span>(quol_5 ~<span class="st"> </span>burden +<span class="st"> </span>c161sex, <span class="dt">data =</span> .))
-  ) %&gt;%
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(e42dep, burden, c161sex, quol_<span class="dv">5</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">group_by</span>(e42dep) <span class="op">%&gt;%</span>
+<span class="st">  </span>tidyr<span class="op">::</span><span class="kw">nest</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">na.omit</span>() <span class="op">%&gt;%</span><span class="st">       </span><span class="co"># remove nested group for NA</span>
+<span class="st">  </span><span class="kw">arrange</span>(e42dep) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># arrange by order of levels</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">models =</span> purrr<span class="op">::</span><span class="kw">map</span>(
+    data, <span class="op">~</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">lm</span>(quol_<span class="dv">5</span> <span class="op">~</span><span class="st"> </span>burden <span class="op">+</span><span class="st"> </span>c161sex, <span class="dt">data =</span> .))
+  ) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">spread_coef</span>(models, burden3)
 <span class="co">#&gt; # A tibble: 4 x 6</span>
 <span class="co">#&gt;                 e42dep               data   models   burden3 std.error</span>

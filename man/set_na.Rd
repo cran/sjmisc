@@ -4,7 +4,7 @@
 \alias{set_na}
 \title{Replace specific values in vector with NA}
 \usage{
-set_na(x, ..., na, drop.levels = TRUE, as.tag = FALSE, value)
+set_na(x, ..., na, drop.levels = TRUE, as.tag = FALSE)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -27,8 +27,6 @@ been replaced with \code{NA} are dropped. See 'Examples'.}
 \item{as.tag}{Logical, if \code{TRUE}, values in \code{x} will be replaced
 by \code{tagged_na}, else by usual \code{NA} values. Use a named
 vector to assign the value label to the tagged NA value (see 'Examples').}
-
-\item{value}{Deprecated. Please use \code{na} instead.}
 }
 \value{
 \code{x}, with all elements of \code{na} being replaced by \code{NA}.
@@ -53,7 +51,7 @@ This function replaces specific values of variables with \code{NA}.
 Labels from values that are replaced with NA and no longer used will be
         removed from \code{x}, however, other value and variable label
         attributes are preserved. For more details on labelled data,
-        see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}.
+        see vignette \href{https://cran.r-project.org/package=sjlabelled/vignettes/intro_sjlabelled.html}{Labelled Data and the sjlabelled-Package}.
 }
 \examples{
 # create random variable

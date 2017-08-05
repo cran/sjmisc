@@ -19,7 +19,6 @@
 #' @param as.tag Logical, if \code{TRUE}, values in \code{x} will be replaced
 #'          by \code{tagged_na}, else by usual \code{NA} values. Use a named
 #'          vector to assign the value label to the tagged NA value (see 'Examples').
-#' @param value Deprecated. Please use \code{na} instead.
 #'
 #' @inheritParams to_factor
 #'
@@ -32,7 +31,7 @@
 #' @note Labels from values that are replaced with NA and no longer used will be
 #'         removed from \code{x}, however, other value and variable label
 #'         attributes are preserved. For more details on labelled data,
-#'         see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}.
+#'         see vignette \href{https://cran.r-project.org/package=sjlabelled/vignettes/intro_sjlabelled.html}{Labelled Data and the sjlabelled-Package}.
 #'
 #' @details \code{set_na()} converts all values defined in \code{na} with
 #'            a related \code{NA} or tagged NA value (see \code{\link[haven]{tagged_na}}).
@@ -106,13 +105,7 @@
 #'
 #'
 #' @export
-set_na <- function(x, ..., na, drop.levels = TRUE, as.tag = FALSE, value) {
-  # check deprecated arguments
-  if (!missing(value)) {
-    message("Argument `value` is deprecated. Please use `na` instead.")
-    na <- value
-  }
-
+set_na <- function(x, ..., na, drop.levels = TRUE, as.tag = FALSE) {
   # check for valid value
   if (is.null(na) || is.na(na)) return(x)
 

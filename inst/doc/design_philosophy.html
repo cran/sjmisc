@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2017-06-12" />
+<meta name="date" content="2017-08-04" />
 
 <title>The Design Philosophy of Functions in sjmisc</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">The Design Philosophy of Functions in sjmisc</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2017-06-12</em></h4>
+<h4 class="date"><em>2017-08-04</em></h4>
 
 
 
@@ -91,10 +91,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>If the data-argument is a data frame, the function returns a data frame.</li>
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(sjmisc)
+<span class="co">#&gt; Install package &quot;strengejacke&quot; from GitHub (`devtools::install_github(&quot;strengejacke/strengejacke&quot;)`) to load all sj-packages at once!</span>
 <span class="kw">data</span>(efc)
 
 <span class="co"># returns a vector</span>
-x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span class="dt">rec =</span> <span class="st">&quot;1,2=1; 3,4=2&quot;</span>)
+x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">$</span>e42dep, <span class="dt">rec =</span> <span class="st">&quot;1,2=1; 3,4=2&quot;</span>)
 <span class="kw">str</span>(x)
 <span class="co">#&gt;  atomic [1:908] 2 2 2 2 2 2 2 2 2 2 ...</span>
 <span class="co">#&gt;  - attr(*, &quot;label&quot;)= chr &quot;elder's dependency&quot;</span>
@@ -122,7 +123,7 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 <p>The selection of variables specified in the <code>...</code>-ellipses-argument is powered by dplyr’s <code>select()</code>. This means, you can use existing functions like <code>:</code> to select a range of variables, or also use dplyr’s <code>select_helpers</code>, like <code>contains()</code> or <code>one_of()</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># select all variables with &quot;cop&quot; in their names, and also</span>
 <span class="co"># the range from c161sex to c175empl</span>
-<span class="kw">rec</span>(efc, <span class="kw">contains</span>(<span class="st">&quot;cop&quot;</span>), c161sex:c175empl, <span class="dt">rec =</span> <span class="st">&quot;0,1=0; else=1&quot;</span>)
+<span class="kw">rec</span>(efc, <span class="kw">contains</span>(<span class="st">&quot;cop&quot;</span>), c161sex<span class="op">:</span>c175empl, <span class="dt">rec =</span> <span class="st">&quot;0,1=0; else=1&quot;</span>)
 <span class="co">#&gt; # A tibble: 908 x 12</span>
 <span class="co">#&gt;    c82cop1_r c83cop2_r c84cop3_r c85cop4_r c86cop5_r c87cop6_r c88cop7_r</span>
 <span class="co">#&gt;        &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span>
@@ -141,7 +142,7 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 
 <span class="co"># center all variables with &quot;age&quot; in name, variable c12hour</span>
 <span class="co"># and all variables from column 19 to 21</span>
-<span class="kw">center</span>(efc, c12hour, <span class="kw">contains</span>(<span class="st">&quot;age&quot;</span>), <span class="dv">19</span>:<span class="dv">21</span>)
+<span class="kw">center</span>(efc, c12hour, <span class="kw">contains</span>(<span class="st">&quot;age&quot;</span>), <span class="dv">19</span><span class="op">:</span><span class="dv">21</span>)
 <span class="co">#&gt; # A tibble: 908 x 6</span>
 <span class="co">#&gt;     c12hour_c    e17age_c  c160age_c barthtot_c  neg_c_7_c pos_v_4_c</span>
 <span class="co">#&gt;         &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;</span>
@@ -225,8 +226,8 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 <span class="co">#&gt; 10         2         0</span>
 <span class="co">#&gt; # ... with 898 more rows</span></code></pre></div>
 <p>These variables usually get a suffix, so you can bind these variables as new columns to a data frame, for instance with <code>add_columns()</code>. The function <code>add_columns()</code> is useful if you want to bind/add columns within a pipe-chain <em>to the end</em> of a data frame.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">rec</span>(c82cop1, c83cop2, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>, <span class="dt">append =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">rec</span>(c82cop1, c83cop2, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>, <span class="dt">append =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">add_columns</span>(efc)
 <span class="co">#&gt; # A tibble: 908 x 28</span>
 <span class="co">#&gt;    c12hour e15relat e16sex e17age e42dep c82cop1 c83cop2 c84cop3 c85cop4</span>
@@ -252,8 +253,8 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 <div id="sjmisc-and-dplyr" class="section level2">
 <h2>sjmisc and dplyr</h2>
 <p>The functions of <strong>sjmisc</strong> are designed to work together seamlessly with other packes from the tidyverse, like <strong>dplyr</strong>. For instance, you can use the functions from <strong>sjmisc</strong> both within a pipe-worklflow to manipulate data frames, or to create new variables with <code>mutate()</code>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">select</span>(c82cop1, c83cop2) %&gt;%<span class="st"> </span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(c82cop1, c83cop2) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">rec</span>(<span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>)
 <span class="co">#&gt; # A tibble: 908 x 2</span>
 <span class="co">#&gt;    c82cop1_r c83cop2_r</span>
@@ -270,12 +271,12 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc$e42dep, <span cl
 <span class="co">#&gt; 10         2         0</span>
 <span class="co">#&gt; # ... with 898 more rows</span>
 
-efc %&gt;%<span class="st"> </span>
-<span class="st">  </span><span class="kw">select</span>(c82cop1, c83cop2) %&gt;%<span class="st"> </span>
+efc <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(c82cop1, c83cop2) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">mutate</span>(
     <span class="dt">c82cop1_dicho =</span> <span class="kw">rec</span>(c82cop1, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>),
     <span class="dt">c83cop2_dicho =</span> <span class="kw">rec</span>(c83cop2, <span class="dt">rec =</span> <span class="st">&quot;1,2=0; 3:4=2&quot;</span>)
-  ) %&gt;%<span class="st"> </span>
+  ) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">head</span>()
 <span class="co">#&gt;   c82cop1 c83cop2 c82cop1_dicho c83cop2_dicho</span>
 <span class="co">#&gt; 1       3       2             2             0</span>

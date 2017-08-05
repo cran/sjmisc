@@ -5,7 +5,7 @@
 \title{Recode variables}
 \usage{
 rec(x, ..., rec, as.num = TRUE, var.label = NULL, val.labels = NULL,
-  append = FALSE, suffix = "_r", recodes)
+  append = FALSE, suffix = "_r")
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -23,12 +23,12 @@ function to create recode strings for grouping variables.}
 \item{as.num}{Logical, if \code{TRUE}, return value will be numeric, not a factor.}
 
 \item{var.label}{Optional string, to set variable label attribute for the
-returned variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
+returned variable (see vignette \href{https://cran.r-project.org/package=sjlabelled/vignettes/intro_sjlabelled.html}{Labelled Data and the sjlabelled-Package}).
 If \code{NULL} (default), variable label attribute of \code{x} will
 be used (if present). If empty, variable label attributes will be removed.}
 
 \item{val.labels}{Optional character vector, to set value label attributes
-of recoded variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
+of recoded variable (see vignette \href{https://cran.r-project.org/package=sjlabelled/vignettes/intro_sjlabelled.html}{Labelled Data and the sjlabelled-Package}).
 If \code{NULL} (default), no value labels will be set. Value labels
 can also be directly defined in the \code{rec}-syntax, see
 'Details'.}
@@ -50,8 +50,6 @@ column names in a data frame depends on the function call:
   \item standardized variables (\code{std()}) will be suffixed with \code{"_z"}
   \item centered variables (\code{center()}) will be suffixed with \code{"_c"}
 }}
-
-\item{recodes}{Deprecated. Use \code{rec} instead.}
 }
 \value{
 \code{x} with recoded categories. If \code{x} is a data frame,
@@ -146,6 +144,9 @@ lapply(
 # recode character vector
 dummy <- c("M", "F", "F", "X")
 rec(dummy, rec = "M=Male; F=Female; X=Refused")
+
+# recode numeric to character
+rec(efc$e42dep, rec = "1=first;2=2nd;3=third;else=hi")
 
 # recode non-numeric factors
 data(iris)

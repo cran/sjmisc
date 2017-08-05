@@ -4,8 +4,8 @@
 \alias{split_var}
 \title{Split numeric variables into smaller groups}
 \usage{
-split_var(x, ..., groupcount, as.num = FALSE, val.labels = NULL,
-  var.label = NULL, inclusive = FALSE, append = FALSE, suffix = "_g")
+split_var(x, ..., n, as.num = FALSE, val.labels = NULL, var.label = NULL,
+  inclusive = FALSE, append = FALSE, suffix = "_g", groupcount)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -16,18 +16,18 @@ vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
-\item{groupcount}{The new number of groups that \code{x} should be split into.}
+\item{n}{The new number of groups that \code{x} should be split into.}
 
 \item{as.num}{Logical, if \code{TRUE}, return value will be numeric, not a factor.}
 
 \item{val.labels}{Optional character vector, to set value label attributes
-of recoded variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
+of recoded variable (see vignette \href{https://cran.r-project.org/package=sjlabelled/vignettes/intro_sjlabelled.html}{Labelled Data and the sjlabelled-Package}).
 If \code{NULL} (default), no value labels will be set. Value labels
 can also be directly defined in the \code{rec}-syntax, see
 'Details'.}
 
 \item{var.label}{Optional string, to set variable label attribute for the
-returned variable (see vignette \href{../doc/intro_sjmisc.html}{Labelled Data and the sjmisc-Package}).
+returned variable (see vignette \href{https://cran.r-project.org/package=sjlabelled/vignettes/intro_sjlabelled.html}{Labelled Data and the sjlabelled-Package}).
 If \code{NULL} (default), variable label attribute of \code{x} will
 be used (if present). If empty, variable label attributes will be removed.}
 
@@ -53,6 +53,8 @@ column names in a data frame depends on the function call:
   \item standardized variables (\code{std()}) will be suffixed with \code{"_z"}
   \item centered variables (\code{center()}) will be suffixed with \code{"_c"}
 }}
+
+\item{groupcount}{Deprecated. Use \code{n} instead.}
 }
 \value{
 A grouped variable with equal sized groups. If \code{x} is a data frame,
@@ -74,6 +76,10 @@ Recode numeric variables into equal sized groups, i.e. a
            By contrast, \code{\link{group_var}} recodes a variable into
            groups, where groups have the same value range
            (e.g., from 1-5, 6-10, 11-15 etc.).
+           \cr \cr
+           \code{split_var()} also works on grouped data frames (see \code{\link[dplyr]{group_by}}).
+           In this case, splitting is applied to the subsets of variables
+           in \code{x}. See 'Examples'.
 }
 \note{
 In case a vector has only few number of unique values, splitting into
@@ -87,22 +93,43 @@ data(efc)
 table(efc$neg_c_7)
 
 # split into 3 groups
-table(split_var(efc$neg_c_7, groupcount = 3))
+table(split_var(efc$neg_c_7, n = 3))
 
 # split multiple variables into 3 groups
-split_var(efc, neg_c_7, pos_v_4, e17age, groupcount = 3)
-frq(split_var(efc, neg_c_7, pos_v_4, e17age, groupcount = 3))
+split_var(efc, neg_c_7, pos_v_4, e17age, n = 3)
+frq(split_var(efc, neg_c_7, pos_v_4, e17age, n = 3))
 
 # original
 table(efc$e42dep)
 
 # two groups, non-inclusive cut-point
 # vector split leads to unequal group sizes
-table(split_var(efc$e42dep, groupcount = 2))
+table(split_var(efc$e42dep, n = 2))
 
 # two groups, inclusive cut-point
 # group sizes are equal
-table(split_var(efc$e42dep, groupcount = 2, inclusive = TRUE))
+table(split_var(efc$e42dep, n = 2, inclusive = TRUE))
+
+# Unlike dplyr's ntile(), split_var() never splits a value
+# into two different categories, i.e. you always get a clean
+# separation of original categories
+library(dplyr)
+
+x <- dplyr::ntile(efc$neg_c_7, n = 3)
+table(efc$neg_c_7, x)
+
+x <- split_var(efc$neg_c_7, n = 3)
+table(efc$neg_c_7, x)
+
+# works also with gouped data frames
+mtcars \%>\%
+  split_var(disp, n = 3) \%>\%
+  table()
+
+mtcars \%>\%
+  group_by(cyl) \%>\%
+  split_var(disp, n = 3) \%>\%
+  table()
 
 }
 \seealso{
