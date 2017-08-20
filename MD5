@@ -1,7 +1,7 @@
-2facd31312d57c57e9f1066e240bfc50 *DESCRIPTION
+d779bcc6353e5c364b70f354ce212c93 *DESCRIPTION
 6d4249cca144ae8467a01488190f7324 *NAMESPACE
-818ff92783f592c64649ef2f9fe70cce *NEWS
-197ec569b855892104a3149849327553 *NEWS.md
+a8a905920788b59b1b57de1563f2637a *NEWS
+66bb21bee1381e4498995f7ff041c2cd *NEWS.md
 52b9162e01ff672b6de6428af6d7f099 *R/S3-methods.R
 131ad76acdeedf775ddfd7c15cd8aac1 *R/add_columns.R
 a6a6b4272192923cee59f4c038f3c92a *R/all_na.R
@@ -11,7 +11,7 @@ bc94db98cefa834b2f38e505c02030f0 *R/descr.R
 8516532e28c8102737429bf1f6b98c80 *R/dicho.R
 db1a52d2c6c5570f1b97b5cb08dc59e5 *R/efc.R
 e5ea3658f9ac78ef120bfe4feac80d34 *R/find_var.R
-215de17b1cee55345491cf9524b0874f *R/frq.R
+fbb6e879eb117e29816e9c409b2ec0be *R/frq.R
 61670e6fce9eea9bd149eabc84a1806f *R/group_str.R
 84c39ef7d42172437ecb84787facd0fb *R/group_var.R
 84c0e0ddc6ee6601cc1a76b98f97ffae *R/helpfunctions.R
@@ -20,7 +20,7 @@ e5ea3658f9ac78ef120bfe4feac80d34 *R/find_var.R
 06e7411b30eb69fec5092a0a5a6d9e2a *R/is_even.R
 6cd23dcdf3583045cc3ca5d475a8518e *R/is_num_fac.R
 9861a0b7f5309f66c40d4ca0bfef6a17 *R/merge_df.R
-a4c631fa63b7ce413181d8d9104c7f00 *R/merge_imputations.R
+5aaaaa95649a1a1a7910c98788a91509 *R/merge_imputations.R
 cae6f2ad9a5daef98f0326baebd91af9 *R/notin.R
 bff87563c6e79142e8a81cad4ea0e6fb *R/prop_table.R
 edc841046e6d54b98738fbbee7039bb2 *R/rec.R
@@ -43,7 +43,7 @@ c72eecee3db20956db2eb662478071bf *R/split_var.R
 51e67c824540569d8a86e43950897219 *R/to_dummy.R
 2c9b54c0d3be684d835a012480c12665 *R/to_factor.R
 5c456efae8ce59f0f889cf326c8f2255 *R/to_label.R
-9026fec00510559b3d6a93c3540801e0 *R/to_long.R
+27c75fe759291a1363bc8a90b0232499 *R/to_long.R
 1fd81ac32005952a62846b9c68e2a6bd *R/to_value.R
 5f90508ac8a7e4560772e6e0b0943504 *R/trim.R
 515e4ffe53c10ddf89f01fdfc1806f00 *R/var_labels.R
@@ -52,16 +52,16 @@ c72eecee3db20956db2eb662478071bf *R/split_var.R
 bad3cbae255b66f9f8b0463a5871b030 *R/zap_inf.R
 74146d25a636af68b998f79655e07deb *R/zzz.R
 a2178506a4d3b93209d0a5bb9b86228c *README.md
-5d322dfe087cd572bab2176eb9061465 *build/partial.rdb
+2518ba393db8aadae78c46952775ccaa *build/partial.rdb
 97a87a41d99def9fa1e26d4497e47de6 *build/vignette.rds
 3172b22b3d87d0f86d78326bc26891fc *data/efc.RData
 eaa45c409d036aa8493d2b7298315171 *inst/CITATION
 144644b123feec14968b2d8b04f9d3c8 *inst/doc/design_philosophy.R
 7ea00d69a0dd938217cc3f55efd49f40 *inst/doc/design_philosophy.Rmd
-9f1fb7cd8155a928e84a4f53ea6760a3 *inst/doc/design_philosophy.html
+1fdbca8b43d8d48b2376b59f39ede4a5 *inst/doc/design_philosophy.html
 d4ade7cf58059f924ce20a896b57a757 *inst/doc/exploringdatasets.R
 9ac7ab229bb5eadd24fbbecda6ef96c6 *inst/doc/exploringdatasets.Rmd
-2dcab0b5d0d5d34a61cacb830ea5719d *inst/doc/exploringdatasets.html
+59caa1fb021165de32e54f08891985e5 *inst/doc/exploringdatasets.html
 f341154556e92a9d5ef8e90ecf1a7db4 *man/add_columns.Rd
 1e840b3fe407383a987f1836a335a192 *man/all_na.Rd
 b35cadda3a334236e7edb2e796ba995e *man/big_mark.Rd
