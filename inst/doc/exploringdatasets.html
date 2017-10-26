@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2017-08-20" />
+<meta name="date" content="2017-10-26" />
 
 <title>Exploring Data Sets</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Exploring Data Sets</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2017-08-20</em></h4>
+<h4 class="date"><em>2017-10-26</em></h4>
 
 
 
@@ -103,6 +103,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>By default, it looks for variable name and labels. The function also supports regex-patterns. By default, <code>find_var()</code> returns the column-indices, but you can also print a small “summary”&quot; with the <code>as.varlab</code>-argument.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># find all variables with &quot;dependency&quot; in name or label</span>
 <span class="kw">find_var</span>(efc, <span class="st">&quot;dependency&quot;</span>, <span class="dt">as.varlab =</span> T)
+<span class="co">#&gt; `as.varlab` is deprecated. Please use `out = &quot;table&quot; instead.</span>
 <span class="co">#&gt; # A tibble: 1 x 3</span>
 <span class="co">#&gt;   col.nr var.name          var.label</span>
 <span class="co">#&gt;    &lt;int&gt;    &lt;chr&gt;              &lt;chr&gt;</span>
@@ -196,7 +197,7 @@ efc <span class="op">%&gt;%</span>
 <span class="co">#&gt; 2   severely dependent &lt;tibble [304 x 3]&gt;</span>
 <span class="co">#&gt; 3          independent  &lt;tibble [66 x 3]&gt;</span>
 <span class="co">#&gt; 4   slightly dependent &lt;tibble [225 x 3]&gt;</span>
-<span class="co">#&gt; 5                   NA   &lt;tibble [7 x 3]&gt;</span></code></pre></div>
+<span class="co">#&gt; 5                 &lt;NA&gt;   &lt;tibble [7 x 3]&gt;</span></code></pre></div>
 </div>
 <div id="get-coefficients-of-nested-models" class="section level2">
 <h2>Get coefficients of nested models</h2>
