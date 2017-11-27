@@ -5,9 +5,10 @@
 \alias{center}
 \title{Standardize and center variables}
 \usage{
-std(x, ..., include.fac = TRUE, append = FALSE, suffix = "_z")
+std(x, ..., robust = c("sd", "gmd", "mad"), include.fac = FALSE,
+  append = FALSE, suffix = "_z")
 
-center(x, ..., include.fac = TRUE, append = FALSE, suffix = "_c")
+center(x, ..., include.fac = FALSE, append = FALSE, suffix = "_c")
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -17,6 +18,14 @@ further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
+
+\item{robust}{Character vector, indicating the method applied when
+standardizing variables with \code{std()}. By default, standardization is
+achieved by dividing the centered variables by their standard deviation
+(\code{robust = "sd"}). However, for skewed distributions, the median
+absolute deviation (MAD, \code{robust = "mad"}) or Gini's mean difference
+(\code{robust = "gmd"}) might be more robust measures of dispersion. For
+the latter option, \CRANpkg{sjstats} needs to be installed.}
 
 \item{include.fac}{Logical, if \code{TRUE}, factors will be converted to numeric
 vectors and also standardized or centered.}
@@ -78,11 +87,17 @@ efc \%>\%
   mutate(age_std = std(e17age), burden = center(neg_c_7)) \%>\%
   head()
 
-# works also with gouped data frames
+# works also with grouped data frames
 mtcars \%>\% std(disp)
 
 mtcars \%>\%
   group_by(cyl) \%>\%
   std(disp)
+
+data(iris)
+# also standardize factors
+std(iris, include.fac = TRUE)
+# don't standardize factors
+std(iris, include.fac = FALSE)
 
 }

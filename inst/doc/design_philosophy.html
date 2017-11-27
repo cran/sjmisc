@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2017-10-26" />
+<meta name="date" content="2017-11-28" />
 
 <title>The Design Philosophy of Functions in sjmisc</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">The Design Philosophy of Functions in sjmisc</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2017-10-26</em></h4>
+<h4 class="date"><em>2017-11-28</em></h4>
 
 
 
@@ -91,6 +91,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>If the data-argument is a data frame, the function returns a data frame.</li>
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(sjmisc)
+<span class="co">#&gt; Learn more about sjmisc with 'browseVignettes(&quot;sjmisc&quot;)'.</span>
 <span class="kw">data</span>(efc)
 
 <span class="co"># returns a vector</span>
@@ -119,7 +120,7 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 </div>
 <div id="the--ellipses-argument" class="section level2">
 <h2>The …-ellipses-argument</h2>
-<p>The selection of variables specified in the <code>...</code>-ellipses-argument is powered by dplyr’s <code>select()</code>. This means, you can use existing functions like <code>:</code> to select a range of variables, or also use dplyr’s <code>select_helpers</code>, like <code>contains()</code> or <code>one_of()</code>.</p>
+<p>The selection of variables specified in the <code>...</code>-ellipses-argument is powered by dplyr’s <code>select()</code> and tidyselect’s <code>select_helpers()</code>. This means, you can use existing functions like <code>:</code> to select a range of variables, or also use tidyselect’s <code>select_helpers</code>, like <code>contains()</code> or <code>one_of()</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># select all variables with &quot;cop&quot; in their names, and also</span>
 <span class="co"># the range from c161sex to c175empl</span>
 <span class="kw">rec</span>(efc, <span class="kw">contains</span>(<span class="st">&quot;cop&quot;</span>), c161sex<span class="op">:</span>c175empl, <span class="dt">rec =</span> <span class="st">&quot;0,1=0; else=1&quot;</span>)

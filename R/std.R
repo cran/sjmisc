@@ -4,7 +4,14 @@
 #'              on the input. \code{center()} centers the input.
 #'
 #' @param include.fac Logical, if \code{TRUE}, factors will be converted to numeric
-#'          vectors and also standardized or centered.
+#'   vectors and also standardized or centered.
+#' @param robust Character vector, indicating the method applied when
+#'   standardizing variables with \code{std()}. By default, standardization is
+#'   achieved by dividing the centered variables by their standard deviation
+#'   (\code{robust = "sd"}). However, for skewed distributions, the median
+#'   absolute deviation (MAD, \code{robust = "mad"}) or Gini's mean difference
+#'   (\code{robust = "gmd"}) might be more robust measures of dispersion. For
+#'   the latter option, \CRANpkg{sjstats} needs to be installed.
 #'
 #' @inheritParams to_factor
 #' @inheritParams rec
@@ -41,103 +48,59 @@
 #'   mutate(age_std = std(e17age), burden = center(neg_c_7)) %>%
 #'   head()
 #'
-#' # works also with gouped data frames
+#' # works also with grouped data frames
 #' mtcars %>% std(disp)
 #'
 #' mtcars %>%
 #'   group_by(cyl) %>%
 #'   std(disp)
 #'
+#' data(iris)
+#' # also standardize factors
+#' std(iris, include.fac = TRUE)
+#' # don't standardize factors
+#' std(iris, include.fac = FALSE)
+#'
+#' @importFrom dplyr quos
 #' @export
-std <- function(x, ..., include.fac = TRUE, append = FALSE, suffix = "_z") {
+std <- function(x, ..., robust = c("sd", "gmd", "mad"), include.fac = FALSE, append = FALSE, suffix = "_z") {
   # evaluate arguments, generate data
   .dat <- get_dot_data(x, dplyr::quos(...))
 
-  std_and_center(x, .dat, include.fac, append, standardize = TRUE, suffix)
+  # match arguments
+  robust <- match.arg(robust)
+
+  std_and_center(x, .dat, include.fac, append, standardize = TRUE, robust = robust, suffix)
 }
 
 
 #' @rdname std
 #' @export
-center <- function(x, ..., include.fac = TRUE, append = FALSE, suffix = "_c") {
+center <- function(x, ..., include.fac = FALSE, append = FALSE, suffix = "_c") {
   # evaluate arguments, generate data
   .dat <- get_dot_data(x, dplyr::quos(...))
 
-  std_and_center(x, .dat, include.fac, append, standardize = FALSE, suffix)
+  std_and_center(x, .dat, include.fac, append, standardize = FALSE, robust = NULL, suffix)
 }
 
 
-std_and_center <- function(x, .dat, include.fac, append, standardize, suffix) {
-  if (is.data.frame(x)) {
-
-    # remember original data, if user wants to bind columns
-    orix <- tibble::as_tibble(x)
-
-    # do we have a grouped data frame?
-    if (inherits(.dat, "grouped_df")) {
-
-      # get grouped data, as nested data frame
-      grps <- get_grouped_data(.dat)
-
-      # iterate all groups
-      for (i in seq_len(nrow(grps))) {
-        # get data from each single group
-        group <- grps$data[[i]]
-
-        # now iterate all variables of interest
-        for (j in colnames(group)) {
-          group[[j]] <- std_helper(
-            x = group[[j]],
-            include.fac = include.fac,
-            standardize = standardize
-          )
-        }
-
-        # write back data
-        grps$data[[i]] <- group
-      }
-
-      # unnest data frame
-      x <- tidyr::unnest(grps)
-
-      # remove grouping column
-      .dat <- .dat[colnames(.dat) %nin% dplyr::group_vars(.dat)]
-
-    } else {
-      # iterate variables of data frame
-      for (i in colnames(.dat)) {
-        x[[i]] <- std_helper(
-          x = .dat[[i]],
-          include.fac = include.fac,
-          standardize = standardize
-        )
-      }
-    }
-
-    # coerce to tibble and select only recoded variables
-    x <- tibble::as_tibble(x[colnames(.dat)])
-
-    # add suffix to recoded variables?
-    if (!is.null(suffix) && !sjmisc::is_empty(suffix)) {
-      colnames(x) <- sprintf("%s%s", colnames(x), suffix)
-
-      }
-    # combine data
-    if (append) x <- dplyr::bind_cols(orix, x)
-  } else {
-    x <- std_helper(
-      x = .dat,
-      include.fac = include.fac,
-      standardize = standardize
-    )
-  }
-
-  x
+std_and_center <- function(x, .dat, include.fac, append, standardize, robust, suffix) {
+  recode_fun(
+    x = x,
+    .dat = .dat,
+    fun = get("std_helper", asNamespace("sjmisc")),
+    suffix = suffix,
+    append = append,
+    include.fac = include.fac,
+    standardize = standardize,
+    robust = robust
+  )
 }
 
 
-#' @importFrom stats sd na.omit
-std_helper <- function(x, include.fac, standardize) {
+#' @importFrom stats sd na.omit mad
+#' @importFrom sjlabelled get_label set_label
+std_helper <- function(x, include.fac, standardize, robust) {
   # check whether factors should also be standardized
   if (is.factor(x)) {
     if (include.fac)
@@ -145,6 +108,9 @@ std_helper <- function(x, include.fac, standardize) {
     else
       return(x)
   }
+
+  # non-numeric are preserved.
+  if (!is.numeric(x)) return(x)
 
   # remove missings
   tmp <- stats::na.omit(x)
@@ -154,7 +120,19 @@ std_helper <- function(x, include.fac, standardize) {
 
   # now center and standardize
   tmp <- tmp - mean(tmp)
-  if (standardize) tmp <- tmp / stats::sd(tmp)
+
+
+  # standardization can be achieved by std. dev., MAD or Gini's MD
+
+  if (standardize) {
+    if (robust == "mad")
+      tmp <- tmp / stats::mad(tmp)
+    else if (robust == "gmd" && requireNamespace("sjstats", quietly = TRUE))
+      tmp <- tmp / sjstats::gmd(tmp)
+    else
+      tmp <- tmp / stats::sd(tmp)
+  }
+
 
   # and fill in values in original vector
   x[!is.na(x)] <- tmp

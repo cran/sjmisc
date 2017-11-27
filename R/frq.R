@@ -78,21 +78,28 @@ frq <- function(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
 
   # do we have a grouped data frame?
   if (inherits(x, "grouped_df")) {
+
     # get grouped data
     grps <- get_grouped_data(x)
 
-    # now plot everything
-    for (i in seq_len(nrow(grps))) {
-      # copy back labels to grouped data frame
-      tmp <- sjlabelled::copy_labels(grps$data[[i]], x)
+    # we may have more than two variables...
+    for (j in seq_len(ncol(grps$data[[1]]))) {
 
-      # print frequencies
-      dummy <- frq_helper(x = tmp[[1]], sort.frq = sort.frq, weight.by = weight.by)
-      attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = "\n")
+      # now plot everything
+      for (i in seq_len(nrow(grps))) {
+        # copy back labels to grouped data frame
+        tmp <- sjlabelled::copy_labels(grps$data[[i]][j], x)
 
-      # save data frame for return value
-      dataframes[[length(dataframes) + 1]] <- dummy
+        # print frequencies
+        dummy <- frq_helper(x = tmp[[1]], sort.frq = sort.frq, weight.by = weight.by)
+        attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = "\n")
+
+        # save data frame for return value
+        dataframes[[length(dataframes) + 1]] <- dummy
+      }
+
     }
+
   } else {
     # if we don't have data frame, coerce
     if (!is.data.frame(x)) x <- tibble::tibble(x)
@@ -299,19 +306,21 @@ get_title_part <- function(x, grps, level, i) {
 #' @importFrom tidyr nest
 #' @importFrom dplyr filter
 #' @importFrom stats complete.cases
+#' @importFrom rlang .data
 get_grouped_data <- function(x) {
   # nest data frame
   grps <- tidyr::nest(x)
 
-  # remove NA category
+  # remove NA category for grouped data
   cc <- grps %>%
     dplyr::select(-.data$data) %>%
     stats::complete.cases()
 
   # select only complete cases
-  grps <- grps %>% dplyr::filter(cc)
+  grps <- dplyr::filter(grps, !! cc)
 
   # arrange data
+
   if (length(attr(x, "vars", exact = T)) == 1)
     reihe <- order(grps[[1]])
   else

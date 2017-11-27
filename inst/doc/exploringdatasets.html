@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2017-10-26" />
+<meta name="date" content="2017-11-28" />
 
 <title>Exploring Data Sets</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Exploring Data Sets</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2017-10-26</em></h4>
+<h4 class="date"><em>2017-11-28</em></h4>
 
 
 
@@ -83,7 +83,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h2>Print frequencies with labels</h2>
 <p>The first thing that may be of interest is probably the distribution of gender. You can plot frequencies for labelled data with <code>frq()</code>. This function requires either a vector or data frame as input and prints the variable label as first line, followed by a frequency-table with values, labels, counts and percentages of the vector.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">frq</span>(efc<span class="op">$</span>c161sex)
+<span class="co">#&gt; </span>
 <span class="co">#&gt; # carer's gender &lt;numeric&gt;</span>
+<span class="co">#&gt; # Total N = 908 (valid N = 901)</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val  label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1   Male 215   23.68     23.86   23.86</span>
@@ -100,10 +102,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>value labels</li>
 <li>or any combination of these.</li>
 </ol>
-<p>By default, it looks for variable name and labels. The function also supports regex-patterns. By default, <code>find_var()</code> returns the column-indices, but you can also print a small “summary”&quot; with the <code>as.varlab</code>-argument.</p>
+<p>By default, it looks for variable name and labels. The function also supports regex-patterns. By default, <code>find_var()</code> returns the column-indices, but you can also print a small “summary”&quot; with the <code>out</code>-argument.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># find all variables with &quot;dependency&quot; in name or label</span>
-<span class="kw">find_var</span>(efc, <span class="st">&quot;dependency&quot;</span>, <span class="dt">as.varlab =</span> T)
-<span class="co">#&gt; `as.varlab` is deprecated. Please use `out = &quot;table&quot; instead.</span>
+<span class="kw">find_var</span>(efc, <span class="st">&quot;dependency&quot;</span>, <span class="dt">out =</span> <span class="st">&quot;table&quot;</span>)
 <span class="co">#&gt; # A tibble: 1 x 3</span>
 <span class="co">#&gt;   col.nr var.name          var.label</span>
 <span class="co">#&gt;    &lt;int&gt;    &lt;chr&gt;              &lt;chr&gt;</span>
@@ -140,7 +141,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 )
 <span class="co"># print frequencies</span>
 <span class="kw">frq</span>(efc<span class="op">$</span>burden)
+<span class="co">#&gt; </span>
 <span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
+<span class="co">#&gt; # Total N = 908 (valid N = 892)</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low 280   30.84     31.39   31.39</span>
@@ -156,10 +159,12 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="st">  </span><span class="kw">select</span>(burden, c161sex) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">group_by</span>(c161sex) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">frq</span>()
+<span class="co">#&gt; </span>
 <span class="co">#&gt; Grouped by:</span>
 <span class="co">#&gt; carer's gender: Male</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
+<span class="co">#&gt; # Total N = 215 (valid N = 212)</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low  80   37.21     37.74   37.74</span>
@@ -172,6 +177,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co">#&gt; carer's gender: Female</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
+<span class="co">#&gt; # Total N = 686 (valid N = 679)</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low 199   29.01     29.31   29.31</span>

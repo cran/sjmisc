@@ -22,8 +22,6 @@
 #' @param n Sets the maximum number of groups that are defined when auto-grouping is on
 #'          (\code{size = "auto"}). Default is 30. If \code{size} is not set to \code{"auto"},
 #'          this argument will be ignored.
-#' @param groupsize Deprecated. Use \code{size} instead.
-#' @param groupcount Deprecated. Use \code{n} instead.
 #'
 #' @inheritParams to_factor
 #' @inheritParams rec
@@ -115,94 +113,22 @@
 #' @importFrom purrr map
 #' @export
 group_var <- function(x, ..., size = 5, as.num = TRUE, right.interval = FALSE,
-                      n = 30, append = FALSE, suffix = "_gr", groupsize, groupcount) {
-
-  # check deprecated arguments
-  if (!missing(groupcount)) {
-    message("Argument `groupcount` is deprecated. Please use `n` instead.")
-    n <- groupcount
-  }
-
-  if (!missing(groupsize)) {
-    message("Argument `groupsize` is deprecated. Please use `size` instead.")
-    size <- groupsize
-  }
-
+                      n = 30, append = FALSE, suffix = "_gr") {
 
   # evaluate arguments, generate data
   .dat <- get_dot_data(x, dplyr::quos(...))
 
-  if (is.data.frame(x)) {
-
-    # remember original data, if user wants to bind columns
-    orix <- tibble::as_tibble(x)
-
-    # do we have a grouped data frame?
-    if (inherits(.dat, "grouped_df")) {
-
-      # get grouped data, as nested data frame
-      grps <- get_grouped_data(.dat)
-
-      # iterate all groups
-      for (i in seq_len(nrow(grps))) {
-        # get data from each single group
-        group <- grps$data[[i]]
-
-        # now iterate all variables of interest
-        for (j in colnames(group)) {
-          group[[j]] <- g_v_helper(
-            x = group[[j]],
-            groupsize = size,
-            as.num = as.num,
-            right.interval = right.interval,
-            groupcount = n
-          )
-        }
-
-        # write back data
-        grps$data[[i]] <- group
-      }
-
-      # unnest data frame
-      x <- tidyr::unnest(grps)
-
-      # remove grouping column
-      .dat <- .dat[colnames(.dat) %nin% dplyr::group_vars(.dat)]
-
-    } else {
-      # iterate variables of data frame
-      for (i in colnames(.dat)) {
-        x[[i]] <- g_v_helper(
-          x = .dat[[i]],
-          groupsize = size,
-          as.num = as.num,
-          right.interval = right.interval,
-          groupcount = n
-        )
-      }
-    }
-
-    # coerce to tibble and select only recoded variables
-    x <- tibble::as_tibble(x[colnames(.dat)])
-
-    # add suffix to recoded variables?
-    if (!is.null(suffix) && !sjmisc::is_empty(suffix)) {
-      colnames(x) <- sprintf("%s%s", colnames(x), suffix)
-    }
-
-    # combine data
-    if (append) x <- dplyr::bind_cols(orix, x)
-  } else {
-    x <- g_v_helper(
-      x = .dat,
-      groupsize = size,
-      as.num = as.num,
-      right.interval = right.interval,
-      groupcount = n
-    )
-  }
-
-  x
+  recode_fun(
+    x = x,
+    .dat = .dat,
+    fun = get("g_v_helper", asNamespace("sjmisc")),
+    suffix = suffix,
+    append = append,
+    groupsize = size,
+    as.num = as.num,
+    right.interval = right.interval,
+    groupcount = n
+  )
 }
 
 
@@ -227,19 +153,10 @@ g_v_helper <- function(x, groupsize, as.num, right.interval, groupcount) {
 
 
 #' @rdname group_var
+#' @importFrom purrr map
+#' @importFrom dplyr quos
 #' @export
-group_labels <- function(x, ..., size = 5, right.interval = FALSE, n = 30, groupsize, groupcount) {
-  # check deprecated arguments
-  if (!missing(groupcount)) {
-    message("Argument `groupcount` is deprecated. Please use `n` instead.")
-    n <- groupcount
-  }
-
-  if (!missing(groupsize)) {
-    message("Argument `groupsize` is deprecated. Please use `size` instead.")
-    size <- groupsize
-  }
-
+group_labels <- function(x, ..., size = 5, right.interval = FALSE, n = 30) {
   # evaluate arguments, generate data
   .dat <- get_dot_data(x, dplyr::quos(...))
 

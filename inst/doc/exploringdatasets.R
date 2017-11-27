@@ -11,7 +11,7 @@ frq(efc$c161sex)
 
 ## ------------------------------------------------------------------------
 # find all variables with "dependency" in name or label
-find_var(efc, "dependency", as.varlab = T)
+find_var(efc, "dependency", out = "table")
 
 ## ------------------------------------------------------------------------
 flat_table(efc, e42dep, c161sex)
