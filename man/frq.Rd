@@ -4,7 +4,9 @@
 \alias{frq}
 \title{Frequencies of labelled variables}
 \usage{
-frq(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL)
+frq(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL,
+  auto.grp = NULL, show.strings = TRUE, grp.strings = NULL,
+  out = c("txt", "viewer", "browser"))
 }
 \arguments{
 \item{x}{A vector or a data frame. May also be a grouped data frame
@@ -13,7 +15,8 @@ frq(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL)
 \item{...}{Optional, unquoted names of variables that should be selected for
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
-You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+You may also use functions like \code{:} or tidyselect's
+\code{\link[tidyselect]{select_helpers}}.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{sort.frq}{Determines whether categories should be sorted
@@ -24,6 +27,26 @@ categories are not sorted by frequency. Use \code{"asc"} or
 \item{weight.by}{Vector of weights that will be applied to weight all observations.
 Must be a vector of same length as the input vector. Default is
 \code{NULL}, so no weights are used.}
+
+\item{auto.grp}{Numeric value, indicating the minimum amount of unique
+values in a variable, at which automatic grouping into smaller  units
+is done (see \code{\link{group_var}}). Default value for \code{auto.group}
+is \code{NULL}, i.e. auto-grouping is off.}
+
+\item{show.strings}{Logical, if \code{TRUE}, frequency tables for character
+vectors will not be printed. This is useful when printing frequency tables
+of all variables from a data frame, and due to computational reasons
+character vectors should not be printed.}
+
+\item{grp.strings}{Numeric, if not \code{NULL}, groups string values in
+character vectors, based on their similarity. The similarity is estimated
+with the \pkg{stringdist}-package. See \code{\link{group_str}} for details
+on grouping, and that function's \code{maxdist}-argument to get more
+details on the distance of strings to be treated as equal.}
+
+\item{out}{Character vector, indicating whether the results should be printed
+to console (\code{out = "txt"}) or as HTML-table in the viewer-pane
+(\code{out = "viewer"}) or browser (\code{out = "browser"}).}
 }
 \value{
 A list of data frames with values, value labels, frequencies, raw, valid and
@@ -74,6 +97,28 @@ frq(efc, contains("cop"))
 
 # all variables from column "c161sex" to column "c175empl"
 frq(efc, c161sex:c175empl)
+
+# for non-labelled data, variable name is printed,
+# and "label" column is removed from output
+data(iris)
+frq(iris, Species)
+
+# group variables with large range
+frq(efc, c160age)
+frq(efc, c160age, auto.grp = 5)
+
+# group string values
+\dontrun{
+dummy <- efc \%>\% dplyr::select(3)
+dummy$words <- sample(
+  c("Hello", "Helo", "Hole", "Apple", "Ape",
+    "New", "Old", "System", "Systemic"),
+  size = nrow(dummy),
+  replace = TRUE
+)
+
+frq(dummy)
+frq(dummy, grp.strings = 2)}
 
 }
 \seealso{

@@ -4,12 +4,25 @@
 #' @description This function returns a frequency table of labelled vectors, as data frame.
 #'
 #' @param sort.frq Determines whether categories should be sorted
-#'          according to their frequencies or not. Default is \code{"none"}, so
-#'          categories are not sorted by frequency. Use \code{"asc"} or
-#'          \code{"desc"} for sorting categories ascending or descending order.
+#'   according to their frequencies or not. Default is \code{"none"}, so
+#'   categories are not sorted by frequency. Use \code{"asc"} or
+#'   \code{"desc"} for sorting categories ascending or descending order.
 #' @param weight.by Vector of weights that will be applied to weight all observations.
-#'          Must be a vector of same length as the input vector. Default is
-#'          \code{NULL}, so no weights are used.
+#'   Must be a vector of same length as the input vector. Default is
+#'   \code{NULL}, so no weights are used.
+#' @param auto.grp Numeric value, indicating the minimum amount of unique
+#'   values in a variable, at which automatic grouping into smaller  units
+#'   is done (see \code{\link{group_var}}). Default value for \code{auto.group}
+#'   is \code{NULL}, i.e. auto-grouping is off.
+#' @param show.strings Logical, if \code{TRUE}, frequency tables for character
+#'   vectors will not be printed. This is useful when printing frequency tables
+#'   of all variables from a data frame, and due to computational reasons
+#'   character vectors should not be printed.
+#' @param grp.strings Numeric, if not \code{NULL}, groups string values in
+#'   character vectors, based on their similarity. The similarity is estimated
+#'   with the \pkg{stringdist}-package. See \code{\link{group_str}} for details
+#'   on grouping, and that function's \code{maxdist}-argument to get more
+#'   details on the distance of strings to be treated as equal.
 #'
 #' @inheritParams descr
 #'
@@ -60,12 +73,50 @@
 #' # all variables from column "c161sex" to column "c175empl"
 #' frq(efc, c161sex:c175empl)
 #'
+#' # for non-labelled data, variable name is printed,
+#' # and "label" column is removed from output
+#' data(iris)
+#' frq(iris, Species)
+#'
+#' # group variables with large range
+#' frq(efc, c160age)
+#' frq(efc, c160age, auto.grp = 5)
+#'
+#' # group string values
+#' \dontrun{
+#' dummy <- efc %>% dplyr::select(3)
+#' dummy$words <- sample(
+#'   c("Hello", "Helo", "Hole", "Apple", "Ape",
+#'     "New", "Old", "System", "Systemic"),
+#'   size = nrow(dummy),
+#'   replace = TRUE
+#' )
+#'
+#' frq(dummy)
+#' frq(dummy, grp.strings = 2)}
+#'
 #' @importFrom stats na.omit
-#' @importFrom dplyr full_join
-#' @importFrom tibble add_row
+#' @importFrom dplyr full_join select_if
+#' @importFrom tibble add_row as_tibble
 #' @importFrom sjlabelled get_label get_labels get_values copy_labels
+#' @importFrom purrr map_if
 #' @export
-frq <- function(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
+frq <- function(x,
+                ...,
+                sort.frq = c("none", "asc", "desc"),
+                weight.by = NULL,
+                auto.grp = NULL,
+                show.strings = TRUE,
+                grp.strings = NULL,
+                out = c("txt", "viewer", "browser")) {
+
+  out <- match.arg(out)
+
+  if (out != "txt" && !requireNamespace("sjPlot", quietly = TRUE)) {
+    message("Package `sjPlot` needs to be loaded to print HTML tables.")
+    out <- "txt"
+  }
+
 
   # get dot data
   x <- get_dot_data(x, dplyr::quos(...))
@@ -75,6 +126,27 @@ frq <- function(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
 
   # return values
   dataframes <- list()
+
+
+  # remove strings from output, if requested
+  # and check if there are any variables left to print
+
+  if (!show.strings)
+    x <- dplyr::select_if(x, no_character)
+
+  if (sjmisc::is_empty(x)) return(NULL)
+
+
+  # group strings
+
+  if (!is.null(grp.strings)) {
+    x <- x %>%
+      purrr::map_if(is.character, ~ group_str(
+        strings = .x, maxdist = grp.strings, remove.empty = FALSE)
+      ) %>%
+      tibble::as_tibble()
+  }
+
 
   # do we have a grouped data frame?
   if (inherits(x, "grouped_df")) {
@@ -91,7 +163,15 @@ frq <- function(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
         tmp <- sjlabelled::copy_labels(grps$data[[i]][j], x)
 
         # print frequencies
-        dummy <- frq_helper(x = tmp[[1]], sort.frq = sort.frq, weight.by = weight.by)
+        dummy <-
+          frq_helper(
+            x = tmp[[1]],
+            sort.frq = sort.frq,
+            weight.by = weight.by,
+            cn = colnames(tmp)[1],
+            auto.grp = auto.grp
+          )
+
         attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = "\n")
 
         # save data frame for return value
@@ -106,20 +186,38 @@ frq <- function(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL) {
 
     for (i in seq_len(ncol(x))) {
       # print frequencies
-      dummy <- frq_helper(x = x[[i]], sort.frq = sort.frq, weight.by = weight.by)
+      dummy <-
+        frq_helper(
+          x = x[[i]],
+          sort.frq = sort.frq,
+          weight.by = weight.by,
+          cn = colnames(x)[i],
+          auto.grp = auto.grp
+        )
+
       # save data frame for return value
       dataframes[[length(dataframes) + 1]] <- dummy
     }
   }
 
   # add class-attr for print-method()
-  class(dataframes) <- c("sjmisc.frq", "list")
+  if (out == "txt")
+    class(dataframes) <- c("sjmisc_frq", "list")
+  else
+    class(dataframes) <- c("sjt_frq", "list")
+
+  # save how to print output
+  attr(dataframes, "print") <- out
 
   dataframes
 }
 
 
-frq_helper <- function(x, sort.frq, weight.by) {
+#' @importFrom dplyr n_distinct full_join
+#' @importFrom stats na.omit xtabs na.pass sd weighted.mean
+#' @importFrom sjlabelled get_labels get_label as_numeric
+#' @importFrom tibble add_row
+frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
   # remember type
   vartype <- var_type(x)
 
@@ -136,14 +234,51 @@ frq_helper <- function(x, sort.frq, weight.by) {
       valid.prc = NA,
       cum.perc = NA
     )
-    return(structure(class = "sjmisc.frq", list(mydat = mydat)))
+    return(structure(class = "sjmisc_frq", list(mydat = mydat)))
   }
+
+
+  # save descriptive statistics
+
+  xnum <- sjlabelled::as_numeric(x, keep.labels = FALSE)
+  if (!is.null(weight.by)) {
+    mean.value <- stats::weighted.mean(stats::na.omit(xnum), w = weight.by)
+    if (requireNamespace("sjstats", quietly = TRUE))
+      sd.value <- sjstats::wtd_sd(stats::na.omit(xnum), weights = weight.by)
+    else
+      sd.value <- NA
+  } else {
+    mean.value <- mean(xnum, na.rm = TRUE)
+    sd.value <- stats::sd(xnum, na.rm = TRUE)
+  }
+
+
+  # get variable label (if any)
+  varlab <- sjlabelled::get_label(x)
+
+
+  # numeric variables with many distinct values may
+  # be grouped for better overview
+
+  if (!is.null(auto.grp) && dplyr::n_distinct(x, na.rm = TRUE) >= auto.grp) {
+    gl <- group_labels(x, size = "auto", n = auto.grp)
+    x <- group_var(x, size = "auto", n = auto.grp)
+    gv <- sort(stats::na.omit(unique(x)))
+    names(gv) <- gl
+    attr(x, "labels") <- gv
+  }
+
 
   # get value labels (if any)
   labels <- sjlabelled::get_labels(x, attr.only = T, include.values = "n", include.non.labelled = T)
 
-  # get variable label (if any)
-  varlab <- sjlabelled::get_label(x)
+
+  # if we don't have variable label, use column name
+  if (sjmisc::is_empty(varlab) && !sjmisc::is_empty(cn))
+    varlab <- cn
+  else if (!sjmisc::is_empty(varlab) && !sjmisc::is_empty(cn))
+    varlab <- sprintf("%s (%s)", varlab, cn)
+
 
   # do we have a labelled vector?
   if (!is.null(labels)) {
@@ -187,7 +322,7 @@ frq_helper <- function(x, sort.frq, weight.by) {
 
     # replace NA with 0, for proper percentages, i.e.
     # missing values don't appear (zero counts)
-    mydat$frq <- suppressMessages(replace_na(mydat$frq, value = 0))
+    mydat$frq <- suppressMessages(sjmisc::replace_na(mydat$frq, value = 0))
   } else {
     # weight data?
     if (!is.null(weight.by)) {
@@ -259,6 +394,8 @@ frq_helper <- function(x, sort.frq, weight.by) {
   # add variable label and type as attribute, for print-method
   attr(mydat, "label") <- varlab
   attr(mydat, "vartype") <- vartype
+  attr(mydat, "mean") <- mean.value
+  attr(mydat, "sd") <- sd.value
 
   mydat
 }
@@ -330,3 +467,6 @@ get_grouped_data <- function(x) {
 
   grps
 }
+
+
+no_character <- function(x) !is.character(x)

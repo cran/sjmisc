@@ -5,9 +5,9 @@
 \alias{col_count}
 \title{Count row or column indices}
 \usage{
-row_count(x, ..., count, var = "rowcount", append = FALSE)
+row_count(x, ..., count, var = "rowcount", append = TRUE)
 
-col_count(x, ..., count, var = "colcount", append = FALSE)
+col_count(x, ..., count, var = "colcount", append = TRUE)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -15,7 +15,8 @@ col_count(x, ..., count, var = "colcount", append = FALSE)
 \item{...}{Optional, unquoted names of variables that should be selected for
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
-You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+You may also use functions like \code{:} or tidyselect's
+\code{\link[tidyselect]{select_helpers}}.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{count}{The value for which the row or column sum should be computed. May
@@ -25,9 +26,9 @@ or null-values.}
 
 \item{var}{Name of new the variable with the row or column counts.}
 
-\item{append}{Logical, if \code{TRUE} and \code{x} is a data frame,
+\item{append}{Logical, if \code{TRUE} (the default) and \code{x} is a data frame,
 \code{x} including the new variables as additional columns is returned;
-if \code{FALSE} (the default), only the new variables are returned.}
+if \code{FALSE}, only the new variables are returned.}
 }
 \value{
 For \code{row_count()}, a tibble with one variable: the sum of \code{count}
@@ -61,12 +62,12 @@ dat <- tribble(
    NA,   3,  NA,   2
 )
 
-row_count(dat, count = 1)
-row_count(dat, count = NA)
+row_count(dat, count = 1, append = FALSE)
+row_count(dat, count = NA, append = FALSE)
 row_count(dat, c1:c3, count = 2, append = TRUE)
 
-col_count(dat, count = 1)
-col_count(dat, count = NA)
+col_count(dat, count = 1, append = FALSE)
+col_count(dat, count = NA, append = FALSE)
 col_count(dat, c1:c3, count = 2, append = TRUE)
 
 }

@@ -1,3 +1,30 @@
+# sjmisc 2.7.0
+
+## General
+
+* *Breaking changes*: The `append`-argument in recode and transformation functions like `rec()`, `dicho()`, `split_var()`, `group_var()`, `center()`, `std()`, `recode_to()`, `row_sums()`, `row_count()`, `col_count()` and `row_means()` now defaults to `TRUE`.
+* The `print()`-method for `descr()` now accepts a `digits`-argument, to specify the rounding of the output.
+* Cross refences from `dplyr::select_helpers` were updated to `tidyselect::select_helpers`.
+
+## New functions
+
+* `is_whole()` as counterpart to `is_float()`.
+
+## Changes to functions
+
+* `frq()` now prints variable names for non-labelled data, adds variable names in braces for labelled data and omits the _label_ column for non-labelled data.
+* `frq()` now prints mean and standard deviation in the header line of the output.
+* `frq()` now gets a `auto.grp`-argument to automatically group variables with many unique values.
+* `frq()` now gets a `show.strings`-argument to omit string variables (character vectors) from being printed as frequency table.
+* `frq()` now gets a `grp.strings`-argument to group similar string values in the frequency table.
+* `frq()` gets an `out`-argument, to print output to console, or as HTML table in the viewer or web browser.
+* `descr()` gets an `out`-argument, to print output to console, or as HTML table in the viewer or web browser.
+
+## Bug fixes
+
+* `is_empty()` returned `TRUE` for single vectors with `NA` being the first element.
+* Fix issue where due to a bug during code cleanup, `remove_empty_rows()` did no longer remove empty rows, but columns.
+
 # sjmisc 2.6.3
 
 ## General

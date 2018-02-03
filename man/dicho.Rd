@@ -5,7 +5,7 @@
 \title{Dichotomize variables}
 \usage{
 dicho(x, ..., dich.by = "median", as.num = FALSE, var.label = NULL,
-  val.labels = NULL, append = FALSE, suffix = "_d")
+  val.labels = NULL, append = TRUE, suffix = "_d")
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -13,7 +13,8 @@ dicho(x, ..., dich.by = "median", as.num = FALSE, var.label = NULL,
 \item{...}{Optional, unquoted names of variables that should be selected for
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
-You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+You may also use functions like \code{:} or tidyselect's
+\code{\link[tidyselect]{select_helpers}}.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{dich.by}{Indicates the split criterion where a variable is dichotomized.
@@ -35,9 +36,9 @@ be used (if present). If empty, variable label attributes will be removed.}
 attributes of dichotomized variable (see \code{\link[sjlabelled]{set_labels}}).
 If \code{NULL} (default), no value labels will be set.}
 
-\item{append}{Logical, if \code{TRUE} and \code{x} is a data frame,
+\item{append}{Logical, if \code{TRUE} (the default) and \code{x} is a data frame,
 \code{x} including the new variables as additional columns is returned;
-if \code{FALSE} (the default), only the new variables are returned.}
+if \code{FALSE}, only the new variables are returned.}
 
 \item{suffix}{String value, will be appended to variable (column) names of
 \code{x}, if \code{x} is a data frame. If \code{x} is not a data
@@ -91,20 +92,24 @@ efc \%>\%
   head()
 
 # dichtomize several variables in a data frame
-dicho(efc, c12hour, e17age, c160age)
+dicho(efc, c12hour, e17age, c160age, append = FALSE)
 
 # dichotomize and set labels
-frq(dicho(efc, e42dep, var.label = "Dependency (dichotomized)",
-          val.labels = c("lower", "higher")))
+frq(dicho(
+  efc, e42dep,
+  var.label = "Dependency (dichotomized)",
+  val.labels = c("lower", "higher"),
+  append = FALSE
+))
 
 # works also with gouped data frames
 mtcars \%>\%
-  dicho(disp) \%>\%
+  dicho(disp, append = FALSE) \%>\%
   table()
 
 mtcars \%>\%
   group_by(cyl) \%>\%
-  dicho(disp) \%>\%
+  dicho(disp, append = FALSE) \%>\%
   table()
 
 # dichotomizing grouped data frames leads to different

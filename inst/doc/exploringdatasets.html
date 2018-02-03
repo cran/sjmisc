@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2017-11-28" />
+<meta name="date" content="2018-02-03" />
 
 <title>Exploring Data Sets</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Exploring Data Sets</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2017-11-28</em></h4>
+<h4 class="date"><em>2018-02-03</em></h4>
 
 
 
@@ -84,8 +84,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>The first thing that may be of interest is probably the distribution of gender. You can plot frequencies for labelled data with <code>frq()</code>. This function requires either a vector or data frame as input and prints the variable label as first line, followed by a frequency-table with values, labels, counts and percentages of the vector.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">frq</span>(efc<span class="op">$</span>c161sex)
 <span class="co">#&gt; </span>
-<span class="co">#&gt; # carer's gender &lt;numeric&gt;</span>
-<span class="co">#&gt; # Total N = 908 (valid N = 901)</span>
+<span class="co">#&gt; # carer's gender (x) &lt;numeric&gt;</span>
+<span class="co">#&gt; # total N=908  valid N=901  mean=1.76  sd=0.43</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val  label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1   Male 215   23.68     23.86   23.86</span>
@@ -106,9 +106,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># find all variables with &quot;dependency&quot; in name or label</span>
 <span class="kw">find_var</span>(efc, <span class="st">&quot;dependency&quot;</span>, <span class="dt">out =</span> <span class="st">&quot;table&quot;</span>)
 <span class="co">#&gt; # A tibble: 1 x 3</span>
-<span class="co">#&gt;   col.nr var.name          var.label</span>
-<span class="co">#&gt;    &lt;int&gt;    &lt;chr&gt;              &lt;chr&gt;</span>
-<span class="co">#&gt; 1      5   e42dep elder's dependency</span></code></pre></div>
+<span class="co">#&gt;   col.nr var.name var.label         </span>
+<span class="co">#&gt;    &lt;int&gt; &lt;chr&gt;    &lt;chr&gt;             </span>
+<span class="co">#&gt; 1      5 e42dep   elder's dependency</span></code></pre></div>
 <p>Variable in column 5, named <em>e42dep</em>, is what we are looking for.</p>
 </div>
 <div id="print-crosstables-with-labels" class="section level2">
@@ -132,7 +132,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </div>
 <div id="recoding-variables" class="section level2">
 <h2>Recoding variables</h2>
-<p>Next, we need the negatice impact of care (_neg_c_7) and want to create three groups: low, middle and high negative impact. We can easily recode and label vectors with <code>rec()</code>. This function does not only recode vectors, it also allows direct labelling of categories inside the recode-syntax (this is optional, you can also use the <code>val.labels</code>-argument). We now recode neg_c_7 into a new variable <em>burden</em>. The cut-points are a bit arbitrary, for the sake of demonstration.</p>
+<p>Next, we need the negatice impact of care (<em>neg_c_7</em>) and want to create three groups: low, middle and high negative impact. We can easily recode and label vectors with <code>rec()</code>. This function does not only recode vectors, it also allows direct labelling of categories inside the recode-syntax (this is optional, you can also use the <code>val.labels</code>-argument). We now recode neg_c_7 into a new variable <em>burden</em>. The cut-points are a bit arbitrary, for the sake of demonstration.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc<span class="op">$</span>burden &lt;-<span class="st"> </span><span class="kw">rec</span>(
   efc<span class="op">$</span>neg_c_<span class="dv">7</span>,
   <span class="dt">rec =</span> <span class="kw">c</span>(<span class="st">&quot;min:9=1 [low]; 10:12=2 [moderate]; 13:max=3 [high]; else=NA&quot;</span>),
@@ -142,8 +142,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co"># print frequencies</span>
 <span class="kw">frq</span>(efc<span class="op">$</span>burden)
 <span class="co">#&gt; </span>
-<span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
-<span class="co">#&gt; # Total N = 908 (valid N = 892)</span>
+<span class="co">#&gt; # Subjective burden (x) &lt;categorical&gt;</span>
+<span class="co">#&gt; # total N=908  valid N=892  mean=2.03  sd=0.81</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low 280   30.84     31.39   31.39</span>
@@ -163,8 +163,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co">#&gt; Grouped by:</span>
 <span class="co">#&gt; carer's gender: Male</span>
 <span class="co">#&gt; </span>
-<span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
-<span class="co">#&gt; # Total N = 215 (valid N = 212)</span>
+<span class="co">#&gt; # Subjective burden (burden) &lt;categorical&gt;</span>
+<span class="co">#&gt; # total N=215  valid N=212  mean=1.91  sd=0.81</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low  80   37.21     37.74   37.74</span>
@@ -176,8 +176,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co">#&gt; Grouped by:</span>
 <span class="co">#&gt; carer's gender: Female</span>
 <span class="co">#&gt; </span>
-<span class="co">#&gt; # Subjective burden &lt;categorical&gt;</span>
-<span class="co">#&gt; # Total N = 686 (valid N = 679)</span>
+<span class="co">#&gt; # Subjective burden (burden) &lt;categorical&gt;</span>
+<span class="co">#&gt; # total N=686  valid N=679  mean=2.08  sd=0.81</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;  val    label frq raw.prc valid.prc cum.prc</span>
 <span class="co">#&gt;    1      low 199   29.01     29.31   29.31</span>
@@ -197,13 +197,13 @@ efc <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">group_by</span>(e42dep) <span class="op">%&gt;%</span>
 <span class="st">  </span>tidyr<span class="op">::</span><span class="kw">nest</span>()
 <span class="co">#&gt; # A tibble: 5 x 2</span>
-<span class="co">#&gt;                 e42dep               data</span>
-<span class="co">#&gt;                 &lt;fctr&gt;             &lt;list&gt;</span>
+<span class="co">#&gt;   e42dep               data              </span>
+<span class="co">#&gt;   &lt;fct&gt;                &lt;list&gt;            </span>
 <span class="co">#&gt; 1 moderately dependent &lt;tibble [306 x 3]&gt;</span>
-<span class="co">#&gt; 2   severely dependent &lt;tibble [304 x 3]&gt;</span>
-<span class="co">#&gt; 3          independent  &lt;tibble [66 x 3]&gt;</span>
-<span class="co">#&gt; 4   slightly dependent &lt;tibble [225 x 3]&gt;</span>
-<span class="co">#&gt; 5                 &lt;NA&gt;   &lt;tibble [7 x 3]&gt;</span></code></pre></div>
+<span class="co">#&gt; 2 severely dependent   &lt;tibble [304 x 3]&gt;</span>
+<span class="co">#&gt; 3 independent          &lt;tibble [66 x 3]&gt; </span>
+<span class="co">#&gt; 4 slightly dependent   &lt;tibble [225 x 3]&gt;</span>
+<span class="co">#&gt; 5 &lt;NA&gt;                 &lt;tibble [7 x 3]&gt;</span></code></pre></div>
 </div>
 <div id="get-coefficients-of-nested-models" class="section level2">
 <h2>Get coefficients of nested models</h2>
@@ -220,13 +220,12 @@ efc <span class="op">%&gt;%</span>
   ) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">spread_coef</span>(models)
 <span class="co">#&gt; # A tibble: 4 x 7</span>
-<span class="co">#&gt;                 e42dep               data   models `(Intercept)`   burden2</span>
-<span class="co">#&gt;                 &lt;fctr&gt;             &lt;list&gt;   &lt;list&gt;         &lt;dbl&gt;     &lt;dbl&gt;</span>
-<span class="co">#&gt; 1          independent  &lt;tibble [66 x 3]&gt; &lt;S3: lm&gt;      18.75471 -3.163399</span>
-<span class="co">#&gt; 2   slightly dependent &lt;tibble [225 x 3]&gt; &lt;S3: lm&gt;      19.83867 -2.202107</span>
-<span class="co">#&gt; 3 moderately dependent &lt;tibble [306 x 3]&gt; &lt;S3: lm&gt;      17.90339 -1.822156</span>
-<span class="co">#&gt; 4   severely dependent &lt;tibble [304 x 3]&gt; &lt;S3: lm&gt;      19.10617 -3.659523</span>
-<span class="co">#&gt; # ... with 2 more variables: burden3 &lt;dbl&gt;, c161sex &lt;dbl&gt;</span></code></pre></div>
+<span class="co">#&gt;   e42dep               data   models `(Intercept)` burden2 burden3 c161sex</span>
+<span class="co">#&gt;   &lt;fct&gt;                &lt;list&gt; &lt;list&gt;         &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span>
+<span class="co">#&gt; 1 independent          &lt;tibb~ &lt;S3: ~          18.8   -3.16   -4.94  -0.709</span>
+<span class="co">#&gt; 2 slightly dependent   &lt;tibb~ &lt;S3: ~          19.8   -2.20   -2.48  -1.14 </span>
+<span class="co">#&gt; 3 moderately dependent &lt;tibb~ &lt;S3: ~          17.9   -1.82   -5.29  -0.637</span>
+<span class="co">#&gt; 4 severely dependent   &lt;tibb~ &lt;S3: ~          19.1   -3.66   -7.92  -0.746</span></code></pre></div>
 <p>We see that higher burden is associated with lower quality of life, for all dependency-groups. The <code>se</code> and <code>p.val</code>-arguments add standard errors and p-values to the output. <code>model.term</code> returns the statistics only for a specific term. If you specify a <code>model.term</code>, arguments <code>se</code> and <code>p.val</code> automatically default to <code>TRUE</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">select</span>(e42dep, burden, c161sex, quol_<span class="dv">5</span>) <span class="op">%&gt;%</span>
@@ -240,13 +239,12 @@ efc <span class="op">%&gt;%</span>
   ) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">spread_coef</span>(models, burden3)
 <span class="co">#&gt; # A tibble: 4 x 6</span>
-<span class="co">#&gt;                 e42dep               data   models   burden3 std.error</span>
-<span class="co">#&gt;                 &lt;fctr&gt;             &lt;list&gt;   &lt;list&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span>
-<span class="co">#&gt; 1          independent  &lt;tibble [66 x 3]&gt; &lt;S3: lm&gt; -4.936070 2.2000022</span>
-<span class="co">#&gt; 2   slightly dependent &lt;tibble [225 x 3]&gt; &lt;S3: lm&gt; -2.482336 0.6936153</span>
-<span class="co">#&gt; 3 moderately dependent &lt;tibble [306 x 3]&gt; &lt;S3: lm&gt; -5.287360 0.6688096</span>
-<span class="co">#&gt; 4   severely dependent &lt;tibble [304 x 3]&gt; &lt;S3: lm&gt; -7.918891 0.8747650</span>
-<span class="co">#&gt; # ... with 1 more variables: p.value &lt;dbl&gt;</span></code></pre></div>
+<span class="co">#&gt;   e42dep               data        models  burden3 std.error       p.value</span>
+<span class="co">#&gt;   &lt;fct&gt;                &lt;list&gt;      &lt;list&gt;    &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;</span>
+<span class="co">#&gt; 1 independent          &lt;tibble [6~ &lt;S3: l~   -4.94     2.20       2.84e- 2</span>
+<span class="co">#&gt; 2 slightly dependent   &lt;tibble [2~ &lt;S3: l~   -2.48     0.694      4.25e- 4</span>
+<span class="co">#&gt; 3 moderately dependent &lt;tibble [3~ &lt;S3: l~   -5.29     0.669      5.22e-14</span>
+<span class="co">#&gt; 4 severely dependent   &lt;tibble [3~ &lt;S3: l~   -7.92     0.875      2.10e-17</span></code></pre></div>
 </div>
 
 

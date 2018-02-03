@@ -1,8 +1,10 @@
 #' @importFrom purrr walk
 #' @importFrom crayon blue cyan italic
 #' @importFrom cli cat_line
+#' @importFrom dplyr select n_distinct
+#' @importFrom rlang .data
 #' @export
-print.sjmisc.frq <- function(x, ...) {
+print.sjmisc_frq <- function(x, ...) {
   cat("\n")
   purrr::walk(x, function(dat) {
 
@@ -22,10 +24,16 @@ print.sjmisc.frq <- function(x, ...) {
 
     # add Total N
     cli::cat_line(crayon::blue(sprintf(
-      "# Total N = %i (valid N = %i)\n",
+      "# total N=%i  valid N=%i  mean=%.2f  sd=%.2f\n",
       sum(dat$frq, na.rm = TRUE),
-      sum(dat$frq[1:(nrow(dat) - 1)], na.rm = TRUE)
+      sum(dat$frq[1:(nrow(dat) - 1)], na.rm = TRUE),
+      attr(dat, "mean", exact = T),
+      attr(dat, "sd", exact = T)
     )))
+
+    # don't print labels, if all are "none"
+    if (dplyr::n_distinct(dat$label) == 1 && unique(dat$label) == "<none>")
+      dat <- dplyr::select(dat, -.data$label)
 
     # print frq-table
     print.data.frame(dat, ..., row.names = FALSE, quote = FALSE)
@@ -38,15 +46,41 @@ print.sjmisc.frq <- function(x, ...) {
 #' @importFrom crayon blue
 #' @importFrom cli cat_line
 #' @export
-print.sjmisc.descr <- function(x, ...) {
+print.sjmisc_descr <- function(x, ...) {
   cat("\n")
   cli::cat_line(crayon::blue("## Basic descriptive statistics\n"))
+  print_descr_helper(x, ...)
+}
+
+print_descr_helper <- function(x, ...) {
+  digits <- 2
+
+  # do we have digits argument?
+  add.args <- lapply(match.call(expand.dots = F)$`...`, function(x) x)
+  if ("digits" %in% names(add.args)) digits <- eval(add.args[["digits"]])
+
   # round values
-  x[, c(4:6, 8, 12:14)] <- round(x[, c(4:6, 8, 12:14)], 2)
+  x[, c(5:10, 14:15)] <- round(x[, c(5:10, 14:15)], digits = digits)
   # print frq-table
   print.data.frame(x, ..., row.names = FALSE)
 }
 
+#' @importFrom crayon blue cyan italic
+#' @importFrom cli cat_line
+#' @export
+print.sjmisc_grpdescr <- function(x, ...) {
+  cat("\n")
+  cli::cat_line(crayon::blue("## Basic descriptive statistics"))
+
+  purrr::walk(x, function(.x) {
+    # print title for grouping
+    cli::cat_line(crayon::cyan(crayon::italic(
+      sprintf("\nGrouped by:\n%s", attr(.x, "group", exact = TRUE))
+    )))
+
+    print_descr_helper(.x, ...)
+  })
+}
 
 #' @importFrom purrr map_df
 #' @importFrom dplyr n_distinct filter

@@ -10,7 +10,7 @@ x <- rec(efc$e42dep, rec = "1,2=1; 3,4=2")
 str(x)
 
 # returns a data frame (a tibble, to be exactly)
-rec(efc, e42dep, rec = "1,2=1; 3,4=2")
+rec(efc, e42dep, rec = "1,2=1; 3,4=2", append = FALSE)
 
 ## ----echo=FALSE, message=FALSE-------------------------------------------
 library(dplyr)
@@ -18,11 +18,15 @@ library(dplyr)
 ## ----collapse=TRUE-------------------------------------------------------
 # select all variables with "cop" in their names, and also
 # the range from c161sex to c175empl
-rec(efc, contains("cop"), c161sex:c175empl, rec = "0,1=0; else=1")
+rec(
+  efc, contains("cop"), c161sex:c175empl, 
+  rec = "0,1=0; else=1", 
+  append = FALSE
+)
 
 # center all variables with "age" in name, variable c12hour
 # and all variables from column 19 to 21
-center(efc, c12hour, contains("age"), 19:21)
+center(efc, c12hour, contains("age"), 19:21, append = FALSE)
 
 ## ------------------------------------------------------------------------
 to_factor(efc, e42dep, e16sex)
@@ -32,7 +36,7 @@ to_factor(efc, e42dep, e16sex)
 rec(efc, c82cop1, c83cop2, rec = "1,2=0; 3:4=2", append = TRUE)
 
 # only new columns
-rec(efc, c82cop1, c83cop2, rec = "1,2=0; 3:4=2")
+rec(efc, c82cop1, c83cop2, rec = "1,2=0; 3:4=2", append = FALSE)
 
 ## ------------------------------------------------------------------------
 efc %>% 

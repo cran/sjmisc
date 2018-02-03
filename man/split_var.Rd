@@ -5,7 +5,7 @@
 \title{Split numeric variables into smaller groups}
 \usage{
 split_var(x, ..., n, as.num = FALSE, val.labels = NULL, var.label = NULL,
-  inclusive = FALSE, append = FALSE, suffix = "_g")
+  inclusive = FALSE, append = TRUE, suffix = "_g")
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -13,7 +13,8 @@ split_var(x, ..., n, as.num = FALSE, val.labels = NULL, var.label = NULL,
 \item{...}{Optional, unquoted names of variables that should be selected for
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
-You may also use functions like \code{:} or dplyr's \code{\link[dplyr]{select_helpers}}.
+You may also use functions like \code{:} or tidyselect's
+\code{\link[tidyselect]{select_helpers}}.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{n}{The new number of groups that \code{x} should be split into.}
@@ -36,9 +37,9 @@ the preceeding group. This may be necessary if cutting a vector into
 groups does not define proper ("equal sized") group sizes.
 See 'Note' and 'Examples'.}
 
-\item{append}{Logical, if \code{TRUE} and \code{x} is a data frame,
+\item{append}{Logical, if \code{TRUE} (the default) and \code{x} is a data frame,
 \code{x} including the new variables as additional columns is returned;
-if \code{FALSE} (the default), only the new variables are returned.}
+if \code{FALSE}, only the new variables are returned.}
 
 \item{suffix}{String value, will be appended to variable (column) names of
 \code{x}, if \code{x} is a data frame. If \code{x} is not a data
@@ -94,8 +95,8 @@ table(efc$neg_c_7)
 table(split_var(efc$neg_c_7, n = 3))
 
 # split multiple variables into 3 groups
-split_var(efc, neg_c_7, pos_v_4, e17age, n = 3)
-frq(split_var(efc, neg_c_7, pos_v_4, e17age, n = 3))
+split_var(efc, neg_c_7, pos_v_4, e17age, n = 3, append = FALSE)
+frq(split_var(efc, neg_c_7, pos_v_4, e17age, n = 3, append = FALSE))
 
 # original
 table(efc$e42dep)
@@ -121,12 +122,12 @@ table(efc$neg_c_7, x)
 
 # works also with gouped data frames
 mtcars \%>\%
-  split_var(disp, n = 3) \%>\%
+  split_var(disp, n = 3, append = FALSE) \%>\%
   table()
 
 mtcars \%>\%
   group_by(cyl) \%>\%
-  split_var(disp, n = 3) \%>\%
+  split_var(disp, n = 3, append = FALSE) \%>\%
   table()
 
 }
