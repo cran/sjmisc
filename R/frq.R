@@ -121,6 +121,21 @@ frq <- function(x,
   # get dot data
   x <- get_dot_data(x, dplyr::quos(...))
 
+
+  # remove empty columns
+
+  rem.col <- empty_cols(x)
+
+  if (!sjmisc::is_empty(rem.col)) {
+    rem.vars <- colnames(x)[rem.col]
+    x <- remove_empty_cols(x)
+
+    message(sprintf("Following %i variables have only missing values and are not shown:", length(rem.vars)))
+    cat(paste(sprintf("%s [%i]", rem.vars, rem.col), collapse = ", "))
+    cat("\n")
+  }
+
+
   # match args
   sort.frq <- match.arg(sort.frq)
 
@@ -241,12 +256,21 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
   # save descriptive statistics
 
   xnum <- sjlabelled::as_numeric(x, keep.labels = FALSE)
+
   if (!is.null(weight.by)) {
-    mean.value <- stats::weighted.mean(stats::na.omit(xnum), w = weight.by)
+    # make sure, vector and weights have same length, so remove missing from weights
+
+    weight.by[is.na(xnum)] <- NA
+    xnum[is.na(weight.by)] <- NA
+    x[is.na(weight.by)] <- NA
+
+    mean.value <- stats::weighted.mean(stats::na.omit(xnum), w = stats::na.omit(weight.by))
+
     if (requireNamespace("sjstats", quietly = TRUE))
-      sd.value <- sjstats::wtd_sd(stats::na.omit(xnum), weights = weight.by)
+      sd.value <- sjstats::wtd_sd(stats::na.omit(xnum), weights = stats::na.omit(weight.by))
     else
       sd.value <- NA
+
   } else {
     mean.value <- mean(xnum, na.rm = TRUE)
     sd.value <- stats::sd(xnum, na.rm = TRUE)
@@ -270,7 +294,13 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
 
 
   # get value labels (if any)
-  labels <- sjlabelled::get_labels(x, attr.only = T, include.values = "n", include.non.labelled = T)
+  labels <-
+    sjlabelled::get_labels(
+      x,
+      attr.only = T,
+      include.values = "n",
+      include.non.labelled = T
+    )
 
 
   # if we don't have variable label, use column name
@@ -295,7 +325,7 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
     # character vectors need to be converted with to_value
     # to avoid NAs, but only if character is non-numeric
     if (is.character(dat$val) && anyNA(suppressWarnings(as.numeric(dat$val))))
-      dat$val <- to_value(dat$val, keep.labels = F)
+      dat$val <- sjlabelled::as_numeric(dat$val, keep.labels = F)
     else
       dat$val <- as.numeric(dat$val)
 
@@ -304,7 +334,7 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
       dat2 <- data.frame(round(
         stats::xtabs(
           weights ~ x,
-          data = data.frame(weights = weight.by, x = x),
+          data = data.frame(weights = stats::na.omit(weight.by), x = stats::na.omit(x)),
           na.action = stats::na.pass,
           exclude = NULL
         ),
@@ -314,8 +344,9 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
       # create frequency table
       dat2 <- data.frame(table(x, useNA = "always"))
     }
+
     colnames(dat2) <- c("val", "frq")
-    dat2$val <- to_value(dat2$val, keep.labels = F)
+    dat2$val <- sjlabelled::as_numeric(dat2$val, keep.labels = F)
 
     # join frq table and label columns
     mydat <- suppressMessages(dplyr::full_join(dat, dat2))
@@ -329,7 +360,7 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
       mydat <- data.frame(round(
         stats::xtabs(
           weights ~ x,
-          data = data.frame(weights = weight.by, x = x),
+          data = data.frame(weights = stats::na.omit(weight.by), x = stats::na.omit(x)),
           na.action = stats::na.pass,
           exclude = NULL
         ),
@@ -348,7 +379,7 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
 
   # need numeric
   if (is.factor(x) || is.character(x)) {
-    x <- to_value(x, keep.labels = F)
+    x <- sjlabelled::as_numeric(x, keep.labels = F)
   }
 
   # check if we have any NA-values - if not, add row for NA's
@@ -386,7 +417,7 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
   if (!is.null(mydat$label)) mydat$label[is.na(mydat$label)] <- "NA"
 
   # save original order
-  reihe <- to_value(mydat$val, start.at = 1, keep.labels = F)
+  reihe <- sjlabelled::as_numeric(mydat$val, start.at = 1, keep.labels = F)
 
   # sort
   if (sort.frq == "none") mydat <- mydat[order(reihe), ]

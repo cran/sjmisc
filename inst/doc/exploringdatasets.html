@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2018-02-03" />
+<meta name="date" content="2018-03-25" />
 
 <title>Exploring Data Sets</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Exploring Data Sets</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2018-02-03</em></h4>
+<h4 class="date"><em>2018-03-25</em></h4>
 
 
 
@@ -132,7 +132,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </div>
 <div id="recoding-variables" class="section level2">
 <h2>Recoding variables</h2>
-<p>Next, we need the negatice impact of care (<em>neg_c_7</em>) and want to create three groups: low, middle and high negative impact. We can easily recode and label vectors with <code>rec()</code>. This function does not only recode vectors, it also allows direct labelling of categories inside the recode-syntax (this is optional, you can also use the <code>val.labels</code>-argument). We now recode neg_c_7 into a new variable <em>burden</em>. The cut-points are a bit arbitrary, for the sake of demonstration.</p>
+<p>Next, we need the negatice impact of care (<em>neg_c_7</em>) and want to create three groups: low, middle and high negative impact. We can easily recode and label vectors with <code>rec()</code>. This function does not only recode vectors, it also allows direct labelling of categories inside the recode-syntax (this is optional, you can also use the <code>val.labels</code>-argument). We now recode <em>neg_c_7</em> into a new variable <em>burden</em>. The cut-points are a bit arbitrary, for the sake of demonstration.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc<span class="op">$</span>burden &lt;-<span class="st"> </span><span class="kw">rec</span>(
   efc<span class="op">$</span>neg_c_<span class="dv">7</span>,
   <span class="dt">rec =</span> <span class="kw">c</span>(<span class="st">&quot;min:9=1 [low]; 10:12=2 [moderate]; 13:max=3 [high]; else=NA&quot;</span>),
@@ -150,7 +150,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="co">#&gt;    2 moderate 301   33.15     33.74   65.13</span>
 <span class="co">#&gt;    3     high 311   34.25     34.87  100.00</span>
 <span class="co">#&gt;   NA       NA  16    1.76        NA      NA</span></code></pre></div>
-<p>You can see the variable <em>burden</em> has a variable label (“Subjective burden”), which was set inside <code>rec()</code>, as well as three values with labels (“low”, “moderate” and “high”). From the lowest value in <code>neg_c_7</code> to 9 were recoded into 1, values 10 to 12 into 2 and values 13 to the highest value in <code>neg_c_7</code> into 3. All remaining values are set to missing (<code>else=NA</code> – for details on the recode-syntax, see <code>?rec</code>).</p>
+<p>You can see the variable <em>burden</em> has a variable label (“Subjective burden”), which was set inside <code>rec()</code>, as well as three values with labels (“low”, “moderate” and “high”). From the lowest value in <em>neg_c_7</em> to 9 were recoded into 1, values 10 to 12 into 2 and values 13 to the highest value in <em>neg_c_7</em> into 3. All remaining values are set to missing (<code>else=NA</code> – for details on the recode-syntax, see <code>?rec</code>).</p>
 </div>
 <div id="grouped-data-frames" class="section level2">
 <h2>Grouped data frames</h2>
@@ -188,7 +188,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="nested-data-frames" class="section level2">
 <h2>Nested data frames</h2>
 <p>Let’s investigate the association between quality of life and burden across the different dependency categories, by fitting linear models for each category of <em>e42dep</em>. We can do this using <em>nested data frames</em>. <code>nest()</code> from the <strong>tidyr</strong>-package can create subsets of a data frame, based on grouping criteria, and create a new <em>list-variable</em>, where each element itself is a data frame (so it’s nested, because we have data frames inside a data frame).</p>
-<p>In the following example, we group the data by <em>e42dep</em>, and “nest”&quot; the groups. Now we get a data frame with two columns: First, the grouping variable (<em>e42dep</em>) and second, the datasets (subsets) for each country as data frame, stored in the list-variable <em>data</em>. The data frames in the subsets (in <em>data</em>) all contain the selected variables <code>burden</code>, <code>c161sex</code> and <code>quol_4</code> (quality of life).</p>
+<p>In the following example, we group the data by <em>e42dep</em>, and “nest” the groups. Now we get a data frame with two columns: First, the grouping variable (<em>e42dep</em>) and second, the datasets (subsets) for each country as data frame, stored in the list-variable <em>data</em>. The data frames in the subsets (in <em>data</em>) all contain the selected variables <em>burden</em>, <em>c161sex</em> and <em>quol_5</em> (quality of life).</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># convert variable to labelled factor, because we then </span>
 <span class="co"># have the labels as factor levels in the output</span>
 efc<span class="op">$</span>e42dep &lt;-<span class="st"> </span><span class="kw">to_label</span>(efc<span class="op">$</span>e42dep, <span class="dt">drop.levels =</span> T)
@@ -239,12 +239,12 @@ efc <span class="op">%&gt;%</span>
   ) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">spread_coef</span>(models, burden3)
 <span class="co">#&gt; # A tibble: 4 x 6</span>
-<span class="co">#&gt;   e42dep               data        models  burden3 std.error       p.value</span>
-<span class="co">#&gt;   &lt;fct&gt;                &lt;list&gt;      &lt;list&gt;    &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;</span>
-<span class="co">#&gt; 1 independent          &lt;tibble [6~ &lt;S3: l~   -4.94     2.20       2.84e- 2</span>
-<span class="co">#&gt; 2 slightly dependent   &lt;tibble [2~ &lt;S3: l~   -2.48     0.694      4.25e- 4</span>
-<span class="co">#&gt; 3 moderately dependent &lt;tibble [3~ &lt;S3: l~   -5.29     0.669      5.22e-14</span>
-<span class="co">#&gt; 4 severely dependent   &lt;tibble [3~ &lt;S3: l~   -7.92     0.875      2.10e-17</span></code></pre></div>
+<span class="co">#&gt;   e42dep               data             models  burden3 std.error  p.value</span>
+<span class="co">#&gt;   &lt;fct&gt;                &lt;list&gt;           &lt;list&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span>
+<span class="co">#&gt; 1 independent          &lt;tibble [66 x 3~ &lt;S3: l~   -4.94     2.20  2.84e- 2</span>
+<span class="co">#&gt; 2 slightly dependent   &lt;tibble [225 x ~ &lt;S3: l~   -2.48     0.694 4.25e- 4</span>
+<span class="co">#&gt; 3 moderately dependent &lt;tibble [306 x ~ &lt;S3: l~   -5.29     0.669 5.22e-14</span>
+<span class="co">#&gt; 4 severely dependent   &lt;tibble [304 x ~ &lt;S3: l~   -7.92     0.875 2.10e-17</span></code></pre></div>
 </div>
 
 

@@ -12,7 +12,7 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2018-02-03" />
+<meta name="date" content="2018-03-25" />
 
 <title>The Design Philosophy of Functions in sjmisc</title>
 
@@ -70,16 +70,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">The Design Philosophy of Functions in sjmisc</h1>
 <h4 class="author"><em>Daniel Lüdecke</em></h4>
-<h4 class="date"><em>2018-02-03</em></h4>
+<h4 class="date"><em>2018-03-25</em></h4>
 
 
 
-<p>Basically, this package covers two domains of functionality:</p>
-<ul>
-<li>Reading and writing data between R and other statistical software packages like <em>SPSS</em>, <em>SAS</em> or <em>Stata</em> and working with labelled data; this includes easy ways to get and set label attributes, to convert labelled vectors into factors (and vice versa), or to deal with multiple declared missing values etc.</li>
-<li>Data transformation tasks like recoding, dichotomizing or grouping variables, setting and replacing missing values. The data transformation functions also support labelled data.</li>
-</ul>
-<p>This vignette focusses on the second bullet point and gives an overview of data wrangling functions in this package.</p>
+<p>Basically, this package complements the <em>dplyr</em> package in that <em>sjmisc</em> takes over data transformation tasks on variables, like recoding, dichotomizing or grouping variables, setting and replacing missing values, etc. The data transformation functions also support labelled data.</p>
 <div id="the-design-of-data-transformation-functions" class="section level1">
 <h1>The design of data transformation functions</h1>
 <p>The design of data transformation functions in this package follows, where appropriate, the <em>tidyverse-approach</em>, with the first argument of a function always being the data (either a data frame or vector), followed by variable names that should be processed by the function. If no variables are specified as argument, the function applies to the complete data that was indicated as first function argument.</p>
@@ -104,16 +99,16 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 <span class="co">#&gt; # A tibble: 908 x 1</span>
 <span class="co">#&gt;    e42dep_r</span>
 <span class="co">#&gt;       &lt;dbl&gt;</span>
-<span class="co">#&gt;  1     2.00</span>
-<span class="co">#&gt;  2     2.00</span>
-<span class="co">#&gt;  3     2.00</span>
-<span class="co">#&gt;  4     2.00</span>
-<span class="co">#&gt;  5     2.00</span>
-<span class="co">#&gt;  6     2.00</span>
-<span class="co">#&gt;  7     2.00</span>
-<span class="co">#&gt;  8     2.00</span>
-<span class="co">#&gt;  9     2.00</span>
-<span class="co">#&gt; 10     2.00</span>
+<span class="co">#&gt;  1       2.</span>
+<span class="co">#&gt;  2       2.</span>
+<span class="co">#&gt;  3       2.</span>
+<span class="co">#&gt;  4       2.</span>
+<span class="co">#&gt;  5       2.</span>
+<span class="co">#&gt;  6       2.</span>
+<span class="co">#&gt;  7       2.</span>
+<span class="co">#&gt;  8       2.</span>
+<span class="co">#&gt;  9       2.</span>
+<span class="co">#&gt; 10       2.</span>
 <span class="co">#&gt; # ... with 898 more rows</span></code></pre></div>
 <p>This design-choice is mainly due to compatibility- and convenience-reasons. It does not affect the usual “tidyverse-workflow” or when using pipe-chains.</p>
 </div>
@@ -130,16 +125,16 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 <span class="co">#&gt; # A tibble: 908 x 12</span>
 <span class="co">#&gt;    c82cop1_r c83cop2_r c84cop3_r c85cop4_r c86cop5_r c87cop6_r c88cop7_r</span>
 <span class="co">#&gt;        &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span>
-<span class="co">#&gt;  1      1.00      1.00      1.00      1.00      0         0         1.00</span>
-<span class="co">#&gt;  2      1.00      1.00      1.00      1.00      1.00      0         1.00</span>
-<span class="co">#&gt;  3      1.00      1.00      0         1.00      0         0         0   </span>
-<span class="co">#&gt;  4      1.00      0         1.00      0         0         0         0   </span>
-<span class="co">#&gt;  5      1.00      1.00      0         1.00      1.00      1.00      0   </span>
-<span class="co">#&gt;  6      1.00      1.00      1.00      1.00      1.00      1.00      1.00</span>
-<span class="co">#&gt;  7      1.00      1.00      1.00      0         0         1.00      1.00</span>
-<span class="co">#&gt;  8      1.00      1.00      1.00      0         0         0         1.00</span>
-<span class="co">#&gt;  9      1.00      1.00      1.00      1.00      1.00      0         1.00</span>
-<span class="co">#&gt; 10      1.00      1.00      0         1.00      0         0         0   </span>
+<span class="co">#&gt;  1        1.        1.        1.        1.        0.        0.        1.</span>
+<span class="co">#&gt;  2        1.        1.        1.        1.        1.        0.        1.</span>
+<span class="co">#&gt;  3        1.        1.        0.        1.        0.        0.        0.</span>
+<span class="co">#&gt;  4        1.        0.        1.        0.        0.        0.        0.</span>
+<span class="co">#&gt;  5        1.        1.        0.        1.        1.        1.        0.</span>
+<span class="co">#&gt;  6        1.        1.        1.        1.        1.        1.        1.</span>
+<span class="co">#&gt;  7        1.        1.        1.        0.        0.        1.        1.</span>
+<span class="co">#&gt;  8        1.        1.        1.        0.        0.        0.        1.</span>
+<span class="co">#&gt;  9        1.        1.        1.        1.        1.        0.        1.</span>
+<span class="co">#&gt; 10        1.        1.        0.        1.        0.        0.        0.</span>
 <span class="co">#&gt; # ... with 898 more rows, and 5 more variables: c89cop8_r &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   c90cop9_r &lt;dbl&gt;, c161sex_r &lt;dbl&gt;, c172code_r &lt;dbl&gt;, c175empl_r &lt;dbl&gt;</span>
 
@@ -149,16 +144,16 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 <span class="co">#&gt; # A tibble: 908 x 6</span>
 <span class="co">#&gt;    c12hour_c e17age_c c160age_c barthtot_c neg_c_7_c pos_v_4_c</span>
 <span class="co">#&gt;        &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span>
-<span class="co">#&gt;  1   - 26.4     3.88      2.54       10.5      0.150    -0.477</span>
-<span class="co">#&gt;  2    106       8.88      0.537      10.5      8.15     -1.48 </span>
+<span class="co">#&gt;  1    -26.4     3.88      2.54       10.5      0.150    -0.477</span>
+<span class="co">#&gt;  2    106.      8.88      0.537      10.5      8.15     -1.48 </span>
 <span class="co">#&gt;  3     27.6     2.88     26.5       -29.5     -0.850     0.523</span>
-<span class="co">#&gt;  4    126     -12.1      15.5       -64.5     -1.85      2.52 </span>
-<span class="co">#&gt;  5    126       4.88    - 6.46      -39.5      0.150     2.52 </span>
-<span class="co">#&gt;  6   - 26.4     5.88      2.54      - 4.55     7.15     -3.48 </span>
-<span class="co">#&gt;  7    119     - 5.12      7.54      -59.5      3.15      0.523</span>
+<span class="co">#&gt;  4    126.    -12.1      15.5       -64.5     -1.85      2.52 </span>
+<span class="co">#&gt;  5    126.      4.88     -6.46      -39.5      0.150     2.52 </span>
+<span class="co">#&gt;  6    -26.4     5.88      2.54       -4.55     7.15     -3.48 </span>
+<span class="co">#&gt;  7    119.     -5.12      7.54      -59.5      3.15      0.523</span>
 <span class="co">#&gt;  8     67.6     7.88     13.5       -29.5     -0.850     1.52 </span>
-<span class="co">#&gt;  9   - 14.4   - 0.121     5.54      -49.5      3.15      0.523</span>
-<span class="co">#&gt; 10   -  2.40    3.88    - 4.46      -64.5     -1.85      0.523</span>
+<span class="co">#&gt;  9    -14.4    -0.121     5.54      -49.5      3.15      0.523</span>
+<span class="co">#&gt; 10     -2.40    3.88     -4.46      -64.5     -1.85      0.523</span>
 <span class="co">#&gt; # ... with 898 more rows</span></code></pre></div>
 </div>
 <div id="the-function-types" class="section level2">
@@ -171,16 +166,16 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 <span class="co">#&gt; # A tibble: 908 x 26</span>
 <span class="co">#&gt;    c12hour e15relat e16sex e17age e42dep c82cop1 c83cop2 c84cop3 c85cop4</span>
 <span class="co">#&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;dbl&gt; &lt;fct&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span>
-<span class="co">#&gt;  1    16.0     2.00 2        83.0 3         3.00    2.00    2.00    2.00</span>
-<span class="co">#&gt;  2   148       2.00 2        88.0 3         3.00    3.00    3.00    3.00</span>
-<span class="co">#&gt;  3    70.0     1.00 2        82.0 3         2.00    2.00    1.00    4.00</span>
-<span class="co">#&gt;  4   168       1.00 2        67.0 4         4.00    1.00    3.00    1.00</span>
-<span class="co">#&gt;  5   168       2.00 2        84.0 4         3.00    2.00    1.00    2.00</span>
-<span class="co">#&gt;  6    16.0     2.00 2        85.0 4         2.00    2.00    3.00    3.00</span>
-<span class="co">#&gt;  7   161       1.00 1        74.0 4         4.00    2.00    4.00    1.00</span>
-<span class="co">#&gt;  8   110       4.00 2        87.0 4         3.00    2.00    2.00    1.00</span>
-<span class="co">#&gt;  9    28.0     2.00 2        79.0 4         3.00    2.00    3.00    2.00</span>
-<span class="co">#&gt; 10    40.0     2.00 2        83.0 4         3.00    2.00    1.00    2.00</span>
+<span class="co">#&gt;  1     16.       2. 2         83. 3           3.      2.      2.      2.</span>
+<span class="co">#&gt;  2    148.       2. 2         88. 3           3.      3.      3.      3.</span>
+<span class="co">#&gt;  3     70.       1. 2         82. 3           2.      2.      1.      4.</span>
+<span class="co">#&gt;  4    168.       1. 2         67. 4           4.      1.      3.      1.</span>
+<span class="co">#&gt;  5    168.       2. 2         84. 4           3.      2.      1.      2.</span>
+<span class="co">#&gt;  6     16.       2. 2         85. 4           2.      2.      3.      3.</span>
+<span class="co">#&gt;  7    161.       1. 1         74. 4           4.      2.      4.      1.</span>
+<span class="co">#&gt;  8    110.       4. 2         87. 4           3.      2.      2.      1.</span>
+<span class="co">#&gt;  9     28.       2. 2         79. 4           3.      2.      3.      2.</span>
+<span class="co">#&gt; 10     40.       2. 2         83. 4           3.      2.      1.      2.</span>
 <span class="co">#&gt; # ... with 898 more rows, and 17 more variables: c86cop5 &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   c87cop6 &lt;dbl&gt;, c88cop7 &lt;dbl&gt;, c89cop8 &lt;dbl&gt;, c90cop9 &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   c160age &lt;dbl&gt;, c161sex &lt;dbl&gt;, c172code &lt;dbl&gt;, c175empl &lt;dbl&gt;,</span>
@@ -195,16 +190,16 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 <span class="co">#&gt; # A tibble: 908 x 28</span>
 <span class="co">#&gt;    c12hour e15relat e16sex e17age e42dep c82cop1 c83cop2 c84cop3 c85cop4</span>
 <span class="co">#&gt;      &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span>
-<span class="co">#&gt;  1    16.0     2.00   2.00   83.0   3.00    3.00    2.00    2.00    2.00</span>
-<span class="co">#&gt;  2   148       2.00   2.00   88.0   3.00    3.00    3.00    3.00    3.00</span>
-<span class="co">#&gt;  3    70.0     1.00   2.00   82.0   3.00    2.00    2.00    1.00    4.00</span>
-<span class="co">#&gt;  4   168       1.00   2.00   67.0   4.00    4.00    1.00    3.00    1.00</span>
-<span class="co">#&gt;  5   168       2.00   2.00   84.0   4.00    3.00    2.00    1.00    2.00</span>
-<span class="co">#&gt;  6    16.0     2.00   2.00   85.0   4.00    2.00    2.00    3.00    3.00</span>
-<span class="co">#&gt;  7   161       1.00   1.00   74.0   4.00    4.00    2.00    4.00    1.00</span>
-<span class="co">#&gt;  8   110       4.00   2.00   87.0   4.00    3.00    2.00    2.00    1.00</span>
-<span class="co">#&gt;  9    28.0     2.00   2.00   79.0   4.00    3.00    2.00    3.00    2.00</span>
-<span class="co">#&gt; 10    40.0     2.00   2.00   83.0   4.00    3.00    2.00    1.00    2.00</span>
+<span class="co">#&gt;  1     16.       2.     2.    83.     3.      3.      2.      2.      2.</span>
+<span class="co">#&gt;  2    148.       2.     2.    88.     3.      3.      3.      3.      3.</span>
+<span class="co">#&gt;  3     70.       1.     2.    82.     3.      2.      2.      1.      4.</span>
+<span class="co">#&gt;  4    168.       1.     2.    67.     4.      4.      1.      3.      1.</span>
+<span class="co">#&gt;  5    168.       2.     2.    84.     4.      3.      2.      1.      2.</span>
+<span class="co">#&gt;  6     16.       2.     2.    85.     4.      2.      2.      3.      3.</span>
+<span class="co">#&gt;  7    161.       1.     1.    74.     4.      4.      2.      4.      1.</span>
+<span class="co">#&gt;  8    110.       4.     2.    87.     4.      3.      2.      2.      1.</span>
+<span class="co">#&gt;  9     28.       2.     2.    79.     4.      3.      2.      3.      2.</span>
+<span class="co">#&gt; 10     40.       2.     2.    83.     4.      3.      2.      1.      2.</span>
 <span class="co">#&gt; # ... with 898 more rows, and 19 more variables: c86cop5 &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   c87cop6 &lt;dbl&gt;, c88cop7 &lt;dbl&gt;, c89cop8 &lt;dbl&gt;, c90cop9 &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   c160age &lt;dbl&gt;, c161sex &lt;dbl&gt;, c172code &lt;dbl&gt;, c175empl &lt;dbl&gt;,</span>
@@ -217,16 +212,16 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 <span class="co">#&gt; # A tibble: 908 x 2</span>
 <span class="co">#&gt;    c82cop1_r c83cop2_r</span>
 <span class="co">#&gt;        &lt;dbl&gt;     &lt;dbl&gt;</span>
-<span class="co">#&gt;  1      2.00      0   </span>
-<span class="co">#&gt;  2      2.00      2.00</span>
-<span class="co">#&gt;  3      0         0   </span>
-<span class="co">#&gt;  4      2.00      0   </span>
-<span class="co">#&gt;  5      2.00      0   </span>
-<span class="co">#&gt;  6      0         0   </span>
-<span class="co">#&gt;  7      2.00      0   </span>
-<span class="co">#&gt;  8      2.00      0   </span>
-<span class="co">#&gt;  9      2.00      0   </span>
-<span class="co">#&gt; 10      2.00      0   </span>
+<span class="co">#&gt;  1        2.        0.</span>
+<span class="co">#&gt;  2        2.        2.</span>
+<span class="co">#&gt;  3        0.        0.</span>
+<span class="co">#&gt;  4        2.        0.</span>
+<span class="co">#&gt;  5        2.        0.</span>
+<span class="co">#&gt;  6        0.        0.</span>
+<span class="co">#&gt;  7        2.        0.</span>
+<span class="co">#&gt;  8        2.        0.</span>
+<span class="co">#&gt;  9        2.        0.</span>
+<span class="co">#&gt; 10        2.        0.</span>
 <span class="co">#&gt; # ... with 898 more rows</span></code></pre></div>
 <p>These variables usually get a suffix, so you can bind these variables as new columns to a data frame, for instance with <code>add_columns()</code>. The function <code>add_columns()</code> is useful if you want to bind/add columns within a pipe-chain <em>to the end</em> of a data frame.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">efc <span class="op">%&gt;%</span><span class="st"> </span>
@@ -235,16 +230,16 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 <span class="co">#&gt; # A tibble: 908 x 28</span>
 <span class="co">#&gt;    c12hour e15relat e16sex e17age e42dep c82cop1 c83cop2 c84cop3 c85cop4</span>
 <span class="co">#&gt;      &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span>
-<span class="co">#&gt;  1    16.0     2.00   2.00   83.0   3.00    3.00    2.00    2.00    2.00</span>
-<span class="co">#&gt;  2   148       2.00   2.00   88.0   3.00    3.00    3.00    3.00    3.00</span>
-<span class="co">#&gt;  3    70.0     1.00   2.00   82.0   3.00    2.00    2.00    1.00    4.00</span>
-<span class="co">#&gt;  4   168       1.00   2.00   67.0   4.00    4.00    1.00    3.00    1.00</span>
-<span class="co">#&gt;  5   168       2.00   2.00   84.0   4.00    3.00    2.00    1.00    2.00</span>
-<span class="co">#&gt;  6    16.0     2.00   2.00   85.0   4.00    2.00    2.00    3.00    3.00</span>
-<span class="co">#&gt;  7   161       1.00   1.00   74.0   4.00    4.00    2.00    4.00    1.00</span>
-<span class="co">#&gt;  8   110       4.00   2.00   87.0   4.00    3.00    2.00    2.00    1.00</span>
-<span class="co">#&gt;  9    28.0     2.00   2.00   79.0   4.00    3.00    2.00    3.00    2.00</span>
-<span class="co">#&gt; 10    40.0     2.00   2.00   83.0   4.00    3.00    2.00    1.00    2.00</span>
+<span class="co">#&gt;  1     16.       2.     2.    83.     3.      3.      2.      2.      2.</span>
+<span class="co">#&gt;  2    148.       2.     2.    88.     3.      3.      3.      3.      3.</span>
+<span class="co">#&gt;  3     70.       1.     2.    82.     3.      2.      2.      1.      4.</span>
+<span class="co">#&gt;  4    168.       1.     2.    67.     4.      4.      1.      3.      1.</span>
+<span class="co">#&gt;  5    168.       2.     2.    84.     4.      3.      2.      1.      2.</span>
+<span class="co">#&gt;  6     16.       2.     2.    85.     4.      2.      2.      3.      3.</span>
+<span class="co">#&gt;  7    161.       1.     1.    74.     4.      4.      2.      4.      1.</span>
+<span class="co">#&gt;  8    110.       4.     2.    87.     4.      3.      2.      2.      1.</span>
+<span class="co">#&gt;  9     28.       2.     2.    79.     4.      3.      2.      3.      2.</span>
+<span class="co">#&gt; 10     40.       2.     2.    83.     4.      3.      2.      1.      2.</span>
 <span class="co">#&gt; # ... with 898 more rows, and 19 more variables: c86cop5 &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   c87cop6 &lt;dbl&gt;, c88cop7 &lt;dbl&gt;, c89cop8 &lt;dbl&gt;, c90cop9 &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   c160age &lt;dbl&gt;, c161sex &lt;dbl&gt;, c172code &lt;dbl&gt;, c175empl &lt;dbl&gt;,</span>
@@ -262,16 +257,16 @@ x &lt;-<span class="st"> </span><span class="kw">rec</span>(efc<span class="op">
 <span class="co">#&gt; # A tibble: 908 x 4</span>
 <span class="co">#&gt;    c82cop1 c83cop2 c82cop1_r c83cop2_r</span>
 <span class="co">#&gt;      &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span>
-<span class="co">#&gt;  1    3.00    2.00      2.00      0   </span>
-<span class="co">#&gt;  2    3.00    3.00      2.00      2.00</span>
-<span class="co">#&gt;  3    2.00    2.00      0         0   </span>
-<span class="co">#&gt;  4    4.00    1.00      2.00      0   </span>
-<span class="co">#&gt;  5    3.00    2.00      2.00      0   </span>
-<span class="co">#&gt;  6    2.00    2.00      0         0   </span>
-<span class="co">#&gt;  7    4.00    2.00      2.00      0   </span>
-<span class="co">#&gt;  8    3.00    2.00      2.00      0   </span>
-<span class="co">#&gt;  9    3.00    2.00      2.00      0   </span>
-<span class="co">#&gt; 10    3.00    2.00      2.00      0   </span>
+<span class="co">#&gt;  1      3.      2.        2.        0.</span>
+<span class="co">#&gt;  2      3.      3.        2.        2.</span>
+<span class="co">#&gt;  3      2.      2.        0.        0.</span>
+<span class="co">#&gt;  4      4.      1.        2.        0.</span>
+<span class="co">#&gt;  5      3.      2.        2.        0.</span>
+<span class="co">#&gt;  6      2.      2.        0.        0.</span>
+<span class="co">#&gt;  7      4.      2.        2.        0.</span>
+<span class="co">#&gt;  8      3.      2.        2.        0.</span>
+<span class="co">#&gt;  9      3.      2.        2.        0.</span>
+<span class="co">#&gt; 10      3.      2.        2.        0.</span>
 <span class="co">#&gt; # ... with 898 more rows</span>
 
 efc <span class="op">%&gt;%</span><span class="st"> </span>
