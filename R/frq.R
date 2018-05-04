@@ -7,8 +7,8 @@
 #'   according to their frequencies or not. Default is \code{"none"}, so
 #'   categories are not sorted by frequency. Use \code{"asc"} or
 #'   \code{"desc"} for sorting categories ascending or descending order.
-#' @param weight.by Vector of weights that will be applied to weight all observations.
-#'   Must be a vector of same length as the input vector. Default is
+#' @param weight.by Name of variable in \code{x} that indicated the vector of
+#'   weights that will be applied to weight all  observations. Default is
 #'   \code{NULL}, so no weights are used.
 #' @param auto.grp Numeric value, indicating the minimum amount of unique
 #'   values in a variable, at which automatic grouping into smaller  units
@@ -32,6 +32,13 @@
 #' @note \code{x} may also be a grouped data frame (see \code{\link[dplyr]{group_by}})
 #'       with up to two grouping variables. Frequency tables are created for each
 #'       subgroup then.
+#'       \cr \cr
+#'       The \code{print()}-method adds a table header with information on the
+#'       variable label, variable type, total and valid N, and mean and
+#'       standard deviations. Mean and SD are \emph{always} printed, even for
+#'       categorical vriables (factors) or character vectors. In this case,
+#'       values are coerced into numeric vector to calculate the summary
+#'       statistics.
 #'
 #' @seealso \code{\link{flat_table}} for labelled (proportional) tables.
 #'
@@ -82,6 +89,10 @@
 #' frq(efc, c160age)
 #' frq(efc, c160age, auto.grp = 5)
 #'
+#' # and with weights
+#' efc$weights <- abs(rnorm(n = nrow(efc), mean = 1, sd = .5))
+#' frq(efc, c160age, auto.grp = 5, weight.by = weights)
+#'
 #' # group string values
 #' \dontrun{
 #' dummy <- efc %>% dplyr::select(3)
@@ -96,10 +107,11 @@
 #' frq(dummy, grp.strings = 2)}
 #'
 #' @importFrom stats na.omit
-#' @importFrom dplyr full_join select_if
-#' @importFrom tibble add_row as_tibble
+#' @importFrom dplyr full_join select_if select
+#' @importFrom tibble add_row as_tibble has_name
 #' @importFrom sjlabelled get_label get_labels get_values copy_labels
 #' @importFrom purrr map_if
+#' @importFrom rlang quo_name enquo
 #' @export
 frq <- function(x,
                 ...,
@@ -119,7 +131,22 @@ frq <- function(x,
 
 
   # get dot data
-  x <- get_dot_data(x, dplyr::quos(...))
+  xw <- get_dot_data(x, dplyr::quos(...))
+
+  if (missing(weight.by)) {
+    w <- NULL
+    x <- xw
+  } else {
+    w <- rlang::quo_name(rlang::enquo(weight.by))
+
+    if (!sjmisc::is_empty(w) && w != "NULL") {
+      if (!tibble::has_name(xw, w) && tibble::has_name(x, w))
+        x <- dplyr::bind_cols(xw, dplyr::select(x, !! w))
+    } else {
+      w <- NULL
+      x <- xw
+    }
+  }
 
 
   # remove empty columns
@@ -177,41 +204,56 @@ frq <- function(x,
         # copy back labels to grouped data frame
         tmp <- sjlabelled::copy_labels(grps$data[[i]][j], x)
 
-        # print frequencies
-        dummy <-
-          frq_helper(
-            x = tmp[[1]],
-            sort.frq = sort.frq,
-            weight.by = weight.by,
-            cn = colnames(tmp)[1],
-            auto.grp = auto.grp
-          )
+        if (!is.null(w))
+          wb <- grps$data[[i]][[w]]
+        else
+          wb <- NULL
 
-        attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = "\n")
+        # iterate data frame, but don't select
+        # weighting variable
+        if (is.null(w) || colnames(tmp)[1] != w) {
+          dummy <-
+            frq_helper(
+              x = tmp[[1]],
+              sort.frq = sort.frq,
+              weight.by = wb,
+              cn = colnames(tmp)[1],
+              auto.grp = auto.grp
+            )
 
-        # save data frame for return value
-        dataframes[[length(dataframes) + 1]] <- dummy
+          attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = "\n")
+
+          # save data frame for return value
+          dataframes[[length(dataframes) + 1]] <- dummy
+        }
       }
-
     }
 
   } else {
     # if we don't have data frame, coerce
     if (!is.data.frame(x)) x <- tibble::tibble(x)
 
-    for (i in seq_len(ncol(x))) {
-      # print frequencies
-      dummy <-
-        frq_helper(
-          x = x[[i]],
-          sort.frq = sort.frq,
-          weight.by = weight.by,
-          cn = colnames(x)[i],
-          auto.grp = auto.grp
-        )
+    if (!is.null(w))
+      wb <- x[[w]]
+    else
+      wb <- NULL
 
-      # save data frame for return value
-      dataframes[[length(dataframes) + 1]] <- dummy
+    for (i in seq_len(ncol(x))) {
+      # iterate data frame, but don't select
+      # weighting variable
+      if (is.null(w) || colnames(x)[i] != w) {
+        dummy <-
+          frq_helper(
+            x = x[[i]],
+            sort.frq = sort.frq,
+            weight.by = wb,
+            cn = colnames(x)[i],
+            auto.grp = auto.grp
+          )
+
+        # save data frame for return value
+        dataframes[[length(dataframes) + 1]] <- dummy
+      }
     }
   }
 

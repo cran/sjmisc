@@ -1,5 +1,6 @@
 ## ----echo = FALSE--------------------------------------------------------
 knitr::opts_chunk$set(collapse = TRUE, warning = FALSE, comment = "#>")
+suppressPackageStartupMessages(library(sjmisc))
 
 ## ----message=FALSE-------------------------------------------------------
 library(sjmisc)

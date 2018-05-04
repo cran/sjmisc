@@ -24,8 +24,8 @@ according to their frequencies or not. Default is \code{"none"}, so
 categories are not sorted by frequency. Use \code{"asc"} or
 \code{"desc"} for sorting categories ascending or descending order.}
 
-\item{weight.by}{Vector of weights that will be applied to weight all observations.
-Must be a vector of same length as the input vector. Default is
+\item{weight.by}{Name of variable in \code{x} that indicated the vector of
+weights that will be applied to weight all  observations. Default is
 \code{NULL}, so no weights are used.}
 
 \item{auto.grp}{Numeric value, indicating the minimum amount of unique
@@ -59,6 +59,13 @@ This function returns a frequency table of labelled vectors, as data frame.
 \code{x} may also be a grouped data frame (see \code{\link[dplyr]{group_by}})
       with up to two grouping variables. Frequency tables are created for each
       subgroup then.
+      \cr \cr
+      The \code{print()}-method adds a table header with information on the
+      variable label, variable type, total and valid N, and mean and
+      standard deviations. Mean and SD are \emph{always} printed, even for
+      categorical vriables (factors) or character vectors. In this case,
+      values are coerced into numeric vector to calculate the summary
+      statistics.
 }
 \examples{
 library(haven)
@@ -106,6 +113,10 @@ frq(iris, Species)
 # group variables with large range
 frq(efc, c160age)
 frq(efc, c160age, auto.grp = 5)
+
+# and with weights
+efc$weights <- abs(rnorm(n = nrow(efc), mean = 1, sd = .5))
+frq(efc, c160age, auto.grp = 5, weight.by = weights)
 
 # group string values
 \dontrun{

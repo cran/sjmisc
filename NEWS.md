@@ -1,3 +1,28 @@
+# sjmisc 2.7.2
+
+## New functions
+
+* `round_num()` to round only numeric values in a data frame.
+
+## General
+
+* Improved performance for `merge_df()`. Furthermore, `add_rows()` was added as alias for `merge_df()`.
+* `merge_df()` resp. `add_rows()` now create a unique `id`-name instead of dropping the ID-variable, in case `id` has the same name of any existing variables in the provided data frames.
+* Improved performance for `descr()` and minor changes to the output.
+
+## Support for `mids`-objects (package _mice_)
+
+Following functions now also work on `mids`-objects, as returned by the `mice()`-function:
+* `row_count()`, `row_sums()`, `row_means()`, `rec()`, `dicho()`, `center()`, `std()`, `recode_to()` and `to_long()`.
+
+## Changes to functions
+
+* The `weight.by`-argument in `frq()` now should be a variable name from a variable in `x`, and no longer a separate vector.
+
+## Bug fixes
+
+* `descr()` does not work with character vectors, so these are being removed now.
+
 # sjmisc 2.7.1
 
 ## General
