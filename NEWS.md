@@ -1,3 +1,25 @@
+# sjmisc 2.7.3
+
+## General
+
+* A test-suite was added to the package.
+* Updated reference in `CITATION` to the publication in the Journal of Open Source Software.
+
+## New functions
+
+* `is_cross_classified()` to check whether two factors are partially crossed.
+
+## Changes to functions
+
+* `ref_lvl()` now also accepts value labels as value for the `lvl`-argument. Additionally, `ref_lvl()` now also works for factor with non-numeric factor levels and simply returns `relevel(x, ref = lvl)` in such cases.
+
+## Bug fixes
+
+* Fixed encoding issues in `rec()` with direct labelling for certain locales.
+* Fixed issue in `count_na()`, which did not print labels of tagged `NA` values since the last revision of `frq()`.
+* Fixed issue in `merge_imputation()` for cases where original data frame had less columns than imputed data frames.
+* Fixed issue in `find_var()` for fuzzy-matching in all elements (i.e. when `fuzzy = TRUE` and `search = "all"`).
+
 # sjmisc 2.7.2
 
 ## New functions

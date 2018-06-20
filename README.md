@@ -1,8 +1,16 @@
 # sjmisc - Data and Variable Transformation Functions <img src="man/figures/logo.png" align="right" />
 
-Collection of miscellaneous utility functions, supporting data transformation tasks like recoding, dichotomizing or grouping variables, setting and replacing missing values. The data transformation functions also support labelled data.
+[![DOI](http://joss.theoj.org/papers/10.21105/joss.00754/status.svg)](https://doi.org/10.21105/joss.00754)
+
+Data preparation is a common task in research, which usually takes the most amount of time in the analytical process. Packages for data preparation have been released recently as part of the _tidyverse_, focussing on the transformation of data sets. Packages with special focus on transformation of _variables_, which fit into the workflow and design-philosophy of the tidyverse, are missing.
+
+**sjmisc** tries to fill this gap. Basically, this package complements the **dplyr** package in that **sjmisc** takes over data transformation tasks on variables, like recoding, dichotomizing or grouping variables, setting and replacing missing values, etc. A distinctive feature of **sjmisc** is the support for labelled data, which is especially useful for users who often work with data sets from othert statistical software packages like _SPSS_ or _Stata_.
 
 The functions of **sjmisc** are designed to work together seamlessly with other packes from the tidyverse, like **dplyr**. For instance, you can use the functions from **sjmisc** both within a pipe-workflow to manipulate data frames, or to create new variables with `mutate()`. See `vignette("design_philosophy", "sjmisc")` for more details.
+
+## Contributing to the package
+
+Please follow [this guide](CONTRIBUTING.md) if you like to contribute to this package.
 
 ## Installation
 
@@ -39,6 +47,13 @@ A cheatsheet can be downloaded [from here](http://strengejacke.de/sjPlot/sjmisc-
 
 For more examples, see package vignettes (`browseVignettes("sjmisc")`).
 
+Please visit [https://strengejacke.github.io/sjmisc/](https://strengejacke.github.io/sjmisc/) for documentation and vignettes.
+
 ## Citation
 
-In case you want / have to cite my package, please use `citation('sjmisc')` for citation information. 
+In case you want / have to cite my package, please cite as (see also `citation('sjmisc')`): 
+
+Lüdecke D (2018). sjmisc: Data and Variable Transformation Functions. _Journal of Open
+Source Software_, *3*(26), 754. doi: 10.21105/joss.00754
+
+[![DOI](http://joss.theoj.org/papers/10.21105/joss.00754/status.svg)](https://doi.org/10.21105/joss.00754)
