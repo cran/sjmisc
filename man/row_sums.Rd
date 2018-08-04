@@ -2,12 +2,27 @@
 % Please edit documentation in R/row_sums.R
 \name{row_sums}
 \alias{row_sums}
+\alias{row_sums.default}
+\alias{row_sums.mids}
 \alias{row_means}
+\alias{total_mean}
+\alias{row_means.default}
+\alias{row_means.mids}
 \title{Row sums and means for data frames}
 \usage{
-row_sums(x, ..., na.rm = TRUE, var = "rowsums", append = TRUE)
+row_sums(x, ...)
 
-row_means(x, ..., n, var = "rowmeans", append = TRUE)
+\method{row_sums}{default}(x, ..., n, var = "rowsums", append = TRUE)
+
+\method{row_sums}{mids}(x, ..., var = "rowsums", append = TRUE)
+
+row_means(x, ...)
+
+total_mean(x, ...)
+
+\method{row_means}{default}(x, ..., n, var = "rowmeans", append = TRUE)
+
+\method{row_means}{mids}(x, ..., var = "rowmeans", append = TRUE)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -19,50 +34,46 @@ You may also use functions like \code{:} or tidyselect's
 \code{\link[tidyselect]{select_helpers}}.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
-\item{na.rm}{Logical, \code{TRUE} if missing values should be omitted from
-the calculations.}
+\item{n}{May either be
+\itemize{
+  \item a numeric value that indicates the amount of valid values per row to calculate the row mean or sum;
+  \item or a value between 0 and 1, indicating a proportion of valid values per row to calculate the row mean or sum (see 'Details').
+}
+If a row's sum of valid (i.e. non-\code{NA}) values is less than \code{n}, \code{NA} will be returned as value for the row mean or sum.}
 
 \item{var}{Name of new the variable with the row sums or means.}
 
 \item{append}{Logical, if \code{TRUE} (the default) and \code{x} is a data frame,
 \code{x} including the new variables as additional columns is returned;
 if \code{FALSE}, only the new variables are returned.}
-
-\item{n}{May either be
-\itemize{
-  \item a numeric value that indicates the amount of valid values per row to calculate the row mean;
-  \item or a value between 0 and 1, indicating a proportion of valid values per row to calculate the row mean (see 'Details').
-}
-If a row's sum of valid values is less than \code{n}, \code{NA} will be returned as row mean value.}
 }
 \value{
 For \code{row_sums()}, a tibble with a new variable: the row sums from
-        \code{x}; for \code{row_means()}, a tibble with a new variable: the row
-        means from \code{x}. If \code{append = FALSE}, only the new variable
-        with row sums resp. row means is returned.
+   \code{x}; for \code{row_means()}, a tibble with a new variable: the row
+   means from \code{x}. If \code{append = FALSE}, only the new variable
+   with row sums resp. row means is returned. \code{total_mean()} returns
+   the mean of all values from all specified columns in a data frame.
 }
 \description{
-\code{row_sums()} simply wraps \code{\link{rowSums}}, while
-             \code{row_means()} simply wraps \code{\link[sjstats]{mean_n}},
-             however, the argument-structure of both functions is designed
-             to work nicely within a pipe-workflow and allows select-helpers
-             for selecting variables, the default for \code{na.rm} is \code{TRUE},
-             and the return value is always a tibble (with one variable).
+\code{row_sums()} and \code{row_means()} compute row sums or means
+   for at least \code{n} valid values per row. The functions are designed
+   to work nicely within a pipe-workflow and allow select-helpers
+   for selecting variables.
 }
 \details{
 For \code{n}, must be a numeric value from \code{0} to \code{ncol(x)}. If
-         a \emph{row} in \code{x} has at least \code{n} non-missing values, the
-         row mean is returned. If \code{n} is a non-integer value from 0 to 1,
-         \code{n} is considered to indicate the proportion of necessary non-missing
-         values per row. E.g., if \code{n = .75}, a row must have at least \code{ncol(x) * n}
-         non-missing values for the row mean to be calculated. See 'Examples'.
+   a \emph{row} in \code{x} has at least \code{n} non-missing values, the
+   row mean or sum is returned. If \code{n} is a non-integer value from 0 to 1,
+   \code{n} is considered to indicate the proportion of necessary non-missing
+   values per row. E.g., if \code{n = .75}, a row must have at least \code{ncol(x) * n}
+   non-missing values for the row mean or sum to be calculated. See 'Examples'.
 }
 \examples{
 data(efc)
-efc \%>\% row_sums(c82cop1:c90cop9, append = FALSE)
+efc \%>\% row_sums(c82cop1:c90cop9, n = 3, append = FALSE)
 
 library(dplyr)
-row_sums(efc, contains("cop"), append = FALSE)
+row_sums(efc, contains("cop"), n = 2, append = FALSE)
 
 dat <- data.frame(
   c1 = c(1,2,NA,4),
@@ -74,13 +85,19 @@ dat <- data.frame(
 dat
 
 row_means(dat, n = 4)
+row_sums(dat, n = 4)
+
 row_means(dat, c1:c4, n = 4)
 # at least 40\% non-missing
 row_means(dat, c1:c4, n = .4)
+row_sums(dat, c1:c4, n = .4)
+
+# total mean of all values in the data frame
+total_mean(dat)
 
 # create sum-score of COPE-Index, and append to data
 efc \%>\%
   select(c82cop1:c90cop9) \%>\%
-  row_sums()
+  row_sums(n = 1)
 
 }

@@ -1,4 +1,4 @@
-#' @title Frequencies of labelled variables
+#' @title Frequency table of labelled variables
 #' @name frq
 #'
 #' @description This function returns a frequency table of labelled vectors, as data frame.
@@ -7,9 +7,9 @@
 #'   according to their frequencies or not. Default is \code{"none"}, so
 #'   categories are not sorted by frequency. Use \code{"asc"} or
 #'   \code{"desc"} for sorting categories ascending or descending order.
-#' @param weight.by Name of variable in \code{x} that indicated the vector of
-#'   weights that will be applied to weight all  observations. Default is
-#'   \code{NULL}, so no weights are used.
+#' @param weight.by Bare name, or name as string, of a variable in \code{x}
+#'   that indicates the vector of weights, which will be applied to weight all
+#'   observations. Default is \code{NULL}, so no weights are used.
 #' @param auto.grp Numeric value, indicating the minimum amount of unique
 #'   values in a variable, at which automatic grouping into smaller  units
 #'   is done (see \code{\link{group_var}}). Default value for \code{auto.group}
@@ -36,7 +36,7 @@
 #'       The \code{print()}-method adds a table header with information on the
 #'       variable label, variable type, total and valid N, and mean and
 #'       standard deviations. Mean and SD are \emph{always} printed, even for
-#'       categorical vriables (factors) or character vectors. In this case,
+#'       categorical variables (factors) or character vectors. In this case,
 #'       values are coerced into numeric vector to calculate the summary
 #'       statistics.
 #'
@@ -139,10 +139,22 @@ frq <- function(x,
   } else {
     w <- rlang::quo_name(rlang::enquo(weight.by))
 
-    if (!sjmisc::is_empty(w) && w != "NULL") {
-      if (!tibble::has_name(xw, w) && tibble::has_name(x, w))
-        x <- dplyr::bind_cols(xw, dplyr::select(x, !! w))
+    w.string <- tryCatch(
+      {
+        eval(weight.by)
+      },
+      error = function(x) { NULL },
+      warning = function(x) { NULL },
+      finally = function(x) { NULL }
+    )
+
+    if (!is.null(w.string) && is.character(w.string)) w <- w.string
+
+
+    if (!sjmisc::is_empty(w) && w != "NULL" && !tibble::has_name(xw, w) && tibble::has_name(x, w)) {
+      x <- dplyr::bind_cols(xw, dplyr::select(x, !! w))
     } else {
+      message(sprintf("Weights `%s` not found in data.", w))
       w <- NULL
       x <- xw
     }
