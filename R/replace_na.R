@@ -44,8 +44,10 @@
 #' # the original labels
 #' get_labels(replace_na(efc$e42dep, value = 99))
 #' # NA becomes "99", and is labelled as "former NA"
-#' get_labels(replace_na(efc$e42dep, value = 99, na.label = "former NA"),
-#'            include.values = "p")
+#' get_labels(
+#'   replace_na(efc$e42dep, value = 99, na.label = "former NA"),
+#'   values = "p"
+#' )
 #'
 #' dummy <- data.frame(
 #'   v1 = efc$c82cop1,
@@ -101,10 +103,6 @@ replace_na <- function(x, ..., value, na.label = NULL, tagged.na = NULL) {
         tagged.na = tagged.na
       )
     }
-
-    # coerce to tibble
-    x <- tibble::as_tibble(x)
-
   } else {
     x <- replace_na_helper(
       x = .dat,

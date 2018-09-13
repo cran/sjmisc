@@ -145,12 +145,11 @@ recode_to_if <- function(x, predicate, lowest = 0, highest = -1, append = TRUE, 
 
 
 #' @importFrom dplyr bind_cols
-#' @importFrom tibble as_tibble
 rec_to_fun <- function(x, .dat, lowest, highest, append, suffix) {
   if (is.data.frame(x)) {
 
     # remember original data, if user wants to bind columns
-    orix <- tibble::as_tibble(x)
+    orix <- x
 
     # iterate variables of data frame
     for (i in colnames(.dat)) {
@@ -161,8 +160,8 @@ rec_to_fun <- function(x, .dat, lowest, highest, append, suffix) {
       )
     }
 
-    # coerce to tibble and select only recoded variables
-    x <- tibble::as_tibble(x[colnames(.dat)])
+    # select only recoded variables
+    x <- x[colnames(.dat)]
 
     # add suffix to recoded variables?
     if (!is.null(suffix) && !sjmisc::is_empty(suffix)) {
@@ -189,8 +188,8 @@ rec_to_helper <- function(x, lowest, highest) {
   val_lab <- sjlabelled::get_labels(
     x,
     attr.only = TRUE,
-    include.values = NULL,
-    include.non.labelled = TRUE
+    values = NULL,
+    non.labelled = TRUE
   )
 
   # retrieve variable label

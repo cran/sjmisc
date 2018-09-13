@@ -39,7 +39,6 @@
 #'   select(e42dep, e16sex, c172code) %>%
 #'   to_dummy()
 #'
-#' @importFrom tibble as_tibble
 #' @export
 to_dummy <- function(x, ..., var.name = "name", suffix = c("numeric", "label")) {
   # check for abbr
@@ -70,14 +69,13 @@ to_dummy <- function(x, ..., var.name = "name", suffix = c("numeric", "label")) 
     x <- to_dummy_helper(.dat, varname, suffix)
   }
 
-  # coerce to tibble
-  tibble::as_tibble(x)
+  as.data.frame(x)
 }
 
 
 to_dummy_helper <- function(x, varname, suffix) {
   # check whether we have labels
-  labels <- sjlabelled::get_labels(x, attr.only = F, include.values = "n", include.non.labelled = T)
+  labels <- sjlabelled::get_labels(x, attr.only = F, values = "n", non.labelled = T)
   # get resp. set variable label for new dummy variables
   # get variable label
   label <- sjlabelled::get_label(x, def.value = varname)

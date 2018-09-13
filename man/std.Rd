@@ -58,6 +58,8 @@ column names in a data frame depends on the function call:
   \item grouped variables (\code{group_var()}) will be suffixed with \code{"_gr"}
   \item standardized variables (\code{std()}) will be suffixed with \code{"_z"}
   \item centered variables (\code{center()}) will be suffixed with \code{"_c"}
+  \item de-meaned variables (\code{de_mean()}) will be suffixed with \code{"_dm"}
+  \item grouped-meaned variables (\code{de_mean()}) will be suffixed with \code{"_gm"}
 }}
 
 \item{predicate}{A predicate function to be applied to the columns. The
@@ -103,7 +105,7 @@ center(efc, e17age, c160age, append = FALSE) \%>\% head()
 
 # NOTE!
 std(efc$e17age) # returns a vector
-std(efc, e17age) # returns a tibble
+std(efc, e17age) # returns a data frame
 
 # works with mutate()
 library(dplyr)

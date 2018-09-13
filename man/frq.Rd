@@ -4,9 +4,9 @@
 \alias{frq}
 \title{Frequency table of labelled variables}
 \usage{
-frq(x, ..., sort.frq = c("none", "asc", "desc"), weight.by = NULL,
+frq(x, ..., sort.frq = c("none", "asc", "desc"), weights = NULL,
   auto.grp = NULL, show.strings = TRUE, grp.strings = NULL,
-  out = c("txt", "viewer", "browser"))
+  out = c("txt", "viewer", "browser"), title = NULL, weight.by)
 }
 \arguments{
 \item{x}{A vector or a data frame. May also be a grouped data frame
@@ -24,7 +24,7 @@ according to their frequencies or not. Default is \code{"none"}, so
 categories are not sorted by frequency. Use \code{"asc"} or
 \code{"desc"} for sorting categories ascending or descending order.}
 
-\item{weight.by}{Bare name, or name as string, of a variable in \code{x}
+\item{weights}{Bare name, or name as string, of a variable in \code{x}
 that indicates the vector of weights, which will be applied to weight all
 observations. Default is \code{NULL}, so no weights are used.}
 
@@ -47,6 +47,12 @@ details on the distance of strings to be treated as equal.}
 \item{out}{Character vector, indicating whether the results should be printed
 to console (\code{out = "txt"}) or as HTML-table in the viewer-pane
 (\code{out = "viewer"}) or browser (\code{out = "browser"}).}
+
+\item{title}{String, will be used as alternative title to the variable
+label. If \code{x} is a grouped data frame, \code{title} must be a
+vector of same length as groups.}
+
+\item{weight.by}{Deprecated.}
 }
 \value{
 A list of data frames with values, value labels, frequencies, raw, valid and
@@ -68,32 +74,12 @@ This function returns a frequency table of labelled vectors, as data frame.
       statistics.
 }
 \examples{
-library(haven)
-# create labelled integer
-x <- labelled(
-  c(1, 2, 1, 3, 4, 1),
-  c(Male = 1, Female = 2, Refused = 3, "N/A" = 4)
-)
-frq(x)
-
-x <- labelled(
-  c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
-  c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
-    "Refused" = tagged_na("a"), "Not home" = tagged_na("z"))
-)
-frq(x)
-
-# in a pipe
+# simple vector
 data(efc)
-library(dplyr)
-efc \%>\%
-  select(e42dep, e15relat, c172code) \%>\%
-  frq()
-
-# or:
-# frq(efc, e42dep, e15relat, c172code)
+frq(efc$e42dep)
 
 # with grouped data frames, in a pipe
+library(dplyr)
 efc \%>\%
   group_by(e16sex, c172code) \%>\%
   frq(e16sex, c172code, e42dep)
@@ -110,17 +96,12 @@ frq(efc, c161sex:c175empl)
 data(iris)
 frq(iris, Species)
 
-# group variables with large range
-frq(efc, c160age)
-frq(efc, c160age, auto.grp = 5)
-
-# and with weights
+# group variables with large range and with weights
 efc$weights <- abs(rnorm(n = nrow(efc), mean = 1, sd = .5))
-frq(efc, c160age, auto.grp = 5, weight.by = weights)
+frq(efc, c160age, auto.grp = 5, weights = weights)
 
 # group string values
-\dontrun{
-dummy <- efc \%>\% dplyr::select(3)
+dummy <- efc[1:50, 3, drop = FALSE]
 dummy$words <- sample(
   c("Hello", "Helo", "Hole", "Apple", "Ape",
     "New", "Old", "System", "Systemic"),
@@ -129,7 +110,7 @@ dummy$words <- sample(
 )
 
 frq(dummy)
-frq(dummy, grp.strings = 2)}
+frq(dummy, grp.strings = 2)
 
 }
 \seealso{

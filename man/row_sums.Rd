@@ -37,7 +37,8 @@ See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 \item{n}{May either be
 \itemize{
   \item a numeric value that indicates the amount of valid values per row to calculate the row mean or sum;
-  \item or a value between 0 and 1, indicating a proportion of valid values per row to calculate the row mean or sum (see 'Details').
+  \item a value between 0 and 1, indicating a proportion of valid values per row to calculate the row mean or sum (see 'Details').
+  \item or \code{Inf}. If \code{n = Inf}, all values per row must be non-missing to compute row mean or sum.
 }
 If a row's sum of valid (i.e. non-\code{NA}) values is less than \code{n}, \code{NA} will be returned as value for the row mean or sum.}
 
@@ -48,8 +49,8 @@ If a row's sum of valid (i.e. non-\code{NA}) values is less than \code{n}, \code
 if \code{FALSE}, only the new variables are returned.}
 }
 \value{
-For \code{row_sums()}, a tibble with a new variable: the row sums from
-   \code{x}; for \code{row_means()}, a tibble with a new variable: the row
+For \code{row_sums()}, a data frame with a new variable: the row sums from
+   \code{x}; for \code{row_means()}, a data frame with a new variable: the row
    means from \code{x}. If \code{append = FALSE}, only the new variable
    with row sums resp. row means is returned. \code{total_mean()} returns
    the mean of all values from all specified columns in a data frame.

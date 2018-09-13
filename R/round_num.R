@@ -21,12 +21,16 @@ round_num <- function(x, digits = 0) {
 
 
 #' @importFrom purrr map_if
-#' @importFrom tibble as_tibble
 #' @export
 round_num.data.frame <- function(x, digits = 0) {
-  x %>%
+  xa <- attributes(x)
+
+  x <- x %>%
     purrr::map_if(is.numeric, ~ round(.x, digits = digits)) %>%
-    tibble::as_tibble()
+    as.data.frame(stringsAsFactors = FALSE)
+
+  attributes(x) <- xa
+  x
 }
 
 

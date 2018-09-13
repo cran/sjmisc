@@ -18,8 +18,14 @@ print.sjmisc_frq <- function(x, ...) {
     lab <- attr(dat, "label", exact = T)
     vt <- attr(dat, "vartype", exact = T)
 
+    # fix variable type string
+    if (!sjmisc::is_empty(vt))
+      vt <- sprintf(" <%s>", vt)
+    else
+      vt <- ""
+
     # print label
-    if (!is.null(lab)) cat(crayon::blue(sprintf("# %s <%s>", lab, vt)), "\n")
+    if (!is.null(lab)) cat(crayon::blue(sprintf("# %s%s", lab, vt)), "\n")
 
     # add Total N
     cat(crayon::blue(sprintf(
@@ -58,7 +64,10 @@ print_descr_helper <- function(x, ...) {
   if ("digits" %in% names(add.args)) digits <- eval(add.args[["digits"]])
 
   # round values
-  x[, c(5:10, 12)] <- round(x[, c(5:10, 12)], digits = digits)
+  if (is.null(attr(x, "weights", exact = TRUE)))
+    x[, c(5:10, 12)] <- round(x[, c(5:10, 12)], digits = digits)
+  else
+    x[, c(5:8)] <- round(x[, c(5:8)], digits = digits)
   # print frq-table
   print.data.frame(x, ..., row.names = FALSE)
 }

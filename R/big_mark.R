@@ -42,7 +42,7 @@ big_mark <- function(x, big.mark = ",", ...) {
 
 #' @export
 big_mark.data.frame <- function(x, big.mark = ",", ...) {
-  tibble::as_tibble(lapply(x, FUN = big_mark_helper, big.mark, ...))
+  as.data.frame(lapply(x, FUN = big_mark_helper, big.mark, ...))
 }
 
 #' @export
@@ -71,5 +71,8 @@ prcn.default <- function(x) sprintf("%.2f%%", round(x * 100, 2))
 
 #' @export
 prcn.data.frame <- function(x) {
-  as.data.frame(purrr::map_if(x, is.numeric, ~ sprintf("%.2f%%", round(.x * 100, 2))))
+  as.data.frame(
+    purrr::map_if(x, is.numeric, ~ sprintf("%.2f%%", round(.x * 100, 2))),
+    stringsAsFactors = FALSE
+  )
 }

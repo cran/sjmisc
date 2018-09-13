@@ -7,7 +7,7 @@
 #'   according to their frequencies or not. Default is \code{"none"}, so
 #'   categories are not sorted by frequency. Use \code{"asc"} or
 #'   \code{"desc"} for sorting categories ascending or descending order.
-#' @param weight.by Bare name, or name as string, of a variable in \code{x}
+#' @param weights Bare name, or name as string, of a variable in \code{x}
 #'   that indicates the vector of weights, which will be applied to weight all
 #'   observations. Default is \code{NULL}, so no weights are used.
 #' @param auto.grp Numeric value, indicating the minimum amount of unique
@@ -23,8 +23,14 @@
 #'   with the \pkg{stringdist}-package. See \code{\link{group_str}} for details
 #'   on grouping, and that function's \code{maxdist}-argument to get more
 #'   details on the distance of strings to be treated as equal.
+#' @param title String, will be used as alternative title to the variable
+#'   label. If \code{x} is a grouped data frame, \code{title} must be a
+#'   vector of same length as groups.
+#'
+#' @param weight.by Deprecated.
 #'
 #' @inheritParams descr
+#' @inheritParams to_factor
 #'
 #' @return A list of data frames with values, value labels, frequencies, raw, valid and
 #'           cumulative percentages of \code{x}.
@@ -43,32 +49,12 @@
 #' @seealso \code{\link{flat_table}} for labelled (proportional) tables.
 #'
 #' @examples
-#' library(haven)
-#' # create labelled integer
-#' x <- labelled(
-#'   c(1, 2, 1, 3, 4, 1),
-#'   c(Male = 1, Female = 2, Refused = 3, "N/A" = 4)
-#' )
-#' frq(x)
-#'
-#' x <- labelled(
-#'   c(1:3, tagged_na("a", "c", "z"), 4:1, 2:3),
-#'   c("Agreement" = 1, "Disagreement" = 4, "First" = tagged_na("c"),
-#'     "Refused" = tagged_na("a"), "Not home" = tagged_na("z"))
-#' )
-#' frq(x)
-#'
-#' # in a pipe
+#' # simple vector
 #' data(efc)
-#' library(dplyr)
-#' efc %>%
-#'   select(e42dep, e15relat, c172code) %>%
-#'   frq()
-#'
-#' # or:
-#' # frq(efc, e42dep, e15relat, c172code)
+#' frq(efc$e42dep)
 #'
 #' # with grouped data frames, in a pipe
+#' library(dplyr)
 #' efc %>%
 #'   group_by(e16sex, c172code) %>%
 #'   frq(e16sex, c172code, e42dep)
@@ -85,17 +71,12 @@
 #' data(iris)
 #' frq(iris, Species)
 #'
-#' # group variables with large range
-#' frq(efc, c160age)
-#' frq(efc, c160age, auto.grp = 5)
-#'
-#' # and with weights
+#' # group variables with large range and with weights
 #' efc$weights <- abs(rnorm(n = nrow(efc), mean = 1, sd = .5))
-#' frq(efc, c160age, auto.grp = 5, weight.by = weights)
+#' frq(efc, c160age, auto.grp = 5, weights = weights)
 #'
 #' # group string values
-#' \dontrun{
-#' dummy <- efc %>% dplyr::select(3)
+#' dummy <- efc[1:50, 3, drop = FALSE]
 #' dummy$words <- sample(
 #'   c("Hello", "Helo", "Hole", "Apple", "Ape",
 #'     "New", "Old", "System", "Systemic"),
@@ -104,11 +85,10 @@
 #' )
 #'
 #' frq(dummy)
-#' frq(dummy, grp.strings = 2)}
+#' frq(dummy, grp.strings = 2)
 #'
 #' @importFrom stats na.omit
 #' @importFrom dplyr full_join select_if select
-#' @importFrom tibble add_row as_tibble has_name
 #' @importFrom sjlabelled get_label get_labels get_values copy_labels
 #' @importFrom purrr map_if
 #' @importFrom rlang quo_name enquo
@@ -116,11 +96,13 @@
 frq <- function(x,
                 ...,
                 sort.frq = c("none", "asc", "desc"),
-                weight.by = NULL,
+                weights = NULL,
                 auto.grp = NULL,
                 show.strings = TRUE,
                 grp.strings = NULL,
-                out = c("txt", "viewer", "browser")) {
+                out = c("txt", "viewer", "browser"),
+                title = NULL,
+                weight.by) {
 
   out <- match.arg(out)
 
@@ -129,30 +111,30 @@ frq <- function(x,
     out <- "txt"
   }
 
+  ## TODO remove deprecated argument later
+
+  if (!missing(weight.by)) {
+    message("Argument `weight.by` is deprecated. Please use `weights`.")
+    weights <- weight.by
+  }
+
 
   # get dot data
   xw <- get_dot_data(x, dplyr::quos(...))
 
-  if (missing(weight.by)) {
+  if (missing(weights)) {
     w <- NULL
     x <- xw
   } else {
-    w <- rlang::quo_name(rlang::enquo(weight.by))
+    w <- try(rlang::quo_name(rlang::enquo(weights)), silent = TRUE)
+    if (inherits(w, "try-error")) w <- NULL
 
-    w.string <- tryCatch(
-      {
-        eval(weight.by)
-      },
-      error = function(x) { NULL },
-      warning = function(x) { NULL },
-      finally = function(x) { NULL }
-    )
+    w.string <- try(eval(weights), silent = TRUE)
+    if (!inherits(w.string, "try-error") && is.character(w.string)) w <- w.string
 
-    if (!is.null(w.string) && is.character(w.string)) w <- w.string
-
-
-    if (!sjmisc::is_empty(w) && w != "NULL" && !tibble::has_name(xw, w) && tibble::has_name(x, w)) {
-      x <- dplyr::bind_cols(xw, dplyr::select(x, !! w))
+    if (!sjmisc::is_empty(w) && w != "NULL" && !obj_has_name(xw, w) && obj_has_name(x, w)) {
+      x <- dplyr::bind_cols(xw, data.frame(x[[w]]))
+      colnames(x)[ncol(x)] <- w
     } else {
       message(sprintf("Weights `%s` not found in data.", w))
       w <- NULL
@@ -198,7 +180,7 @@ frq <- function(x,
       purrr::map_if(is.character, ~ group_str(
         strings = .x, maxdist = grp.strings, remove.empty = FALSE)
       ) %>%
-      tibble::as_tibble()
+      as.data.frame()
   }
 
 
@@ -221,6 +203,12 @@ frq <- function(x,
         else
           wb <- NULL
 
+        # user-defined title
+        if (!is.null(title) && length(title) >= i)
+          gr.title <- title[i]
+        else
+          gr.title <- NULL
+
         # iterate data frame, but don't select
         # weighting variable
         if (is.null(w) || colnames(tmp)[1] != w) {
@@ -230,7 +218,8 @@ frq <- function(x,
               sort.frq = sort.frq,
               weight.by = wb,
               cn = colnames(tmp)[1],
-              auto.grp = auto.grp
+              auto.grp = auto.grp,
+              title = gr.title
             )
 
           attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = "\n")
@@ -243,7 +232,7 @@ frq <- function(x,
 
   } else {
     # if we don't have data frame, coerce
-    if (!is.data.frame(x)) x <- tibble::tibble(x)
+    if (!is.data.frame(x)) x <- data.frame(x, stringsAsFactors = FALSE)
 
     if (!is.null(w))
       wb <- x[[w]]
@@ -260,7 +249,8 @@ frq <- function(x,
             sort.frq = sort.frq,
             weight.by = wb,
             cn = colnames(x)[i],
-            auto.grp = auto.grp
+            auto.grp = auto.grp,
+            title = title
           )
 
         # save data frame for return value
@@ -282,11 +272,10 @@ frq <- function(x,
 }
 
 
-#' @importFrom dplyr n_distinct full_join
+#' @importFrom dplyr n_distinct full_join bind_rows
 #' @importFrom stats na.omit xtabs na.pass sd weighted.mean
 #' @importFrom sjlabelled get_labels get_label as_numeric
-#' @importFrom tibble add_row
-frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
+frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL) {
   # remember type
   vartype <- var_type(x)
 
@@ -352,8 +341,8 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
     sjlabelled::get_labels(
       x,
       attr.only = T,
-      include.values = "n",
-      include.non.labelled = T
+      values = "n",
+      non.labelled = T
     )
 
 
@@ -368,10 +357,9 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
   if (!is.null(labels)) {
     # add rownames and values as columns
     dat <-
-      data.frame(
+      data_frame(
         n = names(labels),
-        v = as.character(labels),
-        stringsAsFactors = FALSE
+        v = as.character(labels)
       )
 
     colnames(dat) <- c("val", "label")
@@ -438,11 +426,13 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
 
   # check if we have any NA-values - if not, add row for NA's
   if (!anyNA(mydat$val)) {
-    mydat <- tibble::add_row(
+    mydat <- dplyr::bind_rows(
       mydat,
-      val = NA,
-      label = NA,
-      frq = 0
+      data.frame(
+        val = NA,
+        label = NA,
+        frq = 0
+      )
     )
   }
 
@@ -477,8 +467,16 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp) {
   if (sort.frq == "none") mydat <- mydat[order(reihe), ]
 
   # add variable label and type as attribute, for print-method
-  attr(mydat, "label") <- varlab
-  attr(mydat, "vartype") <- vartype
+
+  if (!is.null(title)) {
+    attr(mydat, "label") <- title
+    attr(mydat, "vartype") <- ""
+
+  } else {
+    attr(mydat, "label") <- varlab
+    attr(mydat, "vartype") <- vartype
+  }
+
   attr(mydat, "mean") <- mean.value
   attr(mydat, "sd") <- sd.value
 
@@ -508,10 +506,15 @@ get_title_part <- function(x, grps, level, i) {
 
   # get values from value labels
   vals <- sjlabelled::get_values(x[[var.name]])
+
   # if we have no value labels, get values directly
-  if (is.null(vals)) vals <- unique(x[[var.name]])
-  # find position of value labels for current group
-  lab.pos <- which(vals == grps[[var.name]][i])
+  if (is.null(vals)) {
+    vals <- unique(x[[var.name]])
+    lab.pos <- i
+  } else {
+    # find position of value labels for current group
+    lab.pos <- which(vals == grps[[var.name]][i])
+  }
 
   # get variable and value labels
   t1 <- sjlabelled::get_label(x[[var.name]], def.value = var.name)

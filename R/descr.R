@@ -15,6 +15,7 @@
 #'    (\code{out = "viewer"}) or browser (\code{out = "browser"}).
 #'
 #' @inheritParams to_factor
+#' @inheritParams frq
 #'
 #' @return A data frame with basic descriptive statistics.
 #'
@@ -25,6 +26,9 @@
 #' @examples
 #' data(efc)
 #' descr(efc, e17age, c160age)
+#'
+#' efc$weights <- abs(rnorm(nrow(efc), 1, .3))
+#' descr(efc, c12hour, barthtot, weights = weights)
 #'
 #' library(dplyr)
 #' efc %>% select(e42dep, e15relat, c172code) %>% descr()
@@ -43,11 +47,10 @@
 #' # or even use select-helpers
 #' descr(efc, contains("cop"), max.length = 20)
 #'
-#' @importFrom tibble as_tibble rownames_to_column
 #' @importFrom dplyr select mutate
 #' @importFrom sjlabelled copy_labels
 #' @export
-descr <- function(x, ..., max.length = NULL, out = c("txt", "viewer", "browser")) {
+descr <- function(x, ..., max.length = NULL, weights = NULL, out = c("txt", "viewer", "browser")) {
 
   out <- match.arg(out)
 
@@ -56,8 +59,18 @@ descr <- function(x, ..., max.length = NULL, out = c("txt", "viewer", "browser")
     out <- "txt"
   }
 
+
   # get dot data
   dd <- get_dot_data(x, dplyr::quos(...))
+
+  w.name <- deparse(substitute(weights))
+
+  if (w.name == "NULL") {
+    w.name <- NULL
+  } else {
+    dd$.weights <- x[[w.name]]
+  }
+
 
   # return values
   dataframes <- list()
@@ -104,11 +117,10 @@ descr <- function(x, ..., max.length = NULL, out = c("txt", "viewer", "browser")
 }
 
 
-#' @importFrom dplyr select_if group_by summarise_all funs
+#' @importFrom dplyr select_if group_by summarise_all funs summarise
 #' @importFrom tidyr gather
 #' @importFrom sjlabelled get_label
-#' @importFrom stats var na.omit sd median
-#' @importFrom tibble add_column
+#' @importFrom stats var na.omit sd median weighted.mean
 #' @importFrom rlang .data
 descr_helper <- function(dd, max.length) {
 
@@ -116,6 +128,14 @@ descr_helper <- function(dd, max.length) {
   # a result for each *value*, instead one result for the complete vector
   if (!is.data.frame(dd))
     dd <- as.data.frame(dd)
+
+  if (obj_has_name(dd, ".weights")) {
+    weights <- dd$.weights
+    dd <- dplyr::select(dd, -.data$.weights)
+  } else {
+    weights <- NULL
+  }
+
 
   ff <- function(x) is.numeric(x) | is.factor(x)
   dd <- dplyr::select_if(dd, ff)
@@ -125,44 +145,68 @@ descr_helper <- function(dd, max.length) {
   if (is.null(var.name)) var.name <- NA
 
   type <- var_type(dd)
-  labels <- unname(sjlabelled::get_label(dd, def.value = var.name))
+  label <- unname(sjlabelled::get_label(dd, def.value = var.name))
 
   dd <- to_value(dd, keep.labels = FALSE)
 
-  x <- suppressWarnings(
-    dd %>%
-      dplyr::select_if(is.numeric) %>%
-      tidyr::gather(key = "var", value = "val") %>%
-      dplyr::group_by(.data$var) %>%
-      dplyr::summarise_all(
-        dplyr::funs(
-          n = length(stats::na.omit(.data$val)),
-          NA.prc = 100 * sum(is.na(.data$val)) / length(.data$val),
-          mean = mean(.data$val, na.rm = TRUE),
-          sd = stats::sd(.data$val, na.rm = TRUE),
-          se = sqrt(stats::var(.data$val, na.rm = TRUE) / length(stats::na.omit(.data$val))),
-          md = stats::median(.data$val, na.rm = TRUE),
-          trimmed = mean(.data$val, na.rm = TRUE, trim = .1),
+  if (is.null(weights)) {
+    x <- suppressWarnings(
+      dd %>%
+        dplyr::select_if(is.numeric) %>%
+        tidyr::gather(key = "var", value = "val") %>%
+        dplyr::group_by(.data$var) %>%
+        dplyr::summarise_all(
+          dplyr::funs(
+            n = length(stats::na.omit(.data$val)),
+            NA.prc = 100 * sum(is.na(.data$val)) / length(.data$val),
+            mean = mean(.data$val, na.rm = TRUE),
+            sd = stats::sd(.data$val, na.rm = TRUE),
+            se = sqrt(stats::var(.data$val, na.rm = TRUE) / length(stats::na.omit(.data$val))),
+            md = stats::median(.data$val, na.rm = TRUE),
+            trimmed = mean(.data$val, na.rm = TRUE, trim = .1),
+            range = sprintf(
+              "%s (%s-%s)",
+              as.character(round(diff(range(.data$val, na.rm = TRUE)), 2)),
+              as.character(round(min(.data$val, na.rm = TRUE), 2)),
+              as.character(round(max(.data$val, na.rm = TRUE), 2))
+            ),
+            skew = sjmisc.skew(.data$val)
+          ))
+    ) %>%
+      as.data.frame()
+  } else {
+    dd$.weights <- weights
+
+    x <- suppressWarnings(
+      dd %>%
+        dplyr::select_if(is.numeric) %>%
+        tidyr::gather(key = "var", value = "val", -.data$.weights) %>%
+        dplyr::group_by(.data$var) %>%
+        dplyr::summarise(
+          n = round(sum(.data$.weights[!is.na(.data$val)], na.rm = TRUE)),
+          NA.prc = 100 * sum(is.na(.data$val)) / sum(.data$.weights[!is.na(.data$val)], na.rm = TRUE),
+          mean = stats::weighted.mean(.data$val, w = .data$.weights, na.rm = TRUE),
+          sd = wtd_sd_helper(.data$val, weights = .data$.weights),
+          se = wtd_se_helper(.data$val, weights = .data$.weights),
           range = sprintf(
             "%s (%s-%s)",
             as.character(round(diff(range(.data$val, na.rm = TRUE)), 2)),
             as.character(round(min(.data$val, na.rm = TRUE), 2)),
             as.character(round(max(.data$val, na.rm = TRUE), 2))
-          ),
-          skew = sjmisc.skew(.data$val)
-        ))
-    )
+          )
+        )
+    ) %>%
+      as.data.frame()
+  }
 
-    # summarise_all() sorts variables, so restore order
-    x <- x[match(var.name, x$var), ] %>%
-      tibble::add_column(
-        type = type,
-        label = labels,
-        .after = 1
-      )
+
+  # summarise_all() sorts variables, so restore order
+  x <- x[match(var.name, x$var), ] %>% add_cols(type, label, .after = 1)
 
   # check if labels should be truncated
   x$label <- shorten_string(x$label, max.length)
+
+  if (!is.null(weights)) attr(x, "weights") <- "TRUE"
 
   x
 }
@@ -179,4 +223,26 @@ sjmisc.skew <- function(x) {
     return(NA)
 
   sqrt(n) * sum(x ^ 3) / (sum(x ^ 2) ^ (3 / 2)) * sqrt(n * (n - 1)) / (n - 2)
+}
+
+
+wtd_se_helper <- function(x, weights) {
+  sqrt(wtd_var(x, weights) / length(stats::na.omit(x)))
+}
+
+wtd_sd_helper <- function(x, weights = NULL) {
+  sqrt(wtd_var(x, weights))
+}
+
+wtd_var <- function(x, w) {
+  if (is.null(w)) w <- rep(1, length(x))
+
+  x[is.na(w)] <- NA
+  w[is.na(x)] <- NA
+
+  w <- na.omit(w)
+  x <- na.omit(x)
+
+  xbar <- sum(w * x) / sum(w)
+  sum(w * ((x - xbar)^2)) / (sum(w) - 1)
 }

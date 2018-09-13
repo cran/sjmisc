@@ -42,6 +42,8 @@
 #'     \item grouped variables (\code{group_var()}) will be suffixed with \code{"_gr"}
 #'     \item standardized variables (\code{std()}) will be suffixed with \code{"_z"}
 #'     \item centered variables (\code{center()}) will be suffixed with \code{"_c"}
+#'     \item de-meaned variables (\code{de_mean()}) will be suffixed with \code{"_dm"}
+#'     \item grouped-meaned variables (\code{de_mean()}) will be suffixed with \code{"_gm"}
 #'   }
 #'
 #' @inheritParams to_factor
@@ -265,13 +267,12 @@ rec_if <- function(x, predicate, rec, as.num = TRUE, var.label = NULL, val.label
 }
 
 
-#' @importFrom tibble as_tibble
 rec_core_fun <- function(x, .dat, rec, as.num = TRUE, var.label = NULL, val.labels = NULL, append = TRUE, suffix = "_r") {
 
   if (is.data.frame(x)) {
 
     # remember original data, if user wants to bind columns
-    orix <- tibble::as_tibble(x)
+    orix <- x
 
     # iterate variables of data frame
     for (i in colnames(.dat)) {
@@ -284,8 +285,8 @@ rec_core_fun <- function(x, .dat, rec, as.num = TRUE, var.label = NULL, val.labe
       )
     }
 
-    # coerce to tibble and select only recoded variables
-    x <- tibble::as_tibble(x[colnames(.dat)])
+    # select only recoded variables
+    x <- x[colnames(.dat)]
 
     # add suffix to recoded variables?
     if (!is.null(suffix) && !sjmisc::is_empty(suffix)) {
@@ -339,8 +340,8 @@ rec_helper <- function(x, recodes, as.num, var.label, val.labels) {
           sjlabelled::get_labels(
             x,
             attr.only = TRUE,
-            include.values = NULL,
-            include.non.labelled = TRUE,
+            values = NULL,
+            non.labelled = TRUE,
             drop.na = TRUE
           )
         )
@@ -385,8 +386,8 @@ rec_helper <- function(x, recodes, as.num, var.label, val.labels) {
           sjlabelled::get_labels(
             x,
             attr.only = TRUE,
-            include.values = NULL,
-            include.non.labelled = TRUE,
+            values = NULL,
+            non.labelled = TRUE,
             drop.na = TRUE
           )
         )

@@ -123,8 +123,6 @@ to_label <- function(x, ..., add.non.labelled = FALSE, prefix = FALSE, var.label
     for (i in colnames(.dat)) {
       x[[i]] <- to_label_helper(.dat[[i]], add.non.labelled, prefix, var.label, drop.na, drop.levels)
     }
-    # coerce to tibble
-    x <- tibble::as_tibble(x)
   } else {
     x <- to_label_helper(.dat, add.non.labelled, prefix, var.label, drop.na, drop.levels)
   }
@@ -173,8 +171,8 @@ to_label_helper <- function(x, add.non.labelled, prefix, var.label, drop.na, dro
     sjlabelled::get_labels(
       x,
       attr.only = TRUE,
-      include.values = iv,
-      include.non.labelled = add.non.labelled,
+      values = iv,
+      non.labelled = add.non.labelled,
       drop.na = drop.na
     )
 
@@ -186,8 +184,8 @@ to_label_helper <- function(x, add.non.labelled, prefix, var.label, drop.na, dro
       sjlabelled::get_labels(
         x,
         attr.only = TRUE,
-        include.values = "n",
-        include.non.labelled = add.non.labelled,
+        values = "n",
+        non.labelled = add.non.labelled,
         drop.na = drop.na
       )
 
@@ -316,8 +314,6 @@ to_character <- function(x, ..., add.non.labelled = FALSE, prefix = FALSE, var.l
     for (i in colnames(.dat)) {
       x[[i]] <- as.character(to_label_helper(.dat[[i]], add.non.labelled, prefix, var.label, drop.na, drop.levels))
     }
-    # coerce to tibble
-    x <- tibble::as_tibble(x)
   } else {
     x <- as.character(to_label_helper(.dat, add.non.labelled, prefix, var.label, drop.na, drop.levels))
   }

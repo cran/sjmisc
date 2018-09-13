@@ -96,8 +96,6 @@ to_value <- function(x, ..., start.at = NULL, keep.labels = TRUE, use.labels = F
     for (i in colnames(.dat)) {
       x[[i]] <- to_value_helper(.dat[[i]], start.at, keep.labels, use.labels)
     }
-    # coerce to tibble
-    x <- tibble::as_tibble(x)
   } else {
     x <- to_value_helper(.dat, start.at, keep.labels, use.labels)
   }
@@ -116,7 +114,7 @@ to_value_helper <- function(x, start.at, keep.labels, use.labels) {
   varlab <- sjlabelled::get_label(x)
 
   # get labels
-  labels <- sjlabelled::get_labels(x, attr.only = T, include.values = "n")
+  labels <- sjlabelled::get_labels(x, attr.only = T, values = "n")
 
   # get values, if these should be used after converting
   values <- get_values(x)

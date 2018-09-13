@@ -62,11 +62,11 @@
 #'
 #' # only copy existing value labels
 #' to_factor(x)
-#' get_labels(to_factor(x), include.values = "p")
+#' get_labels(to_factor(x), values = "p")
 #'
 #' # also add labels to non-labelled values
 #' to_factor(x, add.non.labelled = TRUE)
-#' get_labels(to_factor(x, add.non.labelled = TRUE), include.values = "p")
+#' get_labels(to_factor(x, add.non.labelled = TRUE), values = "p")
 #'
 #'
 #' # Convert to factor, using different reference level
@@ -88,7 +88,6 @@
 #' to_factor(efc, contains("cop"), c161sex:c175empl)
 #'
 #'
-#' @importFrom tibble as_tibble
 #' @export
 to_factor <- function(x, ..., add.non.labelled = FALSE, ref.lvl = NULL) {
   # evaluate arguments, generate data
@@ -99,8 +98,6 @@ to_factor <- function(x, ..., add.non.labelled = FALSE, ref.lvl = NULL) {
     for (i in colnames(.dat)) {
       x[[i]] <- to_fac_helper(.dat[[i]], add.non.labelled, ref.lvl)
     }
-    # coerce to tibble
-    x <- tibble::as_tibble(x)
   } else {
     x <- to_fac_helper(.dat, add.non.labelled, ref.lvl)
   }
@@ -118,12 +115,12 @@ to_fac_helper <- function(x, add.non.labelled, ref.lvl) {
     sjlabelled::get_labels(
       x,
       attr.only = TRUE,
-      include.values = "n",
-      include.non.labelled = add.non.labelled
+      values = "n",
+      non.labelled = add.non.labelled
     )
 
   # retrieve variable labels
-  varlab <- sjlabelled::get_label(x)
+  varlab <- attr(x, "label", exact = T)
 
   # switch value and names attribute, since get_labels
   # returns the values as names, and the value labels
@@ -154,7 +151,7 @@ to_fac_helper <- function(x, add.non.labelled, ref.lvl) {
     )
 
   # set back variable labels
-  x <- sjlabelled::set_label(x, label = varlab)
+  attr(x, "label") <- varlab
 
   # change reference level?
   if (!is.null(ref.lvl)) x <- ref_lvl(x, lvl = ref.lvl)
