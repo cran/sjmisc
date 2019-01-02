@@ -54,6 +54,10 @@ efc %>%
   head()
 
 ## ------------------------------------------------------------------------
+# complete data, existing columns c82cop1 and c83cop2 are replaced
+rec(efc, c82cop1, c83cop2, rec = "1,2=0; 3:4=2", append = TRUE, suffix = "") %>% head()
+
+## ------------------------------------------------------------------------
 efc %>% 
   select(c82cop1, c83cop2) %>% 
   rec(rec = "1,2=0; 3:4=2") %>% 

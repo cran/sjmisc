@@ -51,3 +51,35 @@ test_that("frq", {
   }
   test.weight(efc, "neg_c_7", "weights")
 })
+
+
+v1 <- c(1, 2, 1, 2, 1, 1)
+v2 <- c(1, 2, 1, NA, 1, 1)
+
+test_that("frq, show.na", {
+  expect_equal(nrow(frq(v1, show.na = TRUE)[[1]]), 3)
+  expect_equal(nrow(frq(v1, show.na = FALSE)[[1]]), 2)
+  expect_equal(nrow(frq(v1, show.na = "auto")[[1]]), 2)
+
+  expect_equal(nrow(frq(v2, show.na = TRUE)[[1]]), 3)
+  expect_equal(nrow(frq(v2, show.na = FALSE)[[1]]), 2)
+  expect_equal(nrow(frq(v2, show.na = "auto")[[1]]), 3)
+})
+
+
+test_that("frq", {
+  data(efc)
+  efc$e15relat <- to_label(efc$e15relat)
+  levels(efc$e15relat) <- c("Hello", "Helo", "Hole", "Apple", "Ape", "System", "Systemic", "new")
+  efc$e15relat <- to_character(efc$e15relat)
+
+  frq(efc$e15relat)
+  frq(efc, e15relat)
+  frq(efc$e15relat, grp.strings = 2)
+  frq(efc, e15relat, grp.strings = 2)
+  x <- efc$e15relat
+  frq(x)
+  frq(x, grp.strings = 2)
+
+  efc %>% dplyr::group_by(c172code) %>% frq(c161sex, e15relat, grp.strings = 2)
+})

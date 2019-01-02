@@ -27,6 +27,8 @@
 #'   centered variables. If \code{x} is a data frame, for \code{append = TRUE},
 #'   \code{x} including the transformed variables as new columns is returned;
 #'   if \code{append = FALSE}, only the transformed variables will be returned.
+#'   If \code{append = TRUE} and \code{suffix = ""}, recoded variables will
+#'   replace (overwrite) existing variables.
 #'
 #' @note \code{std()} and \code{center()} only return a vector, if \code{x} is
 #'   a vector. If \code{x} is a data frame and only one variable is specified
@@ -62,6 +64,10 @@
 #' # NOTE!
 #' std(efc$e17age) # returns a vector
 #' std(efc, e17age) # returns a data frame
+#'
+#' # with quasi-quotation
+#' x <- "e17age"
+#' center(efc, !!x, append = FALSE) %>% head()
 #'
 #' # works with mutate()
 #' library(dplyr)

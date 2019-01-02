@@ -1,3 +1,26 @@
+# sjmisc 2.7.7
+
+## New functions
+
+* `tidy_values()` to "clean" values (i.e. remove special chars) of character vectors or levels of factors.
+* `add_id()` to qickly add an ID variable to (grouped) data frames.
+
+## Changes to functions
+
+* `frq()` gets a `show.na`-argument, to (automatically) show or hide the information for `NA`-values from the output.
+* The `weights`-argument in `frq()` now also accepts vectors, and is not limited to variable names. Note that these vectors must be part of a data frame.
+* For recode-functions (like `rec()`, `dicho()`, ...), if `suffix = ""` and `append = TRUE`, existing variables will be replaced by the new, recoded variables.
+* Improved performance for `group_str()`.
+* `var_rename()` now supports quasi-quotation (see Examples).
+* `row_sums()` and `row_means()` now return the input data frame when this data frame only had one column and no row means or sums were calculated. The returned data frame still gets the new variable name defined in `var`.
+
+## Bug fixes
+
+* `complete_cases()` returned an empty vector instead of all indexes if all cases (rows) of a data frame were complete.
+* Fix issue with `to_dummy()` for character-vector input.
+* Fix issue with missing values in `group_str()`.
+* Fix issue with grouped data frames in `frq()` when `grp.strings = TRUE`.
+
 # sjmisc 2.7.6
 
 ## Changes to functions
