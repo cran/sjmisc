@@ -1,5 +1,4 @@
 #' @importFrom purrr walk
-#' @importFrom crayon blue cyan italic
 #' @importFrom dplyr select n_distinct
 #' @importFrom rlang .data
 #' @export
@@ -12,7 +11,7 @@ print.sjmisc_frq <- function(x, ...) {
 
     # print title for grouping
     if (!is.null(grp))
-      cat(crayon::cyan(crayon::italic(sprintf("Grouped by:\n%s\n", grp))), "\n")
+      cat(.colour("cyan", .colour("italic", sprintf("Grouped by:\n%s\n", grp))), "\n")
 
     # get variable label
     lab <- attr(dat, "label", exact = T)
@@ -25,10 +24,10 @@ print.sjmisc_frq <- function(x, ...) {
       vt <- ""
 
     # print label
-    if (!is.null(lab)) cat(crayon::blue(sprintf("# %s%s", lab, vt)), "\n")
+    if (!is.null(lab)) cat(.colour("blue", sprintf("# %s%s", lab, vt)), "\n")
 
     # add Total N
-    cat(crayon::blue(sprintf(
+    cat(.colour("blue", sprintf(
       "# total N=%i  valid N=%i  mean=%.2f  sd=%.2f\n",
       sum(dat$frq, na.rm = TRUE),
       sum(dat$frq[1:(nrow(dat) - 1)], na.rm = TRUE),
@@ -48,11 +47,10 @@ print.sjmisc_frq <- function(x, ...) {
 }
 
 
-#' @importFrom crayon blue
 #' @export
 print.sjmisc_descr <- function(x, ...) {
   cat("\n")
-  cat(crayon::blue("## Basic descriptive statistics\n\n"))
+  cat(.colour("blue", "## Basic descriptive statistics\n\n"))
   print_descr_helper(x, ...)
 }
 
@@ -72,15 +70,14 @@ print_descr_helper <- function(x, ...) {
   print.data.frame(x, ..., row.names = FALSE)
 }
 
-#' @importFrom crayon blue cyan italic
 #' @export
 print.sjmisc_grpdescr <- function(x, ...) {
   cat("\n")
-  cat(crayon::blue("## Basic descriptive statistics"), "\n")
+  cat(.colour("blue", "## Basic descriptive statistics"), "\n")
 
   purrr::walk(x, function(.x) {
     # print title for grouping
-    cat(crayon::cyan(crayon::italic(
+    cat(.colour("cyan", .colour("italic",
       sprintf("\nGrouped by:\n%s", attr(.x, "group", exact = TRUE))
     )), "\n")
 
@@ -90,7 +87,6 @@ print.sjmisc_grpdescr <- function(x, ...) {
 
 #' @importFrom purrr map_df
 #' @importFrom dplyr n_distinct filter
-#' @importFrom tidyr gather
 #' @importFrom rlang .data
 #' @export
 print.sj_merge.imp <- function(x, ...) {
@@ -124,9 +120,8 @@ print.sj_merge.imp <- function(x, ...) {
         title = "Standard Deviation of imputed values for each merged value"
       )
   } else {
-    analyse <- x$summary %>%
-      purrr::map_df(~.x) %>%
-      tidyr::gather(key = "value", value = "xpos", 1:2)
+    analyse <- purrr::map_df(x$summary, ~.x)
+    analyse <- .gather(analyse, key = "value", value = "xpos", colnames(analyse)[1:2])
 
     if (!is.null(x$filter))
       analyse <- analyse %>% dplyr::filter(.data$grp %in% x$filter)
@@ -159,22 +154,21 @@ print.sj_merge.imp <- function(x, ...) {
 }
 
 
-#' @importFrom crayon red green cyan
 #' @export
 print.sj_has_na <- function(x, ...) {
-  cat(crayon::cyan("## Variables with missing or infinite values (in red)\n\n"))
+  cat(.colour("cyan", "## Variables with missing or infinite values (in red)\n\n"))
 
   s1 <- max(c(nchar(x$name), nchar("Name")))
   s2 <- max(c(nchar(x$label), nchar("Variable Label")))
 
-  cat(crayon::blue(sprintf("   Column   %*s   %*s\n\n", s1, "Name", s2, "Variable Label")))
+  cat(.colour("blue", sprintf("   Column   %*s   %*s\n\n", s1, "Name", s2, "Variable Label")))
 
   for (i in 1:nrow(x)) {
     row <- sprintf("   %*i   %*s   %*s\n", 6, x[i, "col"], s1, x[i, "name"], s2, x[i, "label"])
     if (isTRUE(x[i, "has.na"]))
-      cat(crayon::red(row))
+      cat(.colour("red", row))
     else
-      cat(crayon::green(row))
+      cat(.colour("green", row))
   }
 
   cat("\n")

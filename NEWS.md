@@ -1,3 +1,27 @@
+# sjmisc 2.7.8
+
+## General
+
+* Reduce package dependencies.
+* `str_pos()` was renamed into `str_find()`.
+* New package-vignette **Recoding Variables**.
+
+## New functions
+
+* `typical_value()`, which was formerly located in package _sjstats_.
+
+## Changes to functions
+
+* `is_whole()` now automatically removes missing values from vectors.
+* `is_empty()` now also checks lists with only `NULL`-elements.
+
+## Bug fixes
+
+* Better handling of factors in `merge_imputations()`, which previously could result in `NA`-values when merging imputed values into one variable.
+* Fix issue in `is_empty()` in case the vector had non-missing values, but first element of vector was `NA`.
+* Fixed bug in `frq()` for grouped data frame, when grouping variable was a character vector. In this case, group titles were mixed up.
+* Fix encoding issues in help-files.
+
 # sjmisc 2.7.7
 
 ## New functions
