@@ -255,7 +255,7 @@ frq <- function(x,
               show.na = show.na
             )
 
-          attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = "\n")
+          attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = ", ", long = FALSE)
 
           # save data frame for return value
           dataframes[[length(dataframes) + 1]] <- dummy
@@ -525,15 +525,23 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL, show.
 }
 
 
-get_grouped_title <- function(x, grps, i, sep = "\n") {
+get_grouped_title <- function(x, grps, i, sep = ", ", long = FALSE) {
   # create title for first grouping level
   tp <- get_title_part(x, grps, 1, i)
-  title <- sprintf("%s: %s", tp[1], tp[2])
+
+  if (long)
+    title <- sprintf("%s: %s", tp[1], tp[2])
+  else
+    title <- sprintf("%s", tp[2])
 
   # do we have another groupng variable?
   if (length(dplyr::group_vars(x)) > 1) {
     tp <- get_title_part(x, grps, 2, i)
-    title <- sprintf("%s%s%s: %s", title, sep, tp[1], tp[2])
+
+    if (long)
+      title <- sprintf("%s%s%s: %s", title, sep, tp[1], tp[2])
+    else
+      title <- sprintf("%s%s%s", title, sep, tp[2])
   }
 
   # return title
@@ -547,22 +555,24 @@ get_title_part <- function(x, grps, level, i) {
 
   # get values from value labels
   vals <- sjlabelled::get_values(x[[var.name]])
+  t2 <- NULL
 
   # if we have no value labels, get values directly
   if (is.null(vals)) {
-    vals <- unique(x[[var.name]])
+    vals <- grps[[var.name]]
+    if (is.factor(grps[[var.name]])) vals <- as.character(vals)
     lab.pos <- i
   } else {
     # find position of value labels for current group
     lab.pos <- which(vals == grps[[var.name]][i])
+    t2 <- sjlabelled::get_labels(x[[var.name]])[lab.pos]
   }
 
   # get variable and value labels
   t1 <- sjlabelled::get_label(x[[var.name]], def.value = var.name)
-  t2 <- sjlabelled::get_labels(x[[var.name]])[lab.pos]
 
   # if we have no value label, use value instead
-  if (is.null(t2)) t2 <- vals[lab.pos]
+  if (sjmisc::is_empty(t2)) t2 <- vals[lab.pos]
 
   # generate title
   c(t1, t2)
