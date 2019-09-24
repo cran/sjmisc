@@ -37,13 +37,13 @@ print.sjmisc_frq <- function(x, ...) {
     insight::print_color(sprintf(
       "# total N=%i  valid N=%i  mean=%.2f  sd=%.2f\n\n",
       sum(dat$frq, na.rm = TRUE),
-      sum(dat$frq[1:(nrow(dat) - 1)], na.rm = TRUE),
+      sum(dat$frq[0:(nrow(dat) - 1)], na.rm = TRUE),
       attr(dat, "mean", exact = T),
       attr(dat, "sd", exact = T)
     ), "blue")
 
-    # don't print labels, if all are "none"
-    if (dplyr::n_distinct(dat$label) == 1 && unique(dat$label) == "<none>")
+    # don't print labels, if all except for the NA value are "none"
+    if ((dplyr::n_distinct(dat$label[!is.na(dat$val)]) == 1 && unique(dat$label[!is.na(dat$val)]) == "<none>") || (length(dat$val) == 1 && is.na(dat$val)))
       dat <- dplyr::select(dat, -.data$label)
 
     # print frq-table
@@ -69,10 +69,11 @@ print_descr_helper <- function(x, ...) {
   if ("digits" %in% names(add.args)) digits <- eval(add.args[["digits"]])
 
   # round values
-  if (is.null(attr(x, "weights", exact = TRUE)))
-    x[, c(5:10, 12)] <- round(x[, c(5:10, 12)], digits = digits)
-  else
-    x[, c(5:8)] <- round(x[, c(5:8)], digits = digits)
+  to.round <- c("NA.prc", "mean", "sd", "se", "md", "trimmed")
+  if (is.null(attr(x, "weights", exact = TRUE))) to.round <- c(to.round, "skew")
+  to.round <- intersect(to.round, colnames(x))
+  x[, to.round] <- round(x[, to.round], digits = digits)
+
   # print frq-table
   print.data.frame(x, ..., row.names = FALSE)
 }

@@ -4,8 +4,9 @@
 \alias{descr}
 \title{Basic descriptive statistics}
 \usage{
-descr(x, ..., max.length = NULL, weights = NULL, out = c("txt",
-  "viewer", "browser"))
+descr(x, ..., max.length = NULL, weights = NULL, show = "all",
+  out = c("txt", "viewer", "browser"), encoding = "UTF-8",
+  file = NULL)
 }
 \arguments{
 \item{x}{A vector or a data frame. May also be a grouped data frame
@@ -27,9 +28,23 @@ they will be shortened to the last whole word within the first
 that indicates the vector of weights, which will be applied to weight all
 observations. Default is \code{NULL}, so no weights are used.}
 
+\item{show}{Character vector, indicating which information (columns) that describe
+the data should be returned. May be one or more of \code{"type", "label", "n",
+"NA.prc", "mean", "sd", "se", "md", "trimmed", "range", "skew"}. There are
+two shortcuts: \code{show = "all"} (default) shows all information,
+\code{show = "short"} just shows n, missing percentage, mean and standard
+deviation.}
+
 \item{out}{Character vector, indicating whether the results should be printed
 to console (\code{out = "txt"}) or as HTML-table in the viewer-pane
 (\code{out = "viewer"}) or browser (\code{out = "browser"}).}
+
+\item{encoding}{Character vector, indicating the charset encoding used
+for variable and value labels. Default is \code{"UTF-8"}. Only used
+when \code{out} is not \code{"txt"}.}
+
+\item{file}{Destination file, if the output should be saved as file.
+Only used when \code{out} is not \code{"txt"}.}
 }
 \value{
 A data frame with basic descriptive statistics.
@@ -52,6 +67,9 @@ descr(efc, c12hour, barthtot, weights = weights)
 
 library(dplyr)
 efc \%>\% select(e42dep, e15relat, c172code) \%>\% descr()
+
+# show just a few elements
+efc \%>\% select(e42dep, e15relat, c172code) \%>\% descr(show = "short")
 
 # with grouped data frames
 efc \%>\%

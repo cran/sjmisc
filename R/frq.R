@@ -19,7 +19,7 @@
 #'   of all variables from a data frame, and due to computational reasons
 #'   character vectors should not be printed.
 #' @param show.na Logical, or \code{"auto"}. If \code{TRUE}, the output always
-#'   contains informatin on missing values, even if variables have no missing
+#'   contains information on missing values, even if variables have no missing
 #'   values. If \code{FALSE}, information on missing values are removed from
 #'   the output. If \code{show.na = "auto"}, information on missing values
 #'   is only shown when variables actually have missing values, else it's not
@@ -29,6 +29,12 @@
 #'   and \code{\link{str_find}} for details on grouping, and their
 #'   \code{precision}-argument to get more details on the distance of strings
 #'   to be treated as equal.
+#' @param min.frq Numeric, indicating the minimum frequency for which a
+#'   value will be shown in the output (except for the missing values, prevailing
+#'   \code{show.na}). Default value for \code{min.frq} is \code{0}, so all value
+#'   frequencies are shown. All values or categories that have less than
+#'   \code{min.frq} occurences in the data will be summarized in a \code{"n < 100"}
+#'   category.
 #' @param title String, will be used as alternative title to the variable
 #'   label. If \code{x} is a grouped data frame, \code{title} must be a
 #'   vector of same length as groups.
@@ -43,6 +49,11 @@
 #'
 #' @return A list of data frames with values, value labels, frequencies, raw, valid and
 #'           cumulative percentages of \code{x}.
+#'
+#' @details The \dots-argument not only accepts variable names or expressions
+#'   from \code{\link[tidyselect]{select_helpers}}. You can also use logical
+#'   conditions, math operations, or combining variables to produce "crosstables".
+#'   See 'Examples' for more details.
 #'
 #' @note \code{x} may also be a grouped data frame (see \code{\link[dplyr]{group_by}})
 #'       with up to two grouping variables. Frequency tables are created for each
@@ -68,6 +79,13 @@
 #'   group_by(e16sex, c172code) %>%
 #'   frq(e16sex, c172code, e42dep)
 #'
+#' # show only categories with a minimal amount of frequencies
+#' frq(mtcars$gear)
+#'
+#' frq(mtcars$gear, min.frq = 10)
+#'
+#' frq(mtcars$gear, min.frq = 15)
+#'
 #' # with select-helpers: all variables from the COPE-Index
 #' # (which all have a "cop" in their name)
 #' frq(efc, contains("cop"))
@@ -79,6 +97,11 @@
 #' # and "label" column is removed from output
 #' data(iris)
 #' frq(iris, Species)
+#'
+#' # also works on grouped data frames
+#' efc %>%
+#'   group_by(c172code) %>%
+#'   frq(is.na(nur_pst))
 #'
 #' # group variables with large range and with weights
 #' efc$weights <- abs(rnorm(n = nrow(efc), mean = 1, sd = .5))
@@ -102,6 +125,30 @@
 #' frq(dummy)
 #' frq(dummy, grp.strings = 2)
 #'
+#' #### other expressions than variables
+#'
+#' # logical conditions
+#' frq(mtcars, cyl ==6)
+#'
+#' frq(efc, is.na(nur_pst), contains("cop"))
+#'
+#' iris %>%
+#'   frq(starts_with("Petal"), Sepal.Length > 5)
+#'
+#' # computation of variables "on the fly"
+#' frq(mtcars, (gear + carb) / cyl)
+#'
+#' # crosstables
+#' set.seed(123)
+#' d <- data.frame(
+#'   var_x = sample(letters[1:3], size = 30, replace = TRUE),
+#'   var_y = sample(1:2, size = 30, replace = TRUE),
+#'   var_z = sample(LETTERS[8:10], size = 30, replace = TRUE)
+#' )
+#' table(d$var_x, d$var_z)
+#' frq(d, paste0(var_x, var_z))
+#' frq(d, paste0(var_x, var_y, var_z))
+#'
 #' @importFrom stats na.omit
 #' @importFrom dplyr full_join select_if select group_keys
 #' @importFrom sjlabelled get_label get_labels get_values copy_labels
@@ -116,6 +163,7 @@ frq <- function(x,
                 show.strings = TRUE,
                 show.na = TRUE,
                 grp.strings = NULL,
+                min.frq = 0,
                 out = c("txt", "viewer", "browser"),
                 title = NULL,
                 encoding = "UTF-8",
@@ -128,8 +176,14 @@ frq <- function(x,
     out <- "txt"
   }
 
+  # check min.frq value
+  if (!is.numeric(min.frq)) {
+    message("min.frq value is not numeric. Returned output assumes default value 0.")
+    min.frq <- 0
+  }
+
   # get dot data
-  xw <- get_dot_data(x, dplyr::quos(...))
+  xw <- get_dot_data(x, dplyr::enquos(...))
 
   if (missing(weights)) {
     w <- NULL
@@ -156,17 +210,19 @@ frq <- function(x,
   }
 
 
-  # remove empty columns
+  if (!isTRUE(show.na)) {
+    # remove empty columns
 
-  rem.col <- empty_cols(x)
+    rem.col <- empty_cols(x)
 
-  if (!sjmisc::is_empty(rem.col)) {
-    rem.vars <- colnames(x)[rem.col]
-    x <- remove_empty_cols(x)
+    if (!sjmisc::is_empty(rem.col)) {
+      rem.vars <- colnames(x)[rem.col]
+      x <- remove_empty_cols(x)
 
-    message(sprintf("Following %i variables have only missing values and are not shown:", length(rem.vars)))
-    cat(paste(sprintf("%s [%i]", rem.vars, rem.col), collapse = ", "))
-    cat("\n")
+      message(sprintf("Following %i variables have only missing values and are not shown:", length(rem.vars)))
+      cat(paste(sprintf("%s [%i]", rem.vars, rem.col), collapse = ", "))
+      cat("\n")
+    }
   }
 
 
@@ -183,7 +239,8 @@ frq <- function(x,
   if (!show.strings)
     x <- dplyr::select_if(x, no_character)
 
-  if (sjmisc::is_empty(stats::na.omit(x))) return(NULL)
+  if ((all(sjmisc::is_empty(stats::na.omit(x), first.only = FALSE)) && show.na == FALSE) || all(suppressMessages(replace_na(sjmisc::is_empty(x, first.only = FALSE, all.na.empty = FALSE), value = FALSE))))
+    return(NULL)
 
 
   # group strings
@@ -252,7 +309,8 @@ frq <- function(x,
               cn = colnames(tmp)[1],
               auto.grp = auto.grp,
               title = gr.title,
-              show.na = show.na
+              show.na = show.na,
+              min.frq = min.frq
             )
 
           attr(dummy, "group") <- get_grouped_title(x, grps, i, sep = ", ", long = FALSE)
@@ -284,7 +342,8 @@ frq <- function(x,
             cn = colnames(x)[i],
             auto.grp = auto.grp,
             title = title,
-            show.na = show.na
+            show.na = show.na,
+            min.frq = min.frq
           )
 
         # save data frame for return value
@@ -311,15 +370,15 @@ frq <- function(x,
 #' @importFrom dplyr n_distinct full_join bind_rows
 #' @importFrom stats na.omit xtabs na.pass sd weighted.mean
 #' @importFrom sjlabelled get_labels get_label as_numeric
-frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL, show.na = TRUE) {
+frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL, show.na = TRUE, min.frq = 0) {
   # remember type
   vartype <- var_type(x)
 
   # convert NaN and Inf to missing
   x <- zap_inf(x)
 
-  # variable with only mising?
-  if (length(stats::na.omit(x)) == 0) {
+  # variable with only missing?
+  if (length(stats::na.omit(x)) == 0 && show.na == FALSE) {
     mydat <- data.frame(
       val = NA,
       label = NA,
@@ -376,9 +435,9 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL, show.
   labels <-
     sjlabelled::get_labels(
       x,
-      attr.only = T,
+      attr.only = TRUE,
       values = "n",
-      non.labelled = T
+      non.labelled = TRUE
     )
 
 
@@ -392,11 +451,10 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL, show.
   # do we have a labelled vector?
   if (!is.null(labels)) {
     # add rownames and values as columns
-    dat <-
-      data_frame(
-        n = names(labels),
-        v = as.character(labels)
-      )
+    dat <- data_frame(
+      n = names(labels),
+      v = as.character(labels)
+    )
 
     colnames(dat) <- c("val", "label")
 
@@ -451,8 +509,33 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL, show.
 
     colnames(mydat) <- c("val", "frq")
 
+    if (!anyNA(suppressWarnings(as.numeric(attr(mydat$val, "levels"))))) {
+      mydat$val <- sjlabelled::as_numeric(mydat$val, keep.labels = F)
+    }
+
     # add values as label
     mydat$label <- as.character("<none>")
+    mydat <- mydat[c("val", "label", "frq")]
+  }
+
+  min.frq.string <- sprintf("n < %g", min.frq)
+
+  if (any(mydat$frq[!is.na(mydat$val)] < min.frq)) {
+	  mydatS1 <- mydat[which(mydat$frq >= min.frq | is.na(mydat$val)), ]
+	  mydatS2 <- mydat[which(mydat$frq < min.frq & !is.na(mydat$val)), ]
+
+	  mydatS3 <- data_frame(
+      val = min.frq.string,
+      label = "<none>",
+      frq = sum(mydatS2$frq)
+    )
+
+	  mydat <- rbind(mydatS1, mydatS3)
+
+	  row.names(mydat) <- c(
+	    row.names(mydat)[-length(row.names(mydat))],
+	    as.character(as.integer(row.names(mydat)[length(row.names(mydat)) - 1]) + 1)
+	  )
   }
 
   # need numeric
@@ -475,16 +558,31 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL, show.
   # valid values are one row less, because last row is NA row
   valid.vals <- nrow(mydat) - 1
 
-  # sort categories ascending or descending
-  if (!is.null(sort.frq) && (sort.frq == "asc" || sort.frq == "desc")) {
-    ord <- order(mydat$frq[seq_len(valid.vals)], decreasing = (sort.frq == "desc"))
-    mydat <- mydat[c(ord, valid.vals + 1), ]
+  if (!all(is.na(mydat$val))) {
+
+    extra.vals <- 1
+    # Momentarily, in order to sort categories, we consider lower frequencies subtotal as a non valid value
+    if (is.na(mydat$val[valid.vals]) & mydat$val[valid.vals + 1] == min.frq.string) {
+      valid.vals <- valid.vals - 1
+      extra.vals <- 2
+    }
+
+
+    # sort categories ascending or descending
+    if (!is.null(sort.frq) && (sort.frq == "asc" || sort.frq == "desc")) {
+      ord <- order(mydat$frq[seq_len(valid.vals)], decreasing = (sort.frq == "desc"))
+    } else {
+      ord <- seq_len(valid.vals)
+    }
+    mydat <- mydat[c(ord, (valid.vals + extra.vals):(valid.vals + 1)), ]
   }
+
+  valid.vals <- nrow(mydat) - 1
 
   # raw percentages
   mydat$raw.prc <- mydat$frq / sum(mydat$frq)
 
-  # compute valud and cumulative percentages
+  # compute valid and cumulative percentages
   mydat$valid.prc <- c(mydat$frq[seq_len(valid.vals)] / sum(mydat$frq[seq_len(valid.vals)]), NA)
   mydat$cum.prc <- c(cumsum(mydat$valid.prc[seq_len(valid.vals)]), NA)
 
@@ -494,13 +592,21 @@ frq_helper <- function(x, sort.frq, weight.by, cn, auto.grp, title = NULL, show.
   mydat$valid.prc <- 100 * round(mydat$valid.prc, 4)
 
   # "rename" labels for NA values
-  if (!is.null(mydat$label)) mydat$label[is.na(mydat$label)] <- "NA"
+  if (!is.null(mydat$label)) mydat$label[is.na(mydat$val)] <- NA_character_
 
-  # save original order
-  reihe <- sjlabelled::as_numeric(mydat$val, start.at = 1, keep.labels = F)
-
-  # sort
-  if (sort.frq == "none") mydat <- mydat[order(reihe), ]
+  if (!all(is.na(mydat$val))) {
+    if (extra.vals == 1) {
+      # save original order
+      reihe <- sjlabelled::as_numeric(mydat$val, start.at = 1, keep.labels = F)
+      # sort
+      if (sort.frq == "none") mydat <- mydat[order(reihe), ]
+    } else if (extra.vals == 2) {
+      # save original order
+      reihe <- suppressWarnings(sjlabelled::as_numeric(mydat$val[-c(valid.vals,valid.vals+1)], start.at = 1, keep.labels = F))
+      # sort
+      if (sort.frq == "none") mydat <- mydat[c(order(reihe), valid.vals, valid.vals+1), ]
+    }
+  }
 
   # remove NA, if requested
   has.na <- mydat$frq[nrow(mydat)] > 0

@@ -6,11 +6,11 @@ Data preparation is a common task in research, which usually takes the most amou
 
 **sjmisc** tries to fill this gap. Basically, this package complements the **dplyr** package in that **sjmisc** takes over data transformation tasks on variables, like recoding, dichotomizing or grouping variables, setting and replacing missing values, etc. A distinctive feature of **sjmisc** is the support for labelled data, which is especially useful for users who often work with data sets from other statistical software packages like _SPSS_ or _Stata_.
 
-The functions of **sjmisc** are designed to work together seamlessly with other packes from the tidyverse, like **dplyr**. For instance, you can use the functions from **sjmisc** both within a pipe-workflow to manipulate data frames, or to create new variables with `mutate()`. See `vignette("design_philosophy", "sjmisc")` for more details.
+The functions of **sjmisc** are designed to work together seamlessly with other packages from the tidyverse, like **dplyr**. For instance, you can use the functions from **sjmisc** both within a pipe-workflow to manipulate data frames, or to create new variables with `mutate()`. See `vignette("design_philosophy", "sjmisc")` for more details.
 
 ## Contributing to the package
 
-Please follow [this guide](https://github.com/strengejacke/sjmisc/blob/master/CONTRIBUTING.md) if you like to contribute to this package.
+Please follow [this guide](https://github.com/strengejacke/sjmisc/blob/master/.github/CONTRIBUTING.md) if you like to contribute to this package.
 
 ## Installation
 
@@ -22,10 +22,6 @@ To install the latest development snapshot (see latest changes below), type foll
 library(devtools)
 devtools::install_github("strengejacke/sjmisc")
 ```
-
-Please note the package dependencies when installing from GitHub. The GitHub version of this package may depend on latest GitHub versions of my other packages, so you may need to install those first, if you encounter any problems. Here's the order for installing packages from GitHub:
-
-[sjlabelled](https://github.com/strengejacke/sjlabelled) &rarr; [sjmisc](https://github.com/strengejacke/sjmisc) &rarr; [sjstats](https://github.com/strengejacke/sjstats) &rarr; [ggeffects](https://github.com/strengejacke/ggeffects) &rarr; [sjPlot](https://github.com/strengejacke/sjPlot)
 
 ### Officiale, stable release
 

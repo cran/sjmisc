@@ -2,14 +2,14 @@
 % Please edit documentation in R/find_var.R
 \name{find_var}
 \alias{find_var}
-\alias{find_variables}
+\alias{find_in_data}
 \title{Find variable by name or label}
 \usage{
 find_var(data, pattern, ignore.case = TRUE, search = c("name_label",
   "name_value", "label_value", "name", "label", "value", "all"),
   out = c("table", "df", "index"), fuzzy = FALSE, regex = FALSE)
 
-find_variables(data, pattern, ignore.case = TRUE,
+find_in_data(data, pattern, ignore.case = TRUE,
   search = c("name_label", "name_value", "label_value", "name", "label",
   "value", "all"), out = c("table", "df", "index"), fuzzy = FALSE,
   regex = FALSE)
@@ -21,11 +21,13 @@ find_variables(data, pattern, ignore.case = TRUE,
 character vector of length > 1 (see 'Examples'). \code{pattern} is
 searched for in column names and variable label attributes of
 \code{data} (see \code{\link[sjlabelled]{get_label}}). \code{pattern}
-might also be a regular-expression object, as returned by \code{\link[stringr]{regex}}.
+might also be a regular-expression object, as returned by \code{\link[stringr:modifiers]{stringr::regex()}}.
 Alternatively, use \code{regex = TRUE} to treat \code{pattern} as a regular
 expression rather than a fixed string.}
 
-\item{ignore.case}{Logical, whether matching should be case sensitive or not.}
+\item{ignore.case}{Logical, whether matching should be case sensitive or not.
+\code{ignore.case} is ignored when \code{pattern} is no regular expression or
+\code{regex = FALSE}.}
 
 \item{search}{Character string, indicating where \code{pattern} is sought.
 Use one of following options:

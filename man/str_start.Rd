@@ -13,11 +13,13 @@ str_end(x, pattern, ignore.case = TRUE, regex = FALSE)
 \item{x}{A character vector.}
 
 \item{pattern}{Character string to be matched in \code{x}. \code{pattern} might also
-be a regular-expression object, as returned by \code{\link[stringr]{regex}}.
+be a regular-expression object, as returned by \code{\link[stringr:modifiers]{stringr::regex()}}.
 Alternatively, use \code{regex = TRUE} to treat \code{pattern} as a regular
 expression rather than a fixed string.}
 
-\item{ignore.case}{Logical, whether matching should be case sensitive or not.}
+\item{ignore.case}{Logical, whether matching should be case sensitive or not.
+\code{ignore.case} is ignored when \code{pattern} is no regular expression or
+\code{regex = FALSE}.}
 
 \item{regex}{Logical, if \code{TRUE}, \code{pattern} is treated as a regular
 expression rather than a fixed string.}

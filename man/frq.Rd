@@ -6,8 +6,8 @@
 \usage{
 frq(x, ..., sort.frq = c("none", "asc", "desc"), weights = NULL,
   auto.grp = NULL, show.strings = TRUE, show.na = TRUE,
-  grp.strings = NULL, out = c("txt", "viewer", "browser"),
-  title = NULL, encoding = "UTF-8", file = NULL)
+  grp.strings = NULL, min.frq = 0, out = c("txt", "viewer",
+  "browser"), title = NULL, encoding = "UTF-8", file = NULL)
 }
 \arguments{
 \item{x}{A vector or a data frame. May also be a grouped data frame
@@ -40,7 +40,7 @@ of all variables from a data frame, and due to computational reasons
 character vectors should not be printed.}
 
 \item{show.na}{Logical, or \code{"auto"}. If \code{TRUE}, the output always
-contains informatin on missing values, even if variables have no missing
+contains information on missing values, even if variables have no missing
 values. If \code{FALSE}, information on missing values are removed from
 the output. If \code{show.na = "auto"}, information on missing values
 is only shown when variables actually have missing values, else it's not
@@ -51,6 +51,13 @@ character vectors, based on their similarity. See \code{\link{group_str}}
 and \code{\link{str_find}} for details on grouping, and their
 \code{precision}-argument to get more details on the distance of strings
 to be treated as equal.}
+
+\item{min.frq}{Numeric, indicating the minimum frequency for which a
+value will be shown in the output (except for the missing values, prevailing
+\code{show.na}). Default value for \code{min.frq} is \code{0}, so all value
+frequencies are shown. All values or categories that have less than
+\code{min.frq} occurences in the data will be summarized in a \code{"n < 100"}
+category.}
 
 \item{out}{Character vector, indicating whether the results should be printed
 to console (\code{out = "txt"}) or as HTML-table in the viewer-pane
@@ -73,6 +80,12 @@ A list of data frames with values, value labels, frequencies, raw, valid and
 }
 \description{
 This function returns a frequency table of labelled vectors, as data frame.
+}
+\details{
+The \dots-argument not only accepts variable names or expressions
+  from \code{\link[tidyselect]{select_helpers}}. You can also use logical
+  conditions, math operations, or combining variables to produce "crosstables".
+  See 'Examples' for more details.
 }
 \note{
 \code{x} may also be a grouped data frame (see \code{\link[dplyr]{group_by}})
@@ -97,6 +110,13 @@ efc \%>\%
   group_by(e16sex, c172code) \%>\%
   frq(e16sex, c172code, e42dep)
 
+# show only categories with a minimal amount of frequencies
+frq(mtcars$gear)
+
+frq(mtcars$gear, min.frq = 10)
+
+frq(mtcars$gear, min.frq = 15)
+
 # with select-helpers: all variables from the COPE-Index
 # (which all have a "cop" in their name)
 frq(efc, contains("cop"))
@@ -108,6 +128,11 @@ frq(efc, c161sex:c175empl)
 # and "label" column is removed from output
 data(iris)
 frq(iris, Species)
+
+# also works on grouped data frames
+efc \%>\%
+  group_by(c172code) \%>\%
+  frq(is.na(nur_pst))
 
 # group variables with large range and with weights
 efc$weights <- abs(rnorm(n = nrow(efc), mean = 1, sd = .5))
@@ -130,6 +155,30 @@ dummy$words <- sample(
 
 frq(dummy)
 frq(dummy, grp.strings = 2)
+
+#### other expressions than variables
+
+# logical conditions
+frq(mtcars, cyl ==6)
+
+frq(efc, is.na(nur_pst), contains("cop"))
+
+iris \%>\%
+  frq(starts_with("Petal"), Sepal.Length > 5)
+
+# computation of variables "on the fly"
+frq(mtcars, (gear + carb) / cyl)
+
+# crosstables
+set.seed(123)
+d <- data.frame(
+  var_x = sample(letters[1:3], size = 30, replace = TRUE),
+  var_y = sample(1:2, size = 30, replace = TRUE),
+  var_z = sample(LETTERS[8:10], size = 30, replace = TRUE)
+)
+table(d$var_x, d$var_z)
+frq(d, paste0(var_x, var_z))
+frq(d, paste0(var_x, var_y, var_z))
 
 }
 \seealso{

@@ -1,3 +1,26 @@
+# sjmisc 2.8.2
+
+## General
+
+* Alias `find_variables()` (alias for `find_var()`) was renamed to `find_in_data()`, to avoid conflicts with package *insight*.
+* `rename_variables()` and `rename_columns()` are aliases for `var_rename()`.
+
+## Changes to functions
+
+* `frq()` now also prints frequencies of logical conditions, e.g. how many values are lower or greater than a certain threshold.
+* `frq()` gets a `min.frq`-argument, indicating the minimum frequency for which a value will be shown in the output.
+* `descr()` gets a `show` argument to show selected columns only.
+* `descr()` gets a `file`-argument to write the output as HTML file.
+* `var_rename()` now also accepts a named vector with multiple elements as ellipses-argument.
+
+## Bug fixes
+
+* Fixed erroneously warning in `de_mean()`.
+* `merge_df()` now removes columns with identical column names inside a data frame before merging, to avoid errors.
+* Fixed issue when printing character vectors in `frq()`, where first element was empty, and vectors were not provided as data frame argument.
+* Fixed issue in `word_wrap()` when processing expressions.
+* Fixed issue in `rec()` with token `rec = "rev"`, when reversing labelled vectors with more value labels than values.
+
 # sjmisc 2.8.1
 
 ## General
@@ -52,7 +75,7 @@
 ## New functions
 
 * `tidy_values()` to "clean" values (i.e. remove special chars) of character vectors or levels of factors.
-* `add_id()` to qickly add an ID variable to (grouped) data frames.
+* `add_id()` to quickly add an ID variable to (grouped) data frames.
 
 ## Changes to functions
 
