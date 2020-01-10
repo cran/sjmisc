@@ -14,15 +14,13 @@
 #'        only \code{fun = "mode"} is applicable; for all other functions (including
 #'        the default, \code{"mean"}) the reference level of \code{x} is returned.
 #'        For character vectors, only the mode is returned. You can use a named
-#'        vector to apply other different functions to numeric and categorical
+#'        vector to apply other different functions to integer, numeric and categorical
 #'        \code{x}, where factors are first converted to numeric vectors, e.g.
 #'        \code{fun = c(numeric = "median", factor = "mean")}. See 'Examples'.
 #' @param weights Name of variable in \code{x} that indicated the vector of
 #'   weights that will be applied to weight all observations. Default is
 #'   \code{NULL}, so no weights are used.
 #' @param ... Further arguments, passed down to \code{fun}.
-#'
-#' @inheritParams grpmean
 #'
 #' @return The "typical" value of \code{x}.
 #'
@@ -31,12 +29,12 @@
 #'          \cr \cr
 #'          For factors, the reference level is returned or the most common value
 #'          (if \code{fun = "mode"}), unless \code{fun} is a named vector. If
-#'          \code{fun} is a named vector, specify the function for numeric
+#'          \code{fun} is a named vector, specify the function for integer, numeric
 #'          and categorical variables as element names, e.g.
-#'          \code{fun = c(numeric = "median", factor = "mean")}. In this case,
+#'          \code{fun = c(integer = "median", factor = "mean")}. In this case,
 #'          factors are converted to numeric values (using \code{\link{to_value}})
 #'          and the related function is applied. You may abbreviate the names
-#'          \code{fun = c(n = "median", f = "mean")}. See also 'Examples'.
+#'          \code{fun = c(i = "median", f = "mean")}. See also 'Examples'.
 #'          \cr \cr
 #'          For character vectors the most common value (mode) is returned.
 #'
@@ -62,8 +60,7 @@
 #'
 #' # for factors, use a named vector to apply other functions than "mode"
 #' map(iris, ~ typical_value(.x, fun = c(n = "median", f = "mean")))
-#'
-#'
+#' @importFrom stats median
 #' @export
 typical_value <- function(x, fun = "mean", weights = NULL, ...) {
 
@@ -73,7 +70,10 @@ typical_value <- function(x, fun = "mean", weights = NULL, ...) {
   fnames <- names(fun)
 
   if (!is.null(fnames)) {
-    if (is.numeric(x)) {
+    if (is.integer(x)) {
+      fun <- fun[which(fnames %in% c("integer", "i"))]
+      x <- as.numeric(x)
+    } else if (is.numeric(x)) {
       fun <- fun[which(fnames %in% c("numeric", "n"))]
     } else if (is.factor(x)) {
       fun <- fun[which(fnames %in% c("factor", "f"))]
@@ -125,7 +125,9 @@ typical_value <- function(x, fun = "mean", weights = NULL, ...) {
   else
     myfun <- get("mean", asNamespace("base"))
 
-  if (is.numeric(x)) {
+  if (is.integer(x)) {
+    stats::median(x, na.rm = TRUE)
+  } else if (is.numeric(x)) {
     if (fun == "weighted.mean")
       do.call(myfun, args = list(x = x, na.rm = TRUE, w = weights, ...))
     else
