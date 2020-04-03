@@ -1,3 +1,11 @@
+# sjmisc 2.8.4
+
+## Changes to functions
+
+* `descr()` now also calculates the IQR.
+* Revised `print()`-method for `frq()`.
+* Minor changes to be compatible with forthcoming dplyr-release.
+
 # sjmisc 2.8.3
 
 ## New functions

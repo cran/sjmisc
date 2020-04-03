@@ -12,7 +12,7 @@
 #'    \code{max.length} chars.
 #' @param show Character vector, indicating which information (columns) that describe
 #'   the data should be returned. May be one or more of \code{"type", "label", "n",
-#'   "NA.prc", "mean", "sd", "se", "md", "trimmed", "range", "skew"}. There are
+#'   "NA.prc", "mean", "sd", "se", "md", "trimmed", "range", "iqr", "skew"}. There are
 #'   two shortcuts: \code{show = "all"} (default) shows all information,
 #'   \code{show = "short"} just shows n, missing percentage, mean and standard
 #'   deviation.
@@ -78,7 +78,7 @@ descr <- function(x,
   # select elements that should be shown
 
   if ("all" %in% show)
-    show <- c("type", "label", "n", "NA.prc", "mean", "sd", "se", "md", "trimmed", "range", "skew")
+    show <- c("type", "label", "n", "NA.prc", "mean", "sd", "se", "md", "trimmed", "range", "iqr", "skew")
   else if ("short" %in% show)
     show <- c("n", "NA.prc", "mean", "sd")
 
@@ -147,7 +147,7 @@ descr <- function(x,
 
 #' @importFrom dplyr select_if group_by summarise_all funs summarise
 #' @importFrom sjlabelled get_label
-#' @importFrom stats var na.omit sd median weighted.mean
+#' @importFrom stats var na.omit sd median weighted.mean IQR
 #' @importFrom rlang .data
 descr_helper <- function(dd, max.length) {
 
@@ -197,6 +197,7 @@ descr_helper <- function(dd, max.length) {
               as.character(round(min(.data$val, na.rm = TRUE), 2)),
               as.character(round(max(.data$val, na.rm = TRUE), 2))
             ),
+            iqr = stats::IQR(.data$val, na.rm = TRUE),
             skew = sjmisc.skew(.data$val)
           ))
     ) %>%
@@ -240,20 +241,6 @@ descr_helper <- function(dd, max.length) {
 }
 
 
-sjmisc.skew <- function(x) {
-  if (any(ina <- is.na(x)))
-    x <- x[!ina]
-
-  n <- length(x)
-  x <- x - mean(x)
-
-  if (n < 3)
-    return(NA)
-
-  sqrt(n) * sum(x ^ 3) / (sum(x ^ 2) ^ (3 / 2)) * sqrt(n * (n - 1)) / (n - 2)
-}
-
-
 wtd_se_helper <- function(x, weights) {
   sqrt(wtd_var(x, weights) / length(stats::na.omit(x)))
 }
@@ -273,4 +260,23 @@ wtd_var <- function(x, w) {
 
   xbar <- sum(w * x) / sum(w)
   sum(w * ((x - xbar)^2)) / (sum(w) - 1)
+}
+
+
+
+
+sjmisc.skew <- function(x) {
+  if (any(ina <- is.na(x)))
+    x <- x[!ina]
+
+  n <- length(x)
+  x <- x - mean(x)
+
+  if (n < 3)
+    return(NA)
+
+  # type-1 skewness
+  out <- (sum((x - mean(x))^3) / n) / (sum((x - mean(x))^2) / n)^1.5
+  # type-2 skewness
+  out * sqrt(n * (n - 1)) / (n - 2)
 }
