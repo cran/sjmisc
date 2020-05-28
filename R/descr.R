@@ -90,10 +90,16 @@ descr <- function(x,
 
   w.name <- deparse(substitute(weights))
 
-  if (w.name == "NULL") {
-    w.name <- NULL
+  if (w.name != "NULL") {
+    w.name <- gsub("\"", "", w.name, fixed = FALSE)
+    if (!is.null(x[[w.name]])) {
+      dd[[w.name]] <- NULL
+      dd$.weights <- x[[w.name]]
+    } else {
+      dd$.weights <- eval(substitute(weights))
+    }
   } else {
-    dd$.weights <- x[[w.name]]
+    w.name <- NULL
   }
 
 
@@ -213,7 +219,7 @@ descr_helper <- function(dd, max.length) {
         dplyr::group_by(.data$var) %>%
         dplyr::summarise(
           n = round(sum(.data$.weights[!is.na(.data$val)], na.rm = TRUE)),
-          NA.prc = 100 * sum(is.na(.data$val)) / sum(.data$.weights[!is.na(.data$val)], na.rm = TRUE),
+          NA.prc = 100 * sum(is.na(.data$val)) / length(.data$val),
           mean = stats::weighted.mean(.data$val, w = .data$.weights, na.rm = TRUE),
           sd = wtd_sd_helper(.data$val, weights = .data$.weights),
           se = wtd_se_helper(.data$val, weights = .data$.weights),
@@ -222,7 +228,9 @@ descr_helper <- function(dd, max.length) {
             as.character(round(diff(range(.data$val, na.rm = TRUE)), 2)),
             as.character(round(min(.data$val, na.rm = TRUE), 2)),
             as.character(round(max(.data$val, na.rm = TRUE), 2))
-          )
+          ),
+          iqr = stats::IQR(.data$val, na.rm = TRUE),
+          skew = sjmisc.skew(.data$val)
         )
     ) %>%
       as.data.frame()
@@ -255,8 +263,8 @@ wtd_var <- function(x, w) {
   x[is.na(w)] <- NA
   w[is.na(x)] <- NA
 
-  w <- na.omit(w)
-  x <- na.omit(x)
+  w <- stats::na.omit(w)
+  x <- stats::na.omit(x)
 
   xbar <- sum(w * x) / sum(w)
   sum(w * ((x - xbar)^2)) / (sum(w) - 1)
