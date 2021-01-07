@@ -1,3 +1,13 @@
+# sjmisc 2.8.6
+
+## General
+
+* Updating imports.
+
+## Bug fixes
+
+* Fixed bug in `move_columns()` (using a variable as value for argument `.after` didn't work).
+
 # sjmisc 2.8.5
 
 ## Changes to functions
@@ -7,7 +17,8 @@
 ## Bug fixes
 
 * `descr()` calculated wrong percentage of missing values for weighted data.
-* Fixed issue in `rec` when `min`, `max`, `lo` or `hi` was used to recode a numeric into a character vector, and the new recode string contained one of these four strings as pattern.
+* Fixed issue in `rec()` when `min`, `max`, `lo` or `hi` was used to recode a numeric into a character vector, and the new recode string contained one of these four strings as pattern.
+* Give informative warning in `rec()` when `max` or `hi` was used to recode a value which maximum values was lower than a defined range, e.g. `4:max` when the maximum values was lower than 4.
 
 # sjmisc 2.8.4
 
@@ -356,7 +367,7 @@ The recoding and transformation functions get scoped variants, allowing to selec
 
 ## General
 
-* **sjmisc** now uses dplyr's [tidyeval-approach](http://dplyr.tidyverse.org/articles/programming.html) to evaluate arguments. This means that the select-helper-functions (like `one_of()` or `contains()`) no longer need to be prefixed with a `~` when used as argument within **sjmisc**-functions.
+* **sjmisc** now uses dplyr's tidyeval-approach to evaluate arguments. This means that the select-helper-functions (like `one_of()` or `contains()`) no longer need to be prefixed with a `~` when used as argument within **sjmisc**-functions.
 * All labelled-data functions are now deprecated and will become defunct in future package versions. The labelled-data functions have been moved into a separate package, *sjlabelled*.
 
 ## New functions

@@ -2,12 +2,9 @@
 % Please edit documentation in R/to_value.R
 \name{to_value}
 \alias{to_value}
-\alias{to_numeric}
 \title{Convert factors to numeric variables}
 \usage{
 to_value(x, ..., start.at = NULL, keep.labels = TRUE, use.labels = FALSE)
-
-to_numeric(x, ..., start.at = NULL, keep.labels = TRUE, use.labels = FALSE)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -16,7 +13,7 @@ to_numeric(x, ..., start.at = NULL, keep.labels = TRUE, use.labels = FALSE)
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or tidyselect's
-\code{\link[tidyselect]{select_helpers}}.
+select-helpers.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{start.at}{Starting index, i.e. the lowest numeric value of the variable's

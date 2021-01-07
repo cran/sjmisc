@@ -48,7 +48,7 @@
 #'   If \code{suffix = ""} and \code{append = TRUE}, existing variables that
 #'   have been recoded/transformed will be overwritten.
 #'
-#' @inheritParams to_factor
+#' @inheritParams to_dummy
 #'
 #' @return \code{x} with recoded categories. If \code{x} is a data frame,
 #'   for \code{append = TRUE}, \code{x} including the recoded variables
@@ -517,6 +517,10 @@ rec_helper <- function(x, recodes, as.num, var.label, val.labels) {
         # check for valid range values
         if (is.na(from) || is.na(to)) {
           stop(sprintf("?Syntax error in argument \"%s\"", ovs), call. = F)
+        }
+        # to lower than from?
+        if (from > to) {
+          stop(sprintf("?Syntax error in recode range from %g to %g.", from, to), call. = FALSE)
         }
         # for floating point range, we keep the range
         if (with_dec)

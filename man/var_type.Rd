@@ -13,11 +13,11 @@ var_type(x, ..., abbr = FALSE)
 further processing. Required, if \code{x} is a data frame (and no
 vector) and only selected variables from \code{x} should be processed.
 You may also use functions like \code{:} or tidyselect's
-\code{\link[tidyselect]{select_helpers}}.
+select-helpers.
 See 'Examples' or \href{../doc/design_philosophy.html}{package-vignette}.}
 
 \item{abbr}{Logical, if \code{TRUE}, returns a shortened, abbreviated value
-for the variable type (as returned by \code{\link[pillar]{type_sum}}).
+for the variable type (as returned by \code{pillar::type_sum()}).
 If \code{FALSE} (default), a longer "description" is returned.}
 }
 \value{

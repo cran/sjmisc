@@ -11,7 +11,7 @@ move_columns(data, ..., .before, .after)
 
 \item{...}{Unquoted names or character vector with names of variables that
 should be move to another position. You may also use functions like
-\code{:} or tidyselect's \code{\link[tidyselect]{select_helpers}}.}
+\code{:} or tidyselect's select-helpers.}
 
 \item{.before}{Optional, column name or numeric index of the position where
 \code{col} should be moved to. If not missing, \code{col} is moved to the
@@ -30,7 +30,10 @@ position \emph{after} the column indicated by \code{.after}.}
 }
 \note{
 If neither \code{.before} nor \code{.after} are specified, the
-   column is moved to the end of the data frame by default.
+   column is moved to the end of the data frame by default. \code{.before}
+   and \code{.after} are evaluated in a non-standard fashion, so you need
+   quasi-quotation when the value for \code{.before} or \code{.after} is
+   a vector with the target-column value. See 'Examples'.
 }
 \examples{
 \dontrun{
@@ -57,4 +60,15 @@ iris \%>\%
   move_columns(contains("Width"), .after = "Species") \%>\%
   head()}
 
+# using quasi-quotation
+target <- "Petal.Width"
+# does not work, column is moved to the end
+iris \%>\%
+  move_columns(Sepal.Width, .after = target) \%>\%
+  head()
+
+# using !! works
+iris \%>\%
+  move_columns(Sepal.Width, .after = !!target) \%>\%
+  head()
 }

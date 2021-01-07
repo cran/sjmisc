@@ -7,10 +7,10 @@
 #'              on data frames and within pipe-chains.
 #'
 #' @param abbr Logical, if \code{TRUE}, returns a shortened, abbreviated value
-#'        for the variable type (as returned by \code{\link[pillar]{type_sum}}).
+#'        for the variable type (as returned by \code{pillar::type_sum()}).
 #'        If \code{FALSE} (default), a longer "description" is returned.
 #'
-#' @inheritParams to_factor
+#' @inheritParams to_dummy
 #'
 #' @return The variable type of \code{x}, as character.
 #'

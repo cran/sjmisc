@@ -12,10 +12,19 @@
 
 <meta name="author" content="Daniel Lüdecke" />
 
-<meta name="date" content="2020-05-28" />
+<meta name="date" content="2021-01-07" />
 
 <title>Exploring Data Sets</title>
 
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -104,6 +113,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   }
 })();
 </script>
+
 
 
 
@@ -301,11 +311,11 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Exploring Data Sets</h1>
 <h4 class="author">Daniel Lüdecke</h4>
-<h4 class="date">2020-05-28</h4>
+<h4 class="date">2021-01-07</h4>
 
 
 
-<p>Tidying up, transforming and exploring data is an important part of data analysis, and you can manage many common tasks in this process with the <a href="http://tidyverse.org/">tidyverse</a> or related packages. The <strong>sjmisc</strong>-package fits into this workflow, especially when you work with <a href="https://cran.r-project.org/package=sjlabelled">labelled data</a>, because it offers functions for data transformation and labelled data utility functions. This vignette describes typical steps when beginning with data exploration.</p>
+<p>Tidying up, transforming and exploring data is an important part of data analysis, and you can manage many common tasks in this process with the <em>tidyverse</em> or related packages. The <strong>sjmisc</strong>-package fits into this workflow, especially when you work with <a href="https://cran.r-project.org/package=sjlabelled">labelled data</a>, because it offers functions for data transformation and labelled data utility functions. This vignette describes typical steps when beginning with data exploration.</p>
 <p>The examples are based on data from the EUROFAMCARE project, a survey on the situation of family carers of older people in Europe. The sample data set <code>efc</code> is part of this package. Let us see how the family carer’s gender and subjective perception of negative impact of care as well as the cared-for person’s dependency are associated with the family carer’s quality of life.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(sjmisc)</a>
 <a class="sourceLine" id="cb1-2" title="2"><span class="kw">library</span>(dplyr)</a>
