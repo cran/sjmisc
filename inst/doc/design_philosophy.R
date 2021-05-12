@@ -3,6 +3,9 @@ knitr::opts_chunk$set(
   collapse = TRUE, 
   comment = "#>"
 )
+if (!requireNamespace("dplyr", quietly = TRUE)) {
+  knitr::opts_chunk$set(eval = FALSE)
+}
 options(max.print = 1000)
 suppressPackageStartupMessages(library(sjmisc))
 

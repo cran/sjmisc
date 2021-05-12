@@ -1,5 +1,9 @@
 ## ----echo = FALSE-------------------------------------------------------------
 knitr::opts_chunk$set(collapse = TRUE, warning = FALSE, comment = "#>")
+if (!requireNamespace("dplyr", quietly = TRUE)) {
+  knitr::opts_chunk$set(eval = FALSE)
+}
+
 suppressPackageStartupMessages(library(sjmisc))
 
 ## ----message=FALSE------------------------------------------------------------
@@ -44,7 +48,7 @@ x2 <- efc %>%
 frq(x1)
 
 # median age of total sample, with median-split applied
-# to distibution of age by subgroups of gender
+# to distribution of age by subgroups of gender
 frq(x2)
 
 ## -----------------------------------------------------------------------------

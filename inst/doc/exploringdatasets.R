@@ -1,5 +1,11 @@
 ## ----echo = FALSE-------------------------------------------------------------
 knitr::opts_chunk$set(collapse = TRUE, warning = FALSE, comment = "#>")
+if (!requireNamespace("dplyr", quietly = TRUE) ||
+    !requireNamespace("tidyr", quietly = TRUE) ||
+    !requireNamespace("purrr", quietly = TRUE)) {
+  knitr::opts_chunk$set(eval = FALSE)
+}
+
 suppressPackageStartupMessages(library(sjmisc))
 
 ## ----message=FALSE------------------------------------------------------------
@@ -39,7 +45,7 @@ efc %>%
 ## -----------------------------------------------------------------------------
 # convert variable to labelled factor, because we then 
 # have the labels as factor levels in the output
-efc$e42dep <- to_label(efc$e42dep, drop.levels = T)
+efc$e42dep <- to_label(efc$e42dep, drop.levels = TRUE)
 efc %>%
   select(e42dep, burden, c161sex, quol_5) %>%
   group_by(e42dep) %>%
