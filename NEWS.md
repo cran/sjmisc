@@ -1,3 +1,15 @@
+# sjmisc 2.8.7.1
+
+## Changes to functions
+
+* `rec()` now keeps the labels of the old values with the new ones when there 
+  are no labels specified and there is a 1 to 1 correspondence between old and
+  new values.
+
+* `format()` for `frq()` was revised, and now allows to format the frequency 
+  table to prepare for printing in text, markdown and HTML-format. To do so,
+  use the methods `print()`, `print_md()` or `print_html()`.
+
 # sjmisc 2.8.7
 
 ## New functions
@@ -50,7 +62,7 @@
 
 * `typical_value()` now returns the median for integer-values (instead of mean), to preserve the integer-type of a variable.
 * The recode-pattern in `rec()` now also works for character variables with whitespaces.
-* `rec()` now warns explicetly for possible non-intended multiple assignment of identical new recode-values.
+* `rec()` now warns explicitely for possible non-intended multiple assignment of identical new recode-values.
 * Improved printing for `frq()`.
 * `merge_imputations()` now returns the plot-object as well.
 * `to_numeric()` as alias for `to_value()`.
